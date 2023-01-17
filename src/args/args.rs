@@ -1,3 +1,5 @@
+use std::process::exit;
+
 use log::debug;
 
 #[derive(Clone)]
@@ -47,7 +49,7 @@ impl ArgParser {
     pub fn new() -> Self {
         Self {
             recargs: Vec::new(),
-            desc: String::from("The AcaciaLinux package build system rewritten in rust."),
+            desc: String::from("The AcaciaLinux branch client rewritten in rust."),
             validarg: vec![
                 Arg::new("h", "help", "Prints this help dialogue.", None),
                 Arg::new(
@@ -59,37 +61,37 @@ impl ArgParser {
                 Arg::new(
                     "c",
                     "checkout",
-                    "Checks out a package build from the remote server.",
+                    "Checks out the specified packagebuild from the server.",
                     Some("name".to_owned()),
                 ),
                 Arg::new(
                     "s",
                     "submit",
-                    "Submits a package build to the remote server.",
+                    "Submits the specified packagebuild file to the server.",
                     Some("filename".to_owned()),
                 ),
                 Arg::new(
                     "rb",
                     "releasebuild",
-                    "Requests a release package build from the build server.",
+                    "Requests a releasebuild for the specified package.",
                     Some("name".to_owned()),
                 ),
                 Arg::new(
                     "cb",
                     "crossbuild",
-                    "Requests a release package build from the build server.",
+                    "Requests a crossbuild for the specified package.",
                     Some("name".to_owned()),
                 ),
                 Arg::new(
                     "vl",
                     "viewlog",
-                    "Requests build log of a completed job.",
+                    "Requests build log of the specified completed job.",
                     Some("job_id".to_owned()),
                 ),
                 Arg::new(
                     "st",
                     "status",
-                    "Requests a list of running / completed jobs from the server.",
+                    "Requests a list of running / completed / queued jobs.",
                     None,
                 ),
                 Arg::new(
@@ -101,7 +103,7 @@ impl ArgParser {
                 Arg::new(
                     "cj",
                     "clearjobs",
-                    "Clears the completed jobs from the masterserver.",
+                    "Clears the completed jobs from the server.",
                     None,
                 ),
                 Arg::new(
@@ -113,50 +115,55 @@ impl ArgParser {
                 Arg::new(
                     "cn",
                     "canceljob",
-                    "Cancels a currently queued job.",
+                    "Cancels specified currently queued job.",
                     Some("job_id".to_owned()),
                 ),
-                Arg::new("mp", "managedpkgs", "Get list of managed packages.", None),
+                Arg::new(
+                    "mp",
+                    "managedpkgs",
+                    "Requests list of managed packages.",
+                    None,
+                ),
                 Arg::new(
                     "mk",
                     "managedpkgbuilds",
-                    "Get list of managed packagebuilds.",
+                    "Requests list of managed packagebuilds.",
                     None,
                 ),
                 Arg::new(
                     "dp",
                     "differencepkgs",
-                    "Get a difference between packagebuilds and packages.",
+                    "Requests difference between packagebuilds and packages.",
                     None,
                 ),
                 Arg::new(
                     "sys",
                     "viewsyslog",
-                    "Fetches buildbot system logs from the masterserver.",
+                    "Requests buildbot system logs from server.",
                     None,
                 ),
                 Arg::new(
                     "vt",
                     "viewtree",
-                    "Fetches dependency tree for a given package.",
+                    "Requests dependency tree for specified package.",
                     Some("name".to_owned()),
                 ),
                 Arg::new(
                     "rd",
                     "rebuilddependers",
-                    "Rebuild dependers of a given package.",
+                    "Rebuild dependers of specified package.",
                     Some("name".to_owned()),
                 ),
                 Arg::new(
                     "rbs",
                     "releasebuildsol",
-                    "Submits a branch solution to the masterserver. (RELEASEBUILD)",
+                    "Submits a branch solution to server. (RELEASEBUILD)",
                     Some("sol_file".to_owned()),
                 ),
                 Arg::new(
                     "cbs",
                     "crossbuildsol",
-                    "Submits a branch solution to the masterserver. (CROSSBUILD)",
+                    "Submits a branch solution to server. (CROSSBUILD)",
                     Some("sol_file".to_owned()),
                 ),
             ],
@@ -213,6 +220,10 @@ impl ArgParser {
                             }
                         };
                         option = (long.to_owned(), None);
+                        if option.0 == "--help".to_owned() {
+                            self.help();
+                            exit(0)
+                        }
                         self.recargs.push(option);
                     }
                     //incomplete

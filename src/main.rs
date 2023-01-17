@@ -132,7 +132,6 @@ fn main() -> std::io::Result<()> {
     for func in funcs {
         let fmatch = (func.0.as_str(), func.1);
         match fmatch {
-            ("--help", _) => argparser.help(),
             ("--debugshell", _) => run_dbs(&socket),
             ("--checkout", name) => checkout_pkg(&socket, &name.unwrap_or("".to_owned())),
             ("--submit", filename) => submit_pkg(&socket, &filename.unwrap_or("".to_owned())),
