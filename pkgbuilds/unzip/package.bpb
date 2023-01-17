@@ -1,0 +1,17 @@
+name=unzip
+version=6.0
+real_version=0
+source=http://downloads.sourceforge.net/infozip/unzip60.tar.gz
+extra_sources=[https://www.linuxfromscratch.org/patches/blfs/svn/unzip-6.0-consolidated_fixes-1.patch]
+dependencies=[bzip2]
+builddeps=[bzip2][patch]
+description=The UnZip package contains ZIP extraction utilities
+build={
+	cd unzip60
+	patch -Np1 -i ../unzip-6.0-consolidated_fixes-1.patch
+	make -f unix/Makefile generic
+	make prefix=$PKG_INSTALL_DIR/usr MANDIR=$PKG_INSTALL_DIR/usr/share/man/man1 \
+	 -f unix/Makefile install
+
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

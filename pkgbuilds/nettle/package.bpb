@@ -1,0 +1,22 @@
+name=nettle
+version=3.8.1
+real_version=0
+source=https://ftp.gnu.org/gnu/nettle/nettle-3.8.1.tar.gz
+dependencies=
+builddeps=
+description=The Nettle package contains a low-level cryptographic library that is designed to fit easily in many contexts
+build={
+	cd $PKG_NAME-$PKG_VERSION
+
+	./configure --prefix=/usr --disable-static
+
+	make -j$(nproc)
+
+	make DESTDIR=$PKG_INSTALL_DIR install
+
+	chmod   -v   755 $PKG_INSTALL_DIR/usr/lib/lib{hogweed,nettle}.so
+	install -v -m755 -d $PKG_INSTALL_DIR/usr/share/doc/$PKG_NAME-$PKG_VERSION
+	install -v -m644 nettle.html $PKG_INSTALL_DIR/usr/share/doc/$PKG_NAME-$PKG_VERSION
+
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

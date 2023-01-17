@@ -1,0 +1,15 @@
+name=libuv
+version=1.44.1
+real_version=0
+source=https://dist.libuv.org/dist/v1.44.1/libuv-v1.44.1.tar.gz
+dependencies=
+builddeps=
+description= The libuv package is a multi-platform support library with a focus on asynchronous I/O.
+build={
+	cd $PKG_NAME-v$PKG_VERSION
+	sh autogen.sh
+	./configure --prefix=/usr --disable-static
+	make -j$(nproc) 
+	make DESTDIR=$PKG_INSTALL_DIR -j1 install
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

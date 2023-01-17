@@ -1,0 +1,26 @@
+name=glib
+version=2.74.3
+real_version=0
+source=https://download.gnome.org/sources/glib/2.74/glib-2.74.3.tar.xz
+dependencies=[libxslt][pcre2][dbus]
+builddeps=[libxslt][pcre2][dbus][meson][pkg-config]
+description=The GLib package contains low-level libraries useful for providing data structure handling for C
+build={
+	cd $PKG_NAME-$PKG_VERSION
+
+	mkdir build
+	cd    build
+
+	meson --prefix=/usr       \
+	      --buildtype=release \
+	      -Dman=false          \
+	      ..
+
+	ninja
+
+	DESTDIR=$PKG_INSTALL_DIR ninja install
+	mkdir -p $PKG_INSTALL_DIR/usr/share/doc/$PKG_NAME-$PKG_VERSION
+	cp -r ../docs/reference/{gio,glib,gobject} $PKG_INSTALL_DIR/usr/share/doc/$PKG_NAME-$PKG_VERSION
+
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

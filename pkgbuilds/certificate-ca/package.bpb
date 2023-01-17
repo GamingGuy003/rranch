@@ -1,0 +1,16 @@
+name=certificate-ca
+version=1.0
+real_version=2
+source=https://hg.mozilla.org/mozilla-central/raw-file/tip/security/nss/lib/ckfw/builtins/certdata.txt
+dependencies=
+builddeps=[make-ca]
+description=Contains the certificate ca
+build={
+	mkdir -pv $PKG_INSTALL_DIR/etc/ssl/certs
+	mkdir -pv $PKG_INSTALL_DIR/etc/pki
+
+	/usr/sbin/make-ca -C certdata.txt
+
+	cp -rfv /etc/ssl/certs/* $PKG_INSTALL_DIR/etc/ssl/certs/
+	cp -rfv /etc/pki/* $PKG_INSTALL_DIR/etc/pki/
+}

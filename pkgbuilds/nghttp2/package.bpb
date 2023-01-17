@@ -1,0 +1,17 @@
+name=nghttp2
+version=1.47.0
+real_version=0
+source=https://github.com/nghttp2/nghttp2/releases/download/v1.47.0/nghttp2-1.47.0.tar.xz
+dependencies=[libxml2]
+builddeps=[libxml2]
+description= nghttp2 is an implementation of HTTP/2 and its header compression algorithm, HPACK. 
+build={
+	cd $PKG_NAME-$PKG_VERSION
+	./configure --prefix=/usr     \
+	            --disable-static  \
+	            --enable-lib-only \
+	            --docdir=/usr/share/doc/nghttp2-1.47.0 &&
+	make -j$(nproc)
+	make DESTDIR=$PKG_INSTALL_DIR -j1 install
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

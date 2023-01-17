@@ -1,0 +1,20 @@
+name=bash
+version=5.1.16
+real_version=0
+source=https://ftp.gnu.org/gnu/bash/bash-5.1.16.tar.gz
+extra_sources=
+dependencies=[glibc][readline][ncurses]
+builddeps=[glibc][readline][ncurses]
+description=The Bash package contains the Bourne-Again SHell.
+build={
+	cd $PKG_NAME-$PKG_VERSION
+	./configure --prefix=/usr                      \
+	--docdir=/usr/share/doc/$PKG_NAME-$PKG_VERSION \
+	--without-bash-malloc              \
+	--with-installed-readline
+	make -j$(nproc)
+	make DESTDIR=$PKG_INSTALL_DIR install
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+
+	ln -sv /usr/bin/bash $PKG_INSTALL_DIR/usr/bin/sh
+}

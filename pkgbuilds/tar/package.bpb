@@ -1,0 +1,17 @@
+name=tar
+version=1.34
+real_version=0
+source=https://ftp.gnu.org/gnu/tar/tar-1.34.tar.xz
+dependencies=[acl][attr][glibc]
+builddeps=[acl][attr][glibc]
+description=The Tar package provides the ability to create tar archives as well as perform various other kinds of archive manipulation.
+build={
+	cd $PKG_NAME-$PKG_VERSION
+
+	FORCE_UNSAFE_CONFIGURE=1 ./configure --prefix=/usr
+
+	make -j$(nproc)
+	make DESTDIR=$PKG_INSTALL_DIR install
+	make DESTDIR=$PKG_INSTALL_DIR -C doc install-html docdir=/usr/share/doc/$PKG_NAME-$PKG_VERSION
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

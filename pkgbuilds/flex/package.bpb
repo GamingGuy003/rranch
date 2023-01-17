@@ -1,0 +1,18 @@
+name=flex
+version=2.6.4
+real_version=0
+source=https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz
+dependencies=[glibc][m4]
+builddeps=[glibc][m4]
+description= The Flex package contains a utility for generating programs that recognize patterns in text. 
+build={
+	cd $PKG_NAME-$PKG_VERSION
+	./configure --prefix=/usr \
+            --docdir=/usr/share/doc/$PKG_NAME-$PKG_VERSION \
+            --disable-static
+	make -j$(nproc)
+	make check
+	make DESTDIR=$PKG_INSTALL_DIR install
+	ln -sv flex $PKG_INSTALL_DIR/usr/bin/lex
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

@@ -1,0 +1,23 @@
+name=pygobject
+version=3.42.2
+real_version=0
+source=https://download.gnome.org/sources/pygobject/3.42/pygobject-3.42.2.tar.xz
+dependencies=[gobject-introspection][pycairo]
+builddeps=[gobject-introspection][pycairo][meson][pkg-config]
+description=PyGObject3 provides Python bindings to the GObject class from GLib
+build={
+	cd $PKG_NAME-$PKG_VERSION
+
+	mv -v tests/test_gdbus.py{,.nouse}
+
+	mkdir build
+	cd    build
+
+	meson --prefix=/usr --buildtype=release ..
+
+	ninja
+
+	DESTDIR=$PKG_INSTALL_DIR ninja install
+
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

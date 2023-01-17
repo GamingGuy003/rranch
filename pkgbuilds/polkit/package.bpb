@@ -1,0 +1,44 @@
+name=polkit
+version=122
+real_version=0
+source=https://gitlab.freedesktop.org/polkit/polkit/-/archive/122/polkit-122.tar.gz
+dependencies=[glib][shadow][duktape][gobject-introspection][libxslt][linux-pam][systemd][docbook-xml][docbook-xsl-nons]
+builddeps=[glib][duktape][gobject-introspection][libxslt][linux-pam][systemd][docbook-xml][docbook-xsl-nons][meson][pkg-config][gettext]
+description=Polkit is a toolkit for defining and handling authorizations.
+build={
+	cd $PKG_NAME-$PKG_VERSION
+
+	mkdir build
+	cd    build
+
+	echo "#!/bin/sh" > $PKG_INSTALL_DIR/../preinstall.sh
+	echo "/sbin/chroot \$ROOTDIR /usr/sbin/groupadd -fg 27 polkitd" >> $PKG_INSTALL_DIR/../preinstall.sh
+	echo "/sbin/chroot \$ROOTDIR /usr/sbin/useradd -c \"PolicyKit Daemon Owner\" -d /etc/polkit-1 -u 27 -g polkitd -s /bin/false polkitd" >> $PKG_INSTALL_DIR/../preinstall.sh
+	chmod +x $PKG_INSTALL_DIR/../preinstall.sh
+
+	meson --prefix=/usr                         \
+			--buildtype=release                 \
+			-Dman=true                          \
+			-Dsession_tracking=libsystemd-login \
+			-Dtests=true                        \
+			-Djs_engine=duktape                 \
+    ..
+
+	ninja
+
+	DESTDIR=$PKG_INSTALL_DIR ninja install
+
+	mkdir -pv $PKG_INSTALL_DIR/etc/pam.d/
+	cat > $PKG_INSTALL_DIR/etc/pam.d/polkit-1 << "EOF"
+	# Begin /etc/pam.d/polkit-1
+
+	auth     include        system-auth
+	account  include        system-account
+	password include        system-password
+	session  include        system-session
+
+	# End /etc/pam.d/polkit-1
+	EOF
+
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

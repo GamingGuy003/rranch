@@ -1,0 +1,24 @@
+name=bash-profile
+version=1.0
+real_version=0
+source=https://acacialinux.org/pkgbuilds/bash-profile/profile
+extra_sources=[https://acacialinux.org/pkgbuilds/bash-profile/bash_completion.sh][https://acacialinux.org/pkgbuilds/bash-profile/dircolors.sh][https://acacialinux.org/pkgbuilds/bash-profile/extrapaths.sh][https://acacialinux.org/pkgbuilds/bash-profile/i18n.sh][https://acacialinux.org/pkgbuilds/bash-profile/readline.sh][https://acacialinux.org/pkgbuilds/bash-profile/umask.sh]
+dependencies=
+builddeps=[coreutils]
+description=This package contains a basic bash profile configuration
+build={
+	mkdir -pv $PKG_INSTALL_DIR/etc
+
+	install --directory --mode=0755 --owner=root --group=root $PKG_INSTALL_DIR/etc/profile.d
+	install --directory --mode=0755 --owner=root --group=root $PKG_INSTALL_DIR/etc/bash_completion.d
+
+	cp -v profile $PKG_INSTALL_DIR/etc/profile
+	cp -v bash_completion.sh $PKG_INSTALL_DIR/etc/profile.d/
+	cp -v dircolors.sh $PKG_INSTALL_DIR/etc/profile.d/
+	cp -v extrapaths.sh $PKG_INSTALL_DIR/etc/profile.d/
+	cp -v readline.sh $PKG_INSTALL_DIR/etc/profile.d/
+	cp -v umask.sh $PKG_INSTALL_DIR/etc/profile.d/
+	cp -v i18n.sh $PKG_INSTALL_DIR/etc/profile.d/
+
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

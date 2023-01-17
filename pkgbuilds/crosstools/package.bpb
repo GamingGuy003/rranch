@@ -1,0 +1,11 @@
+name=crosstools
+version=2.36
+real_version=0
+source=http://acacia.maxkofler.eu/images/acacia-glibc236.tar.xz
+dependencies=
+builddeps=
+description=The crosstools package contains a cross compiler toolchain.
+build={
+	rm acacia-glibc236.tar.xz
+	cp -rf ./* $PKG_INSTALL_DIR
+}

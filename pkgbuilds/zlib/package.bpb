@@ -1,0 +1,21 @@
+name=zlib
+version=1.2.13
+real_version=0
+source=https://zlib.net/zlib-1.2.13.tar.xz
+dependencies=[glibc]
+builddeps=[glibc]
+description= The Zlib package contains compression and decompression routines used by some programs. 
+build={
+	cd $PKG_NAME-$PKG_VERSION
+	./configure --prefix=/usr
+
+	make -j$(nproc)
+
+	make check
+
+	make DESTDIR=$PKG_INSTALL_DIR install
+
+	rm -fv $PKG_INSTALL_DIR/usr/lib/libz.a
+
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

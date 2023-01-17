@@ -1,0 +1,64 @@
+name=gcc
+version=12.2.0
+real_version=1
+source=https://ftp.gnu.org/gnu/gcc/gcc-12.2.0/gcc-12.2.0.tar.xz
+extra_sources=
+dependencies=[binutils][mpc][zstd][libstdcpp]
+builddeps=[binutils][mpc][zstd][python3][expect][tar][diffutils][shadow][grep][libstdcpp][findutils]
+crossdeps=[glibc][mpc][zlib][libstdcpp]
+description=The GCC package contains the GNU compiler collection, which includes the C and C++ compilers.
+build={
+	cd $PKG_NAME-$PKG_VERSION
+	
+	case $(uname -m) in
+		x86_64)
+			sed -e '/m64=/s/lib64/lib/' \
+				-i.orig gcc/config/i386/t-linux64
+		;;
+	esac
+
+	mkdir -v build
+	cd       build
+
+	TGT=$(uname -m)-acacia-linux-gnu
+	echo "GCC TGT: $TGT"
+
+	../configure --prefix=/usr                         \
+		LD=ld                                          \
+		--build=$TGT                                   \
+		--host=$TGT                                    \
+		--target=$TGT                                  \
+		--enable-languages=c,c++                       \
+		--disable-multilib                             \
+    	--disable-bootstrap                            \
+        --with-system-zlib
+
+	make -j$(nproc)
+
+	make DESTDIR=$PKG_INSTALL_DIR install
+
+	ln -sv gcc $PKG_INSTALL_DIR/usr/bin/cc
+
+	ln -svr $PKG_INSTALL_DIR/usr/bin/cpp $PKG_INSTALL_DIR/usr/lib
+	mkdir -pv $PKG_INSTALL_DIR/usr/lib/bfd-plugins/
+	ln -sfv ../../libexec/gcc/$(gcc -dumpmachine)/$PKG_VERSION/liblto_plugin.so $PKG_INSTALL_DIR/usr/lib/bfd-plugins/
+	cp -v libiberty/libiberty.a $PKG_INSTALL_DIR/usr/lib/
+
+	mkdir -pv $PKG_INSTALL_DIR/usr/share/gdb/auto-load/usr/lib
+	mv -v $PKG_INSTALL_DIR/usr/lib/*gdb.py $PKG_INSTALL_DIR/usr/share/gdb/auto-load/usr/lib || true
+
+	echo "Installing libstdc++ libraries to remove conflicts..."
+
+	mkdir -pv installForRemoval
+	make -C $(realpath $TGT/libgcc/) DESTDIR=$(realpath installForRemoval) install-shared
+	make -C $(realpath $TGT/libstdc++-v3/) DESTDIR=$(realpath installForRemoval) install
+	cd installForRemoval
+
+	echo "Removing..."
+	find . ! -type d -exec rm -fv $PKG_INSTALL_DIR/{} \;
+	cd ..
+
+	echo "Done!"
+
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

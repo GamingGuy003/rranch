@@ -1,0 +1,16 @@
+name=check
+version=0.15.2
+real_version=0
+source=https://github.com/libcheck/check/releases/download/0.15.2/check-0.15.2.tar.gz
+dependencies=[gawk]
+builddeps=[gawk]
+description=Check is a unit testing framework for C.
+build={
+	cd $PKG_NAME-$PKG_VERSION
+
+	./configure --prefix=/usr --disable-static
+
+	make -j$(nproc)
+	make DESTDIR=$PKG_INSTALL_DIR docdir=/usr/share/doc/$PKG_NAME-$PKG_VERSION install
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

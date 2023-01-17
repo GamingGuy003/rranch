@@ -1,0 +1,22 @@
+name=openssl
+version=3.0.7
+real_version=0
+source=https://www.openssl.org/source/openssl-3.0.7.tar.gz
+dependencies=[glibc][zlib]
+builddeps=[glibc][perl][zlib]
+description=The OpenSSL package contains management tools and libraries relating to cryptography.
+build={
+	cd $PKG_NAME-$PKG_VERSION
+	./config --prefix=/usr        \
+			--openssldir=/etc/ssl \
+			--libdir=lib          \
+			shared                \
+			zlib-dynamic
+	
+	make -j$(nproc)
+
+	sed -i '/INSTALL_LIBS/s/libcrypto.a libssl.a//' Makefile
+	make MANSUFFIX=ssl DESTDIR=$PKG_INSTALL_DIR install
+	mv -v $PKG_INSTALL_DIR/usr/share/doc/openssl $PKG_INSTALL_DIR/usr/share/doc/$PKG_NAME-$PKG_VERSION
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

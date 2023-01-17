@@ -1,0 +1,19 @@
+name=strace
+version=6.1
+real_version=0
+source=https://strace.io/files/6.1/strace-6.1.tar.xz
+dependencies=
+builddeps=
+description=strace is a diagnostic, debugging and instructional userspace utility for Linux
+build={
+	cd $PKG_NAME-$PKG_VERSION
+	ls
+
+	./configure --prefix=/usr
+
+	make -j$(nproc)
+	make -k check -j$(nproc)
+
+	make DESTDIR=$PKG_INSTALL_DIR install
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

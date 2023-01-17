@@ -1,0 +1,18 @@
+name=libksba
+version=1.6.0
+real_version=0
+source=https://www.gnupg.org/ftp/gcrypt/libksba/libksba-1.6.0.tar.bz2
+dependencies=[libgpg-error]
+builddeps=[libgpg-error]
+description=The Libksba package contains a library used to make X.509 certificates as well as making the CMS (Cryptographic Message Syntax) easily accessible by other applications.
+build={
+	cd $PKG_NAME-$PKG_VERSION
+
+	./configure --prefix=/usr
+
+	make -j$(nproc)
+
+	make DESTDIR=$PKG_INSTALL_DIR install
+
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

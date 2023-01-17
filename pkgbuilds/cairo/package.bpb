@@ -1,0 +1,21 @@
+name=cairo
+version=1.17.6
+real_version=0
+source=https://download.gnome.org/sources/cairo/1.17/cairo-1.17.6.tar.xz
+dependencies=[libpng][pixman][glib]
+builddeps=[libpng][pixman][glib][pkg-config]
+description=Cairo is a 2D graphics library
+build={
+	cd $PKG_NAME-$PKG_VERSION
+
+	sed 's/PTR/void */' -i util/cairo-trace/lookup-symbol.c
+	sed -e "/@prefix@/a exec_prefix=@exec_prefix@" -i util/cairo-script/cairo-script-interpreter.pc.in
+
+	./configure --prefix=/usr    \
+	            --disable-static
+
+	make -j$(nproc)
+	make DESTDIR=$PKG_INSTALL_DIR install
+
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

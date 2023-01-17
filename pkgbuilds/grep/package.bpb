@@ -1,0 +1,16 @@
+name=grep
+version=3.7
+real_version=0
+source=https://ftp.gnu.org/gnu/grep/grep-3.7.tar.xz
+dependencies=[glibc]
+builddeps=[glibc][texinfo]
+description=The Grep package contains programs for searching through the contents of files.
+build={
+	cd $PKG_NAME-$PKG_VERSION
+
+	./configure --prefix=/usr
+
+	make -j$(nproc)
+	make DESTDIR=$PKG_INSTALL_DIR install
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

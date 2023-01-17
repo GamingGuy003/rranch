@@ -1,0 +1,24 @@
+name=upower
+version=1.90.0
+real_version=0
+source=https://gitlab.freedesktop.org/upower/upower/-/archive/v1.90.0/upower-v1.90.0.tar.bz2
+dependencies=[libgudev][libusb][polkit][gobject-introspection]
+builddeps=[libgudev][libusb][polkit][gobject-introspection][meson][pkg-config]
+description=The UPower package provides an interface for enumerating power devices
+build={
+	cd $PKG_NAME-v$PKG_VERSION
+
+	mkdir build
+	cd    build
+
+	meson --prefix=/usr       \
+	      --buildtype=release \
+	      -Dgtk-doc=false     \
+	      -Dman=false         \
+	      ..
+	ninja
+
+	DESTDIR=$PKG_INSTALL_DIR ninja install
+
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

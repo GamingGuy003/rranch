@@ -1,0 +1,10 @@
+#master config
+[master]
+addr = "localhost"
+port = 27015
+authkey = "monn"
+
+#client config
+[client]
+name = "netwörkdöner-rs"
+loglevel = "info"

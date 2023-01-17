@@ -1,0 +1,22 @@
+name=libelf
+version=0.187
+real_version=0
+source=https://sourceware.org/ftp/elfutils/0.187/elfutils-0.187.tar.bz2
+dependencies=[libstdcpp][bzip2][xz][zlib][zstd]
+builddeps=[libstdcpp][bzip2][xz][zlib][zstd]
+crossdeps=[bzip2][xz][zlib][zstd]
+description=Libelf is a library for handling ELF (Executable and Linkable Format) files.
+build={
+	cd elfutils-$PKG_VERSION
+
+	./configure --prefix=/usr                \
+				--disable-debuginfod         \
+				--enable-libdebuginfod=dummy
+
+	make -j$(nproc)
+	make -C libelf DESTDIR=$PKG_INSTALL_DIR install
+	mkdir -pv $PKG_INSTALL_DIR/usr/lib/pkgconfig
+	install -vm644 config/libelf.pc $PKG_INSTALL_DIR/usr/lib/pkgconfig
+	rm $PKG_INSTALL_DIR/usr/lib/libelf.a
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

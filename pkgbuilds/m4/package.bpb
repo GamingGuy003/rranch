@@ -1,0 +1,15 @@
+name=m4
+version=1.4.19
+real_version=0
+source=https://ftp.gnu.org/gnu/m4/m4-1.4.19.tar.xz
+dependencies=[glibc]
+builddeps=[glibc]
+description=The M4 package contains a macro processor.
+build={
+	cd $PKG_NAME-$PKG_VERSION
+	./configure --prefix=/usr
+	make -j$(nproc)
+	make check
+	make DESTDIR=$PKG_INSTALL_DIR install
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

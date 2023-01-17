@@ -1,0 +1,20 @@
+name=expat
+version=2.5.0
+real_version=0
+source=https://prdownloads.sourceforge.net/expat/expat-2.5.0.tar.xz
+dependencies=[glibc]
+builddeps=[glibc]
+description=The Expat package contains a stream oriented C library for parsing XML.
+build={
+	cd $PKG_NAME-$PKG_VERSION
+
+	./configure --prefix=/usr    \
+				--disable-static \
+				--docdir=/usr/share/doc/$PKG_NAME-$PKG_VERSION
+
+	make -j$(nproc)
+	make DESTDIR=$PKG_INSTALL_DIR install
+	mkdir -pv $PKG_INSTALL_DIR/usr/share/doc
+	install -v -m644 doc/*.{html,css} $PKG_INSTALL_DIR/usr/share/doc/$PKG_NAME-$PKG_VERSION
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

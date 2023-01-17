@@ -1,0 +1,70 @@
+name=linux-pam
+version=1.5.2
+real_version=0
+source=https://github.com/linux-pam/linux-pam/releases/download/v1.5.2/Linux-PAM-1.5.2.tar.xz
+extra_sources=
+dependencies=
+builddeps=
+description=The Linux PAM package contains Pluggable Authentication Modules used to enable the local system administrator to choose how applications authenticate users. 
+build={
+	cd Linux-PAM-$PKG_VERSION
+	./configure --prefix=/usr                        \
+	            --sbindir=/usr/sbin                  \
+	            --sysconfdir=/etc                    \
+	            --libdir=/usr/lib                    \
+	            --enable-securedir=/usr/lib/security \
+	            --docdir=/usr/share/doc/Linux-PAM-$PKG_VERSION &&
+	make -j$(nproc)
+	install -v -m755 -d /etc/pam.d &&
+	# deploy other file to host
+	cat > /etc/pam.d/other << "EOF"
+	auth     required       pam_deny.so
+	account  required       pam_deny.so
+	password required       pam_deny.so
+	session  required       pam_deny.so
+	EOF
+	# make check 
+	make check
+	rm /etc/pam.d/other
+	# install files
+	mkdir $PKG_INSTALL_DIR/etc
+	# install pam.d
+	install -v -m755 -d $PKG_INSTALL_DIR/etc/pam.d
+	make DESTDIR=$PKG_INSTALL_DIR install
+	# set unix_chkpwd
+	chmod -v 4755 $PKG_INSTALL_DIR/usr/sbin/unix_chkpwd
+	install -vdm755 $PKG_INSTALL_DIR/etc/pam.d
+	# create /etc/pam.d
+	install -vdm755 $PKG_INSTALL_DIR/etc/pam.d
+	cat > $PKG_INSTALL_DIR/etc/pam.d/system-account << "EOF" &&
+	# Begin /etc/pam.d/system-account
+	account   required    pam_unix.so
+	# End /etc/pam.d/system-account
+	EOF
+	cat > $PKG_INSTALL_DIR/etc/pam.d/system-auth << "EOF" &&
+	# Begin /etc/pam.d/system-auth
+	auth      required    pam_unix.so
+	# End /etc/pam.d/system-auth
+	EOF
+	cat > $PKG_INSTALL_DIR/etc/pam.d/system-password << "EOF"
+	# Begin /etc/pam.d/system-password
+	# use sha512 hash for encryption, use shadow, and try to use any previously
+	# defined authentication token (chosen password) set by any prior module
+	password  required    pam_unix.so       sha512 shadow try_first_pass
+	# End /etc/pam.d/system-password
+	EOF
+	cat > $PKG_INSTALL_DIR/etc/pam.d/other << "EOF"
+	# Begin /etc/pam.d/other
+	auth        required        pam_warn.so
+	auth        required        pam_deny.so
+	account     required        pam_warn.so
+	account     required        pam_deny.so
+	password    required        pam_warn.so
+	password    required        pam_deny.so
+	session     required        pam_warn.so
+	session     required        pam_deny.so
+	# End /etc/pam.d/other
+	EOF
+
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

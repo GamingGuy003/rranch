@@ -1,0 +1,21 @@
+name=desktop-file-utils
+version=0.26
+real_version=0
+source=https://www.freedesktop.org/software/desktop-file-utils/releases/desktop-file-utils-0.26.tar.xz
+dependencies=[glib]
+builddeps=[glib][meson][pkg-config]
+description=The Desktop File Utils package contains command line utilities for working with Desktop entries
+build={
+	cd $PKG_NAME-$PKG_VERSION
+
+	mkdir build
+	cd    build
+
+	meson --prefix=/usr --buildtype=release ..
+
+	ninja
+
+	DESTDIR=$PKG_INSTALL_DIR ninja install
+
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

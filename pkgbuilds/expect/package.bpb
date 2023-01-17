@@ -1,0 +1,21 @@
+name=expect
+version=5.45.4
+real_version=0
+source=https://prdownloads.sourceforge.net/expect/expect5.45.4.tar.gz
+dependencies=[tcl]
+builddeps=[tcl]
+description=The Expect package contains tools for automating, via scripted dialogues.
+build={
+	cd $PKG_NAME$PKG_VERSION
+	./configure --prefix=/usr           \
+            --with-tcl=/usr/lib     \
+            --enable-shared         \
+            --mandir=/usr/share/man \
+            --with-tclinclude=/usr/include
+	
+	make -j$(nproc)
+	make test
+	make DESTDIR=$PKG_INSTALL_DIR install
+	ln -svf expect$PKG_NAME-$PKG_VERSION/libexpect$PKG_NAME-$PKG_VERSION.so $PKG_INSTALL_DIR/usr/lib
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

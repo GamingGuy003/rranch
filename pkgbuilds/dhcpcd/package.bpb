@@ -1,0 +1,32 @@
+name=dhcpcd
+version=9.4.1
+real_version=0
+source=https://roy.marples.name/downloads/dhcpcd/dhcpcd-9.4.1.tar.xz
+dependencies=[glibc][systemd][shadow]
+builddeps=[glibc][systemd]
+description=The dhcpcd package contains a dhcp client
+build={
+	cd $PKG_NAME-$PKG_VERSION
+
+	#Prepare the preinstall script
+	echo "install  -v -m700 -d /var/lib/dhcpcd" > $PKG_INSTALL_DIR/../preinstall.sh
+	echo "groupadd -g 52 dhcpcd" >> $PKG_INSTALL_DIR/../preinstall.sh
+	echo "useradd  -c 'dhcpcd PrivSep' -d /var/lib/dhcpcd -g dhcpcd -s /bin/false -u 52 dhcpcd" >> $PKG_INSTALL_DIR/../preinstall.sh
+	echo "chown    -v dhcpcd:dhcpcd /var/lib/dhcpcd" >> $PKG_INSTALL_DIR/../preinstall.sh
+	chmod +x $PKG_INSTALL_DIR/../preinstall.sh
+
+	sed '/Deny everything else/i SECCOMP_ALLOW(__NR_getrandom),' -i src/privsep-linux.c
+
+	./configure --prefix=/usr            \
+            --sysconfdir=/etc            \
+            --libexecdir=/usr/lib/dhcpcd \
+            --dbdir=/var/lib/dhcpcd      \
+            --runstatedir=/run           \
+            --privsepuser=dhcpcd
+
+	make -j$(nproc)
+
+	make DESTDIR=$PKG_INSTALL_DIR install
+
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

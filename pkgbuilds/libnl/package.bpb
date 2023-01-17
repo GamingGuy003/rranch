@@ -1,0 +1,15 @@
+name=libnl
+version=3.6.0
+real_version=0
+source=https://github.com/thom311/libnl/releases/download/libnl3_6_0/libnl-3.6.0.tar.gz
+dependencies=
+builddeps=[flex][bison]
+description= The libnl suite is a collection of libraries providing APIs to netlink protocol based Linux kernel interfaces. 
+build={
+	cd libnl-3.6.0
+	./configure --prefix=/usr     \
+	            --sysconfdir=/etc \
+	            --disable-static  &&
+	make -j$(nproc)
+	make DESTDIR=$PKG_INSTALL_DIR install
+}

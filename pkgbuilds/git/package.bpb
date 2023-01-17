@@ -1,0 +1,18 @@
+name=git
+version=2.38.1
+real_version=0
+source=https://www.kernel.org/pub/software/scm/git/git-2.38.1.tar.xz
+dependencies=[curl][gnupg][openssh][python3][sed]
+builddeps=[curl][gnupg][openssh][python3][findutils][gettext]
+description=Git is a free and open source, distributed version control system designed to handle everything from small to very large projects with speed and efficiency. 
+build={
+	cd $PKG_NAME-$PKG_VERSION
+
+	./configure --prefix=/usr \
+	            --with-gitconfig=/etc/gitconfig \
+	            --with-python=python3
+
+	make -j$(nproc)
+
+	make DESTDIR=$PKG_INSTALL_DIR perllibdir=/usr/lib/perl5/5.34/site_perl install
+}

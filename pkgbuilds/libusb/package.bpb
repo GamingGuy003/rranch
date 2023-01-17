@@ -1,0 +1,16 @@
+name=libusb
+version=1.0.26
+real_version=0
+source=https://github.com/libusb/libusb/releases/download/v1.0.26/libusb-1.0.26.tar.bz2
+dependencies=[glibc][systemd]
+builddeps=[glibc][systemd]
+description= The libusb package contains a library used by some applications for USB device access. 
+build={
+	cd $PKG_NAME-$PKG_VERSION
+
+	./configure --prefix=/usr --disable-static
+	make -j$(nproc)
+	make DESTDIR=$PKG_INSTALL_DIR install
+
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

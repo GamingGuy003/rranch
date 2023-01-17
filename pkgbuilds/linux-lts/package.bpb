@@ -1,0 +1,21 @@
+name=linux-lts
+version=5.15.44
+real_version=0
+source=https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.15.44.tar.xz
+extra_sources=[https://AcaciaLinux.org/images/kernel-config/config]
+dependencies=
+builddeps=[python3][ncurses][flex][bison][libelf][kmod]
+crossdeps=
+description=The linux kernel
+build={
+	cd linux-5.15.44
+	cp ../config ./.config
+	# keep old config
+	make olddefconfig
+	make -j$(nproc)
+	echo "Done building kernel"
+	echo "Installing..."
+	make INSTALL_MOD_PATH="$PKG_INSTALL_DIR/usr" INSTALL_MOD_STRIP=1 modules_install
+	mkdir $PKG_INSTALL_DIR/boot/
+	cp -iv arch/x86/boot/bzImage $PKG_INSTALL_DIR/boot/vmlinuz-acacia-lts
+}

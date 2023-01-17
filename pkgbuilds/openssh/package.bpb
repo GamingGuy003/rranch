@@ -1,0 +1,45 @@
+name=openssh
+version=9.1p1
+real_version=0
+source=https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.1p1.tar.gz
+extra_sources=[https://www.linuxfromscratch.org/blfs/downloads/systemd/blfs-systemd-units-20220720.tar.xz]
+dependencies=[linux-pam][coreutils][shadow]
+builddeps=[linux-pam][tar][xz][coreutils][shadow]
+description=The OpenSSH package contains ssh clients and the sshd daemon.
+build={
+	cd $PKG_NAME-$PKG_VERSION
+
+	echo "Preparing preinstall.sh..."
+
+	echo "#!/bin/sh" > ../preinstall.sh
+	echo "install -v -m700 -d /var/lib/sshd" >> ../preinstall.sh
+	echo "chown -v root:sys /var/lib/sshd" >> ../preinstall.sh
+	echo "groupadd -g 50 sshd" >> ../preinstall.sh
+	echo "useradd  -c 'sshd PrivSep' -d /var/lib/sshd -g sshd -s /bin/false -u 50 sshd" >> ../preinstall.sh
+	chmod +x ../preinstall.sh
+
+	echo "Done preparing preinstall.sh, executing it"
+
+	/bin/sh ../preinstall.sh
+
+	./configure --prefix=/usr                            \
+	            --sysconfdir=/etc/ssh                    \
+	            --with-md5-passwords                     \
+	            --with-privsep-path=/var/lib/sshd        \
+	            --with-default-path=/usr/bin             \
+	            --with-superuser-path=/usr/sbin:/usr/bin \
+	            --with-pid-dir=/run
+	make -j$(nproc)
+
+	make DESTDIR=$PKG_INSTALL_DIR install
+
+	install -v -m755    contrib/ssh-copy-id $PKG_INSTALL_DIR/usr/bin
+	install -v -m644    contrib/ssh-copy-id.1 $PKG_INSTALL_DIR/usr/share/man/man1
+	install -v -m755 -d $PKG_INSTALL_DIR/usr/share/doc/$PKG_NAME-$PKG_VERSION
+	install -v -m644    INSTALL LICENCE OVERVIEW README* $PKG_INSTALL_DIR/usr/share/doc/$PKG_NAME-$PKG_VERSION
+
+	echo "Installing systemd sshd..."
+	tar xpf ../blfs-systemd-units-20220720.tar.xz
+	cd blfs-systemd-units-20220720
+	make DESTDIR=$PKG_INSTALL_DIR install-sshd
+}

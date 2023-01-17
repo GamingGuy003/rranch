@@ -1,0 +1,16 @@
+name=autoconf
+version=2.71
+real_version=0
+source=https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.xz
+dependencies=[m4][perl][gawk][diffutils]
+builddeps=[m4][perl][gawk][diffutils]
+description=The Autoconf package contains programs for producing shell scripts that can automatically configure source code.
+build={
+	cd $PKG_NAME-$PKG_VERSION
+
+	./configure --prefix=/usr
+	
+	make -j$(nproc)
+	make DESTDIR=$PKG_INSTALL_DIR install
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

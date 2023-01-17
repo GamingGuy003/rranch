@@ -1,0 +1,35 @@
+name=vim
+version=9.0.0228
+real_version=0
+source=https://anduin.linuxfromscratch.org/LFS/vim-9.0.0228.tar.gz
+dependencies=[acl][glibc][perl][zlib]
+builddeps=[acl][glibc][perl][zlib][gawk][python3][tcl][findutils]
+build={
+	cd $PKG_NAME-$PKG_VERSION
+	echo '#define SYS_VIMRC_FILE "/etc/vimrc"' >> src/feature.h
+	./configure --prefix=/usr
+	make -j$(nproc)
+	make DESTDIR=$PKG_INSTALL_DIR install
+	ln -sv vim $PKG_INSTALL_DIR/usr/bin/vi
+	for L in  $PKG_INSTALL_DIR/usr/share/man/{,*/}man1/vim.1; do
+	ln -sv vim.1 $(dirname $L)/vi.1
+	done
+	mkdir -pv $PKG_INSTALL_DIR/usr/share/doc/
+	ln -sv ../vim/vim90/doc $PKG_INSTALL_DIR/usr/share/doc/vim-9.0.0228
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+	mkdir -pv $PKG_INSTALL_DIR/etc
+	cat > $PKG_INSTALL_DIR/etc/vimrc << "EOF"
+	" Begin /etc/vimrc
+	" Ensure defaults are set before customizing settings, not after
+	source $VIMRUNTIME/defaults.vim
+	let skip_defaults_vim=1
+	set nocompatible
+	set backspace=2
+	set mouse=
+	syntax on
+	if (&term == "xterm") || (&term == "putty")
+	set background=dark
+	endif
+	" End /etc/vimrc
+	EOF
+}

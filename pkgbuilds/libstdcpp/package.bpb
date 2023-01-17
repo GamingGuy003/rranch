@@ -1,0 +1,41 @@
+name=libstdcpp
+version=12.2.0
+real_version=0
+source=https://ftp.gnu.org/gnu/gcc/gcc-12.2.0/gcc-12.2.0.tar.xz
+dependencies=
+builddeps=[binutils][mpc][zstd][python3][expect][tar][diffutils][shadow][grep]
+crossdeps=[glibc][mpc][zlib]
+description=This is the standard C++ library.
+build={
+	cd gcc-$PKG_VERSION
+
+	case $(uname -m) in
+		x86_64)
+			sed -e '/m64=/s/lib64/lib/' \
+				-i.orig gcc/config/i386/t-linux64
+		;;
+	esac
+
+	mkdir -v build
+	cd       build
+
+	TGT=$(uname -m)-acacia-linux-gnu
+	echo "GCC TGT: $TGT"
+
+	../configure --prefix=/usr                         \
+		LD=ld                                          \
+		--build=$TGT                                   \
+		--host=$TGT                                    \
+		--target=$TGT                                  \
+		--enable-languages=c,c++                       \
+		--disable-multilib                             \
+    	--disable-bootstrap                            \
+        --with-system-zlib
+
+	make -j$(nproc)
+
+	make -C $(realpath $TGT/libgcc/) DESTDIR=$PKG_INSTALL_DIR install-shared
+	make -C $(realpath $TGT/libstdc++-v3/) DESTDIR=$PKG_INSTALL_DIR install
+
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

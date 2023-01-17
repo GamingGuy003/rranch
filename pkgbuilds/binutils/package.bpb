@@ -1,0 +1,38 @@
+name=binutils
+version=2.39
+real_version=0
+source=https://ftp.gnu.org/gnu/binutils/binutils-2.39.tar.xz
+extra_sources=
+dependencies=[glibc][zlib][bc]
+builddeps=[glibc][libelf][zlib][bc][dejagnu][bzip2][bison]
+description=The Binutils package contains a linker, an assembler, and other tools for handling object files.
+build={
+	cd $PKG_NAME-$PKG_VERSION
+	expect -c "spawn ls"
+
+	mkdir -v build
+	cd       build
+	
+	TGT=$(uname -m)-acacia-linux-gnu
+	echo "Binutils TGT: $TGT"
+
+	../configure --prefix=/usr       \
+	                    --sysconfdir=/etc   \
+	                    --build=$TGT        \
+	                    --host=$TGT         \
+	                    --target=$TGT       \
+	                    --enable-gold       \
+	                    --enable-ld=default \
+	                    --enable-plugins    \
+	                    --enable-shared     \
+	                    --disable-werror    \
+	                    --enable-64-bit-bfd \
+	                    --with-system-zlib
+	    make -j$(nproc) tooldir=/usr
+	    #TODO:
+	    #make -k check
+	    
+	    make tooldir=/usr DESTDIR=$PKG_INSTALL_DIR install
+	    rm -fv $PKG_INSTALL_DIR/usr/lib/lib{bfd,ctf,ctf-nobfd,opcodes}.a
+	    rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

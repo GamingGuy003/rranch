@@ -1,0 +1,21 @@
+name=pixman
+version=0.42.2
+real_version=0
+source=https://www.cairographics.org/releases/pixman-0.42.2.tar.gz
+dependencies=[libpng]
+builddeps=[libpng][meson][python3]
+description=The Pixman package contains a library that provides low-level pixel manipulation features such as image compositing and trapezoid rasterization. 
+build={
+	cd $PKG_NAME-$PKG_VERSION
+
+	mkdir build
+	cd    build
+
+	meson --prefix=/usr --buildtype=release
+
+	ninja
+
+	DESTDIR=$PKG_INSTALL_DIR ninja install
+
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

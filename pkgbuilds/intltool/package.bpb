@@ -1,0 +1,20 @@
+name=intltool
+version=0.51.0
+real_version=0
+source=https://launchpad.net/intltool/trunk/0.51.0/+download/intltool-0.51.0.tar.gz
+dependencies=[perl-xml-parser]
+builddeps=[perl-xml-parser]
+description=The Intltool is an internationalization tool used for extracting translatable strings from source files.
+build={
+	cd $PKG_NAME-$PKG_VERSION
+
+	sed -i 's:\\\${:\\\$\\{:' intltool-update.in
+
+	./configure --prefix=/usr
+
+	make -j$(nproc)
+	make DESTDIR=$PKG_INSTALL_DIR install
+	mkdir -pv $PKG_INSTALL_DIR/usr/share/doc/$PKG_NAME-$PKG_VERSION/
+	install -v -Dm644 doc/I18N-HOWTO $PKG_INSTALL_DIR/usr/share/doc/$PKG_NAME-$PKG_VERSION/I18N-HOWTO
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

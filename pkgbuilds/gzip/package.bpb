@@ -1,0 +1,16 @@
+name=gzip
+version=1.12
+real_version=0
+source=https://ftp.gnu.org/gnu/gzip/gzip-1.12.tar.xz
+dependencies=[glibc][less]
+builddeps=[glibc][less]
+description= The Gzip package contains programs for compressing and decompressing files.
+build={
+	cd $PKG_NAME-$PKG_VERSION
+
+	./configure --prefix=/usr
+
+	make -j$(nproc)
+	make DESTDIR=$PKG_INSTALL_DIR install
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

@@ -1,0 +1,27 @@
+name=mpfr
+version=4.1.1
+real_version=0
+source=https://ftp.gnu.org/gnu/mpfr/mpfr-4.1.1.tar.xz
+dependencies=[glibc][gmp]
+builddeps=[glibc][gmp]
+description=The MPFR package contains functions for multiple precision math.
+build={
+	cd $PKG_NAME-$PKG_VERSION
+
+	./configure --prefix=/usr        \
+				--disable-static     \
+				--enable-thread-safe \
+				--docdir=/usr/share/doc/$PKG_NAME-$PKG_VERSION
+
+	make -j$(nproc)
+	make html
+	
+	make install
+
+	make check
+
+	make DESTDIR=$PKG_INSTALL_DIR install
+	make DESTDIR=$PKG_INSTALL_DIR install-html
+
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

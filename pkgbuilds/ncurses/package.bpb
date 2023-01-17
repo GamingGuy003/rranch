@@ -1,0 +1,44 @@
+name=ncurses
+version=6.3
+real_version=0
+source=https://invisible-mirror.net/archives/ncurses/ncurses-6.3.tar.gz
+dependencies=[libstdcpp][glibc]
+builddeps=[libstdcpp][glibc]
+crossdeps=[glibc]
+description=The Ncurses package contains libraries for terminal-independent handling of character screens.
+build={
+	cd $PKG_NAME-$PKG_VERSION
+
+	./configure --prefix=/usr           \
+				--mandir=/usr/share/man \
+				--with-shared           \
+				--without-debug         \
+				--without-normal        \
+				--with-cxx-shared       \
+				--enable-pc-files       \
+				--enable-widec          \
+				--with-pkg-config-libdir=/usr/lib/pkgconfig
+
+	make -j$(nproc)
+
+	make DESTDIR=$PWD/dest install
+	
+	mkdir -pv dest/usr/lib/
+	mkdir -pv $PKG_INSTALL_DIR/usr/lib/pkgconfig
+	install -vm755 dest/usr/lib/libncursesw.so.$PKG_VERSION $PKG_INSTALL_DIR/usr/lib
+	rm -v  dest/usr/lib/libncursesw.so.$PKG_VERSION
+	cp -av dest/* $PKG_INSTALL_DIR/
+
+	mkdir -pv $PKG_INSTALL_DIR/usr/lib/pkgconfig
+	for lib in ncurses form panel menu ; do
+		rm -vf                    $PKG_INSTALL_DIR/usr/lib/lib${lib}.so
+		echo "INPUT(-l${lib}w)" > $PKG_INSTALL_DIR/usr/lib/lib${lib}.so
+		ln -sfv ${lib}w.pc        $PKG_INSTALL_DIR/usr/lib/pkgconfig/${lib}.pc
+	done
+
+	rm -vf                     $PKG_INSTALL_DIR/usr/lib/libcursesw.so
+	echo "INPUT(-lncursesw)" > $PKG_INSTALL_DIR/usr/lib/libcursesw.so
+	ln -sfv libncurses.so      $PKG_INSTALL_DIR/usr/lib/libcurses.so
+
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

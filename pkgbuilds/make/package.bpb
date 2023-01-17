@@ -1,0 +1,16 @@
+name=make
+version=4.3
+real_version=0
+source=https://ftp.gnu.org/gnu/make/make-4.3.tar.gz
+dependencies=[glibc]
+builddeps=[glibc]
+description=The Make package contains a program for controlling the generation of executables and other non-source files of a package from source files.
+build={
+	cd $PKG_NAME-$PKG_VERSION
+
+	./configure --prefix=/usr
+
+	make -j$(nproc)
+	make DESTDIR=$PKG_INSTALL_DIR install
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

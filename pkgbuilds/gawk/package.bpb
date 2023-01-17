@@ -1,0 +1,18 @@
+name=gawk
+version=5.1.1
+real_version=0
+source=https://ftp.gnu.org/gnu/gawk/gawk-5.1.1.tar.xz
+dependencies=[glibc][mpfr]
+builddeps=[glibc][mpfr]
+description=The Gawk package contains programs for manipulating text files.
+build={
+	cd $PKG_NAME-$PKG_VERSION
+
+	sed -i 's/extras//' Makefile.in
+	
+	./configure --prefix=/usr
+
+	make -j$(nproc)
+	make DESTDIR=$PKG_INSTALL_DIR install
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

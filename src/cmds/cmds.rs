@@ -1,0 +1,555 @@
+use std::{net::TcpStream, process::exit};
+
+use console::Style;
+use log::{debug, error, info, trace};
+
+use crate::{
+    coms::coms::write_and_read,
+    structs::{job::Job, pkgbuild::PKGBuildJson},
+};
+
+pub fn checkout_pkg(socket: &TcpStream, pkg_name: &str) {
+    info!("Trying to checkout {}...", pkg_name);
+    let cpkg_resp = match write_and_read(&socket, format!("CHECKOUT_PACKAGE {}", pkg_name)) {
+        Ok(msg) => msg,
+        Err(err) => {
+            error!("{}", err);
+            exit(-1)
+        }
+    };
+
+    if cpkg_resp == "INV_PKG_NAME" {
+        error!("Invalid package name!");
+        exit(-1)
+    } else if cpkg_resp == "INV_PKG" {
+        error!("The packagebuild is invalid!");
+        exit(-1)
+    }
+
+    let json: PKGBuildJson = match serde_json::from_str(&cpkg_resp) {
+        Ok(json) => {
+            debug!("Successfully received and deserialized json from server!");
+            json
+        }
+        Err(err) => {
+            error!("Failed deserializing json received from server: {}", err);
+            exit(-1)
+        }
+    };
+
+    json.create_workdir();
+    info!("Successfully checked out package {}", pkg_name);
+}
+
+pub fn submit_pkg(socket: &TcpStream, pkg_name: &str) {
+    let pkgbuild = PKGBuildJson::from_pkgbuild(pkg_name);
+    let json = serde_json::to_string(&pkgbuild).unwrap_or("".to_owned());
+    if json.len() == 0 {
+        error!("Failed to serialize struct! Check pkgbuild content...");
+        exit(-1)
+    }
+    let resp = match write_and_read(socket, format!("SUBMIT_PACKAGE {}", json)) {
+        Ok(resp) => {
+            debug!("Successfully sent submit message");
+            resp
+        }
+        Err(err) => {
+            error!("Failed to send json to server: {}", err);
+            exit(-1)
+        }
+    };
+    match resp.as_str() {
+        "INV_PKG_BUILD" => {
+            error!("Package submission rejected by server. The package build you attempted to submit is invalid.");
+            exit(-1)
+        }
+        "CMD_OK" => {
+            info!("Package submission accepted by server.");
+        }
+        msg => {
+            error!("Received unknown message from server: {}", msg);
+            exit(-1)
+        }
+    }
+}
+
+pub fn release_build(socket: &TcpStream, pkg_name: &str) {
+    let binding = match write_and_read(socket, format!("RELEASE_BUILD {}", pkg_name)) {
+        Ok(resp) => resp,
+        Err(err) => {
+            error!("Encountered error while communicating with server: {}", err);
+            exit(-1)
+        }
+    };
+    let resp = binding.as_str();
+
+    match resp {
+        "BUILD_REQ_SUBMIT_IMMEDIATELY" => info!("The package build was immediately handled by a ready build bot."),
+        "BUILD_REQ_QUEUED" => info!("No buildbot is currently available to handle the build request. Build request added to queue."),
+        "INV_PKG_NAME" => {
+            error!("Invalid package name!");
+            exit(-1)
+        },
+        "PKG_BUILD_DAMAGED" => {
+            error!("The packagebuild you attempted to queue is damaged.");
+            exit(-1)
+        },
+        msg => {
+            error!("Received invalid response from server: {}", msg);
+            exit(-1)
+        }
+    }
+}
+
+pub fn cross_build(socket: &TcpStream, pkg_name: &str) {
+    let binding = match write_and_read(socket, format!("CROSS_BUILD {}", pkg_name)) {
+        Ok(resp) => resp,
+        Err(err) => {
+            error!("Encountered error while communicating with server: {}", err);
+            exit(-1)
+        }
+    };
+    let resp = binding.as_str();
+
+    match resp {
+        "BUILD_REQ_SUBMIT_IMMEDIATELY" => info!("The package build was immediately handled by a ready build bot."),
+        "BUILD_REQ_QUEUED" => info!("No buildbot is currently available to handle the build request. Build request added to queue."),
+        "INV_PKG_NAME" => {
+            error!("Invalid package name!");
+            exit(-1)
+        },
+        "PKG_BUILD_DAMAGED" => {
+            error!("The packagebuild you attempted to queue is damaged.");
+            exit(-1)
+        },
+        msg => {
+            error!("Received invalid response from server: {}", msg);
+            exit(-1)
+        }
+    }
+}
+
+pub fn status(socket: &TcpStream) {
+    let bold = Style::new().bold();
+    let ital = Style::new().italic();
+
+    //running jobs
+    let resp = match write_and_read(socket, "RUNNING_JOBS_STATUS".to_owned()) {
+        Ok(resp) => {
+            debug!("Successfully fetched running jobs from server");
+            resp
+        }
+        Err(err) => {
+            error!("Encountered error while communicating with server: {}", err);
+            exit(-1)
+        }
+    };
+
+    let running = serde_json::from_str::<Vec<Job>>(&resp).unwrap_or(Vec::new());
+    trace!("Successfully received and parsed running jobs");
+    println!("{}", bold.apply_to("RUNNING JOBS"));
+    if running.len() == 0 {
+        println!("No jobs.");
+    } else {
+        println!(
+            "{}",
+            ital.apply_to(format!(
+                "{:<20} {:<15} {:<40} {:10}",
+                "NAME", "STATUS", "ID", "REQUESTED BY"
+            ))
+        );
+        for job in running {
+            println!("{}", job.to_string());
+        }
+    }
+
+    //completed jobs
+    let resp = match write_and_read(socket, "COMPLETED_JOBS_STATUS".to_owned()) {
+        Ok(resp) => {
+            debug!("Successfully fetched completed jobs from server");
+            resp
+        }
+        Err(err) => {
+            error!("Encountered error while communicating with server: {}", err);
+            exit(-1)
+        }
+    };
+
+    let completed = serde_json::from_str::<Vec<Job>>(&resp).unwrap_or(Vec::new());
+    trace!("Successfully received and parsed completed jobs");
+    println!("{}", bold.apply_to("COMPLETED JOBS"));
+    if completed.len() == 0 {
+        println!("No jobs.");
+    } else {
+        println!(
+            "{}",
+            ital.apply_to(format!(
+                "{:<20} {:<15} {:<40} {:10}",
+                "NAME", "STATUS", "ID", "REQUESTED BY"
+            ))
+        );
+        for job in completed {
+            println!("{}", job.to_string());
+        }
+    }
+
+    //queued jobs
+    let resp = match write_and_read(socket, "QUEUED_JOBS_STATUS".to_owned()) {
+        Ok(resp) => {
+            debug!("Successfully fetched queued jobs from server");
+            resp
+        }
+        Err(err) => {
+            error!("Encountered error while communicating with server: {}", err);
+            exit(-1)
+        }
+    };
+
+    let queued = serde_json::from_str::<Vec<Job>>(&resp).unwrap_or(Vec::new());
+    trace!("Successfully received and parsed queued jobs");
+    println!("{}", bold.apply_to("QUEUED JOBS"));
+    if queued.len() == 0 {
+        println!("No jobs.");
+    } else {
+        println!(
+            "{}",
+            ital.apply_to(format!(
+                "{:<20} {:<15} {:<40} {:10}",
+                "NAME", "STATUS", "ID", "REQUESTED BY"
+            ))
+        );
+        for job in queued {
+            println!("{}", job.to_string());
+        }
+    }
+}
+
+pub fn client_status(socket: &TcpStream) {
+    let bold = Style::new().bold();
+
+    let conn = match write_and_read(socket, "CONNECTED_CONTROLLERS".to_owned()) {
+        Ok(resp) => {
+            debug!("Retrieved connected controllers");
+            resp
+        }
+        Err(err) => {
+            error!("Error while requesting connected controllers: {}", err);
+            exit(-1)
+        }
+    };
+    let bots = match write_and_read(socket, "CONNECTED_BUILDBOTS".to_owned()) {
+        Ok(resp) => {
+            debug!("Retrieved connected buildbots");
+            resp
+        }
+        Err(err) => {
+            error!("Error while requesting connected buildbots: {}", err);
+            exit(-1)
+        }
+    };
+
+    debug!("Trying to deserialize...");
+    let connlist: Vec<String> = serde_json::from_str(conn.as_str()).unwrap_or(Vec::new());
+    debug!("Connlist was: {:?}", connlist);
+    let botslist: Vec<String> = serde_json::from_str(bots.as_str()).unwrap_or(Vec::new());
+    debug!("Botslist was: {:?}", botslist);
+
+    println!("{}", bold.apply_to("CONNECTED CLIENTS"));
+    if connlist.len() > 0 {
+        for c in connlist {
+            println!("{}", c);
+        }
+    } else {
+        println!("No clients connected.");
+    }
+
+    println!("{}", bold.apply_to("CONNECTED BUILDBOTS"));
+    if botslist.len() > 0 {
+        for b in botslist {
+            println!("{}", b);
+        }
+    } else {
+        println!("No buildbots connected.");
+    }
+}
+
+pub fn view_log(socket: &TcpStream, job_id: &str) {
+    let bold = Style::new().bold();
+
+    let log = match write_and_read(socket, format!("VIEW_LOG {}", job_id)) {
+        Ok(log) => {
+            debug!("Successfully received log msg for {}", job_id);
+            log
+        }
+        Err(err) => {
+            error!("Error while retrieving log msg: {}", err);
+            exit(-1)
+        }
+    };
+
+    let log_as_lines: Vec<String> = serde_json::from_str(log.as_str()).unwrap_or(Vec::new());
+    println!("{}", bold.apply_to(format!("Buildlog for {}:\n", job_id)));
+    if log_as_lines.len() > 0 {
+        for line in log_as_lines {
+            println!("{}", line);
+        }
+    } else {
+        println!("Log was empty.");
+    }
+}
+
+pub fn cancel_queued_job(socket: &TcpStream, job_id: &str) {
+    let resp = match write_and_read(socket, format!("CANCEL_QUEUED_JOB {}", job_id)) {
+        Ok(resp) => {
+            debug!(
+                "Successfully fetched response for CANCEL_QUEUD_JOB: {}",
+                resp
+            );
+            resp
+        }
+        Err(err) => {
+            error!("Error communicating with server: {}", err);
+            exit(-1)
+        }
+    };
+
+    match resp.as_str() {
+        "INV_JOB_ID" => {
+            error!("No such job queued");
+            exit(-1)
+        }
+        "JOB_CANCELED" => info!("Successfully canceled job {}", job_id),
+        msg => {
+            error!("Received unknown response: {}", msg);
+            exit(-1)
+        }
+    }
+}
+
+pub fn clear_completed_jobs(socket: &TcpStream) {
+    let resp = match write_and_read(socket, "CLEAR_COMPLETED_JOBS".to_owned()) {
+        Ok(resp) => {
+            debug!(
+                "Successfully fetched response for CLEAR_COMPLETED_JOBS: {}",
+                resp
+            );
+            resp
+        }
+        Err(err) => {
+            error!("Error communicating with server: {}", err);
+            exit(-1)
+        }
+    };
+
+    if resp.as_str() != "JOBS_CLEARED" {
+        error!("Failed to clear completed jobs: {}", resp);
+        exit(-1)
+    } else {
+        info!("Successfully cleared jobs");
+    }
+}
+
+pub fn cancel_all_jobs(socket: &TcpStream) {
+    let resp = match write_and_read(socket, "CANCEL_ALL_QUEUED_JOBS".to_owned()) {
+        Ok(resp) => {
+            debug!(
+                "Successfully fetched response for CANCEL_ALL_QUEUD_JOBS: {}",
+                resp
+            );
+            resp
+        }
+        Err(err) => {
+            error!("Error communicating with server: {}", err);
+            exit(-1)
+        }
+    };
+
+    if resp.as_str() != "JOBS_CANCELED" {
+        error!("Failed to cancel all queued jobs: {}", resp);
+        exit(-1)
+    } else {
+        info!("Successfully cancelled all queued jobs");
+    }
+}
+
+pub fn managed_pkgs(socket: &TcpStream) {
+    let bold = Style::new().bold();
+
+    let resp = match write_and_read(socket, "MANAGED_PACKAGES".to_owned()) {
+        Ok(resp) => resp,
+        Err(err) => {
+            error!("Error communicating with server: {}", err);
+            exit(-1)
+        }
+    };
+    let mut pkgs: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or(Vec::new());
+    debug!("Successfully fetched managed pkgs from server: {:?}", pkgs);
+
+    println!("{}", bold.apply_to("Managed packages:"));
+    if pkgs.len() > 0 {
+        pkgs.sort();
+        print_vec_cols(pkgs);
+    } else {
+        println!("No managed packages on server");
+    }
+}
+
+pub fn managed_pkg_builds(socket: &TcpStream) {
+    let bold = Style::new().bold();
+
+    let resp = match write_and_read(socket, "MANAGED_PKGBUILDS".to_owned()) {
+        Ok(resp) => resp,
+        Err(err) => {
+            error!("Error communicating with server: {}", err);
+            exit(-1)
+        }
+    };
+    let mut pkgb: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or(Vec::new());
+    debug!(
+        "Successfully fetched managed pkgbuilds from server: {:?}",
+        pkgb
+    );
+
+    println!("{}", bold.apply_to("Managed packageuilds:"));
+    if pkgb.len() > 0 {
+        pkgb.sort();
+        print_vec_cols(pkgb);
+    } else {
+        println!("No managed packagebuilds on server");
+    }
+}
+
+pub fn diff_pkgs(socket: &TcpStream) {
+    let red = Style::new().red();
+    let green = Style::new().green();
+    let bold = Style::new().bold();
+
+    let resp = match write_and_read(socket, "MANAGED_PACKAGES".to_owned()) {
+        Ok(resp) => resp,
+        Err(err) => {
+            error!("Error communicating with server: {}", err);
+            exit(-1)
+        }
+    };
+    let pkgs: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or(Vec::new());
+    debug!("Successfully fetched managed pkgs from server: {:?}", pkgs);
+
+    let resp = match write_and_read(socket, "MANAGED_PKGBUILDS".to_owned()) {
+        Ok(resp) => resp,
+        Err(err) => {
+            error!("Error communicating with server: {}", err);
+            exit(-1)
+        }
+    };
+    let mut pkgb: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or(Vec::new());
+    debug!(
+        "Successfully fetched managed pkgbuilds from server: {:?}",
+        pkgb
+    );
+    pkgb.sort();
+
+    let mut diff = Vec::new();
+    for pbuild in pkgb {
+        if pkgs.contains(&pbuild) {
+            diff.push(format!("{}", green.apply_to(pbuild)));
+        } else {
+            diff.push(format!("{}", red.apply_to(pbuild)));
+        }
+    }
+
+    println!("{}", bold.apply_to("Package / Packageuild diff:"));
+    if diff.len() > 0 {
+        print_vec_cols(diff);
+    } else {
+        println!("No managed packagebuilds on server");
+    }
+}
+
+fn print_vec_cols(vec: Vec<String>) {
+    let elem_width = vec.iter().fold(0, |max, s| max.max(s.len())) + 5;
+    let colcount = (termion::terminal_size().unwrap_or((0, 0)).0 / elem_width as u16) as usize;
+    for (idx, val) in vec.into_iter().enumerate() {
+        if idx % colcount == 0 && idx != 0 {
+            println!();
+        }
+        print!("{:<1$}", val, elem_width);
+    }
+    println!();
+}
+
+pub fn view_sys_log(socket: &TcpStream) {
+    let bold = Style::new().bold();
+
+    let log = match write_and_read(socket, "VIEW_SYS_EVENTS".to_owned()) {
+        Ok(log) => {
+            debug!("Successfully received sys log from master");
+            log
+        }
+        Err(err) => {
+            error!("Error while retrieving sys log: {}", err);
+            exit(-1)
+        }
+    };
+    let log_as_lines: Vec<String> = serde_json::from_str(log.as_str()).unwrap_or(Vec::new());
+    println!("{}", bold.apply_to("Syslog:"));
+    if log_as_lines.len() > 0 {
+        for line in log_as_lines {
+            println!("{}", line);
+        }
+    } else {
+        println!("Syslog is empty.");
+    }
+}
+
+pub fn view_tree(socket: &TcpStream, pkg_name: &str) {
+    let bold = Style::new().bold();
+
+    let resp = match write_and_read(socket, format!("GET_TREE_STR {}", pkg_name)) {
+        Ok(resp) => resp,
+        Err(err) => {
+            error!(
+                "Error while fetching dependency tree for {}:{}",
+                pkg_name, err
+            );
+            exit(-1)
+        }
+    };
+    print!(
+        "{}\n{}",
+        bold.apply_to(format!("Dependency tree for {}:", pkg_name)),
+        resp.trim_matches(|c| c == '"')
+            .replace("\\n", "\n")
+            .replace("\\t", "\t")
+    );
+}
+
+pub fn rebuild_dependers(socket: &TcpStream, pkg_name: &str) {
+    let resp = match write_and_read(socket, format!("REBUILD_DEPENDERS {}", pkg_name)) {
+        Ok(resp) => {
+            debug!("Successfully requested dependers rebuild for {}", pkg_name);
+            resp
+        }
+        Err(err) => {
+            error!("Error while communicating with server: {}", err);
+            exit(-1)
+        }
+    };
+
+    match resp.as_str() {
+        "INV_PKG_NAME" => {
+            error!("No such package available");
+            exit(-1)
+        }
+        "CIRCULAR_DEPENDENCY" => {
+            error!("Circular dependency detected. The requested batch build contains a circular dependency and could not be submitted.");
+            exit(-1)
+        }
+        "BATCH_QUEUED" => {
+            info!("Successfully queued batch");
+        }
+        msg => {
+            error!("Received unknown response from server: {}", msg);
+            exit(-1)
+        }
+    }
+}

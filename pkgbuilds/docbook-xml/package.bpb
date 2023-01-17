@@ -1,0 +1,92 @@
+name=docbook-xml
+version=4.5
+real_version=0
+source=https://www.docbook.org/xml/4.5/docbook-xml-4.5.zip
+dependencies=[libxml2][sgml-common][unzip]
+builddeps=[libxml2][sgml-common][unzip]
+description=The DocBook-4.5 XML DTD-4.5 package contains document type definitions for verification of XML data files against the DocBook rule set.
+build={
+	mkdir $PKG_NAME-$PKG_VERSION
+	cd $PKG_NAME-$PKG_VERSION
+	unzip ../$PKG_NAME-$PKG_VERSION.zip
+
+	install -v -d -m755 $PKG_INSTALL_DIR/usr/share/xml/docbook/xml-dtd-$PKG_VERSION
+	install -v -d -m755 $PKG_INSTALL_DIR/etc/xml
+	chown -R root:root .
+	cp -v -af docbook.cat *.dtd ent/ *.mod $PKG_INSTALL_DIR/usr/share/xml/docbook/xml-dtd-$PKG_VERSION
+
+
+	if [ ! -e $PKG_INSTALL_DIR/etc/xml/docbook ]; then
+    	xmlcatalog --noout --create $PKG_INSTALL_DIR/etc/xml/docbook
+	fi
+
+	xmlcatalog --noout --add "public" "-//OASIS//DTD DocBook XML V$PKG_VERSION//EN" \
+	    "http://www.oasis-open.org/docbook/xml/$PKG_VERSION/docbookx.dtd" $PKG_INSTALL_DIR/etc/xml/docbook
+
+	xmlcatalog --noout --add "public" "-//OASIS//DTD DocBook XML CALS Table Model V$PKG_VERSION//EN" \
+	    "file:///usr/share/xml/docbook/xml-dtd-$PKG_VERSION/calstblx.dtd" $PKG_INSTALL_DIR/etc/xml/docbook
+
+	xmlcatalog --noout --add "public" "-//OASIS//DTD XML Exchange Table Model 19990315//EN" \
+	    "file:///usr/share/xml/docbook/xml-dtd-$PKG_VERSION/soextblx.dtd" $PKG_INSTALL_DIR/etc/xml/docbook
+
+	xmlcatalog --noout --add "public" "-//OASIS//ELEMENTS DocBook XML Information Pool V$PKG_VERSION//EN" \
+	    "file:///usr/share/xml/docbook/xml-dtd-$PKG_VERSION/dbpoolx.mod" $PKG_INSTALL_DIR/etc/xml/docbook
+
+	xmlcatalog --noout --add "public" "-//OASIS//ELEMENTS DocBook XML Document Hierarchy V$PKG_VERSION//EN" \
+	    "file:///usr/share/xml/docbook/xml-dtd-$PKG_VERSION/dbhierx.mod" $PKG_INSTALL_DIR/etc/xml/docbook
+
+	xmlcatalog --noout --add "public" "-//OASIS//ELEMENTS DocBook XML HTML Tables V$PKG_VERSION//EN" \
+	    "file:///usr/share/xml/docbook/xml-dtd-$PKG_VERSION/htmltblx.mod" $PKG_INSTALL_DIR/etc/xml/docbook
+
+	xmlcatalog --noout --add "public" "-//OASIS//ENTITIES DocBook XML Notations V$PKG_VERSION//EN" \
+	    "file:///usr/share/xml/docbook/xml-dtd-$PKG_VERSION/dbnotnx.mod" $PKG_INSTALL_DIR/etc/xml/docbook
+
+	xmlcatalog --noout --add "public" "-//OASIS//ENTITIES DocBook XML Character Entities V$PKG_VERSION//EN" \
+	    "file:///usr/share/xml/docbook/xml-dtd-$PKG_VERSION/dbcentx.mod" $PKG_INSTALL_DIR/etc/xml/docbook
+
+	xmlcatalog --noout --add "public" "-//OASIS//ENTITIES DocBook XML Additional General Entities V$PKG_VERSION//EN" \
+	    "file:///usr/share/xml/docbook/xml-dtd-$PKG_VERSION/dbgenent.mod" $PKG_INSTALL_DIR/etc/xml/docbook
+
+	xmlcatalog --noout --add "rewriteSystem" "http://www.oasis-open.org/docbook/xml/$PKG_VERSION" \
+	    "file:///usr/share/xml/docbook/xml-dtd-$PKG_VERSION" $PKG_INSTALL_DIR/etc/xml/docbook
+
+	xmlcatalog --noout --add "rewriteURI" "http://www.oasis-open.org/docbook/xml/$PKG_VERSION" \
+	    "file:///usr/share/xml/docbook/xml-dtd-$PKG_VERSION" $PKG_INSTALL_DIR/etc/xml/docbook
+
+
+	if [ ! -e $PKG_INSTALL_DIR/etc/xml/catalog ]; then
+	    xmlcatalog --noout --create $PKG_INSTALL_DIR/etc/xml/catalog
+	fi
+
+	xmlcatalog --noout --add "delegatePublic" "-//OASIS//ENTITIES DocBook XML" \
+	    "file:///etc/xml/docbook" $PKG_INSTALL_DIR/etc/xml/catalog
+
+	xmlcatalog --noout --add "delegatePublic" "-//OASIS//DTD DocBook XML" \
+	    "file:///etc/xml/docbook" $PKG_INSTALL_DIR/etc/xml/catalog
+
+	xmlcatalog --noout --add "delegateSystem" "http://www.oasis-open.org/docbook/" \
+	    "file:///etc/xml/docbook" $PKG_INSTALL_DIR/etc/xml/catalog
+
+	xmlcatalog --noout --add "delegateURI" "http://www.oasis-open.org/docbook/" \
+	    "file:///etc/xml/docbook" $PKG_INSTALL_DIR/etc/xml/catalog
+
+	for DTDVERSION in 4.1.2 4.2 4.3 4.4
+	do
+	  xmlcatalog --noout --add "public" "-//OASIS//DTD DocBook XML V$DTDVERSION//EN" \
+	    "http://www.oasis-open.org/docbook/xml/$DTDVERSION/docbookx.dtd" $PKG_INSTALL_DIR/etc/xml/docbook
+
+	  xmlcatalog --noout --add "rewriteSystem" "http://www.oasis-open.org/docbook/xml/$DTDVERSION" \
+	    "file:///usr/share/xml/docbook/xml-dtd-$PKG_VERSION" $PKG_INSTALL_DIR/etc/xml/docbook
+
+	  xmlcatalog --noout --add "rewriteURI" "http://www.oasis-open.org/docbook/xml/$DTDVERSION" \
+	    "file:///usr/share/xml/docbook/xml-dtd-$PKG_VERSION" $PKG_INSTALL_DIR/etc/xml/docbook
+
+	  xmlcatalog --noout --add "delegateSystem" "http://www.oasis-open.org/docbook/xml/$DTDVERSION/" \
+	    "file:///etc/xml/docbook" $PKG_INSTALL_DIR/etc/xml/catalog
+
+	  xmlcatalog --noout --add "delegateURI" "http://www.oasis-open.org/docbook/xml/$DTDVERSION/" \
+	    "file:///etc/xml/docbook" $PKG_INSTALL_DIR/etc/xml/catalog
+	done
+
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}

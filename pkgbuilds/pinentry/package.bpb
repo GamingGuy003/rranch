@@ -1,0 +1,18 @@
+name=pinentry
+version=1.2.0
+real_version=0
+source=https://www.gnupg.org/ftp/gcrypt/pinentry/pinentry-1.2.0.tar.bz2
+dependencies=[libassuan][libgpg-error]
+builddeps=[libassuan][libgpg-error]
+description=The PIN-Entry package contains a collection of simple PIN or pass-phrase entry dialogs
+build={
+	cd $PKG_NAME-$PKG_VERSION
+
+	./configure --prefix=/usr --enable-pinentry-tty
+
+	make -j$(nproc)
+
+	make DESTDIR=$PKG_INSTALL_DIR install
+
+	rm -fv $PKG_INSTALL_DIR/usr/share/info/dir
+}
