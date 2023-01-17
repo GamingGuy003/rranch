@@ -1,7 +1,7 @@
 use cmds::cmds::{
     cancel_all_jobs, cancel_queued_job, checkout_pkg, clear_completed_jobs, client_status,
-    cross_build, diff_pkgs, managed_pkg_builds, managed_pkgs, rebuild_dependers, release_build,
-    status, submit_pkg, view_log, view_sys_log, view_tree,
+    submit_build, diff_pkgs, managed_pkg_builds, managed_pkgs, rebuild_dependers,
+    status, submit_pkg, view_log, view_sys_log, view_tree, submit_solution,
 };
 use conn::conn::connect;
 use console::Style;
@@ -135,9 +135,9 @@ fn main() -> std::io::Result<()> {
             ("--help", _) => argparser.help(),
             ("--debugshell", _) => run_dbs(&socket),
             ("--checkout", name) => checkout_pkg(&socket, &name.unwrap_or("".to_owned())),
-            ("--submit", name) => submit_pkg(&socket, &name.unwrap_or("".to_owned())),
-            ("--releasebuild", name) => release_build(&socket, &name.unwrap_or("".to_owned())),
-            ("--crossbuild", name) => cross_build(&socket, &name.unwrap_or("".to_owned())),
+            ("--submit", filename) => submit_pkg(&socket, &filename.unwrap_or("".to_owned())),
+            ("--releasebuild", name) => submit_build(&socket, &name.unwrap_or("".to_owned()), false),
+            ("--crossbuild", name) => submit_build(&socket, &name.unwrap_or("".to_owned()), true),
             ("--viewlog", job_id) => view_log(&socket, &job_id.unwrap_or("".to_owned())),
             ("--status", _) => status(&socket),
             ("--clientstatus", _) => client_status(&socket),
@@ -149,9 +149,9 @@ fn main() -> std::io::Result<()> {
             ("--differencepkgs", _) => diff_pkgs(&socket),
             ("--viewsyslog", _) => view_sys_log(&socket),
             ("--viewtree", name) => view_tree(&socket, &name.unwrap_or("".to_owned())),
-            ("--rebuilddependers", name) => {
-                rebuild_dependers(&socket, &name.unwrap_or("".to_owned()))
-            }
+            ("--rebuilddependers", name) => rebuild_dependers(&socket, &name.unwrap_or("".to_owned())),
+            ("--releasebuildsol", filename) => submit_solution(&socket, &filename.unwrap_or("".to_owned()), false),
+            ("--crossbuildsol", filename) => submit_solution(&socket, &filename.unwrap_or("".to_owned()), true),
             _ => debug!(
                 "No arg found; This is likely a bug or this argument has not been implemented yet."
             ),

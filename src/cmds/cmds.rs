@@ -41,8 +41,8 @@ pub fn checkout_pkg(socket: &TcpStream, pkg_name: &str) {
     info!("Successfully checked out package {}", pkg_name);
 }
 
-pub fn submit_pkg(socket: &TcpStream, pkg_name: &str) {
-    let pkgbuild = PKGBuildJson::from_pkgbuild(pkg_name);
+pub fn submit_pkg(socket: &TcpStream, filename: &str) {
+    let pkgbuild = PKGBuildJson::from_pkgbuild(filename);
     let json = serde_json::to_string(&pkgbuild).unwrap_or("".to_owned());
     if json.len() == 0 {
         error!("Failed to serialize struct! Check pkgbuild content...");
@@ -73,36 +73,15 @@ pub fn submit_pkg(socket: &TcpStream, pkg_name: &str) {
     }
 }
 
-pub fn release_build(socket: &TcpStream, pkg_name: &str) {
-    let binding = match write_and_read(socket, format!("RELEASE_BUILD {}", pkg_name)) {
-        Ok(resp) => resp,
-        Err(err) => {
-            error!("Encountered error while communicating with server: {}", err);
-            exit(-1)
-        }
-    };
-    let resp = binding.as_str();
-
-    match resp {
-        "BUILD_REQ_SUBMIT_IMMEDIATELY" => info!("The package build was immediately handled by a ready build bot."),
-        "BUILD_REQ_QUEUED" => info!("No buildbot is currently available to handle the build request. Build request added to queue."),
-        "INV_PKG_NAME" => {
-            error!("Invalid package name!");
-            exit(-1)
-        },
-        "PKG_BUILD_DAMAGED" => {
-            error!("The packagebuild you attempted to queue is damaged.");
-            exit(-1)
-        },
-        msg => {
-            error!("Received invalid response from server: {}", msg);
-            exit(-1)
-        }
+pub fn submit_build(socket: &TcpStream, pkg_name: &str, cb: bool) {
+    let cmd;
+    if cb {
+        cmd = "CROSS_BUILD";
+    } else {
+        cmd = "RELEASE_BUILD";
     }
-}
 
-pub fn cross_build(socket: &TcpStream, pkg_name: &str) {
-    let binding = match write_and_read(socket, format!("CROSS_BUILD {}", pkg_name)) {
+    let binding = match write_and_read(socket, format!("{} {}", cmd, pkg_name)) {
         Ok(resp) => resp,
         Err(err) => {
             error!("Encountered error while communicating with server: {}", err);
@@ -552,4 +531,51 @@ pub fn rebuild_dependers(socket: &TcpStream, pkg_name: &str) {
             exit(-1)
         }
     }
+}
+
+pub fn submit_solution(socket: &TcpStream, filename: &str, cb: bool) {
+    let cmd;
+    if cb {
+        cmd = "SUBMIT_SOLUTION_CB";
+    } else {
+        cmd = "SUBMIT_SOLUTION_RB";
+    }
+
+    let file = match std::fs::read_to_string(filename) {
+        Ok(file) => {
+            debug!("Successfully read sol file {}", filename);
+            file
+        }
+        Err(err) => {
+            error!("Error reading sol file: {}", err);
+            exit(-1)
+        }
+    };
+
+    let mut ret: Vec<Vec<String>> = Vec::new();
+    file.lines().for_each(|line| ret.push(line.split(";").into_iter().map(|value| value.to_owned()).collect()));
+    let resp = match write_and_read(socket, format!("{} {:?}", cmd, ret)) {
+        Ok(resp) => {
+            debug!("Server responded with: {}", resp);
+            resp
+        },
+        Err(err) => {
+            error!("Error while communicating with server: {}", err);
+            exit(-1)
+            }
+    };
+
+    match resp.as_str() {
+        s if s.starts_with("PKG_BUILD_MISSING") => {
+            error!("Missing packagebuild on server: {}", s.splitn(2, " ").collect::<Vec<&str>>()[1]);
+            exit(-1)
+        },
+        "BATCH_QUEUED" => info!("Successfully queued solutionfile!"),
+        msg => {
+            error!("Received unknown response from server: {}", msg);
+            exit(-1)
+        }
+    }
+
+    
 }
