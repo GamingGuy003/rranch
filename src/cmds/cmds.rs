@@ -553,29 +553,37 @@ pub fn submit_solution(socket: &TcpStream, filename: &str, cb: bool) {
     };
 
     let mut ret: Vec<Vec<String>> = Vec::new();
-    file.lines().for_each(|line| ret.push(line.split(";").into_iter().map(|value| value.to_owned()).collect()));
+    file.lines().for_each(|line| {
+        ret.push(
+            line.split(";")
+                .into_iter()
+                .map(|value| value.to_owned())
+                .collect(),
+        )
+    });
     let resp = match write_and_read(socket, format!("{} {:?}", cmd, ret)) {
         Ok(resp) => {
             debug!("Server responded with: {}", resp);
             resp
-        },
+        }
         Err(err) => {
             error!("Error while communicating with server: {}", err);
             exit(-1)
-            }
+        }
     };
 
     match resp.as_str() {
         s if s.starts_with("PKG_BUILD_MISSING") => {
-            error!("Missing packagebuild on server: {}", s.splitn(2, " ").collect::<Vec<&str>>()[1]);
+            error!(
+                "Missing packagebuild on server: {}",
+                s.splitn(2, " ").collect::<Vec<&str>>()[1]
+            );
             exit(-1)
-        },
+        }
         "BATCH_QUEUED" => info!("Successfully queued solutionfile!"),
         msg => {
             error!("Received unknown response from server: {}", msg);
             exit(-1)
         }
     }
-
-    
 }
