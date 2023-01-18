@@ -40,7 +40,7 @@ impl PKGBuildJson {
             for src in self.extra_sources.clone() {
                 xsrc = format!("{}[{}]", xsrc, src);
             }
-            bpb.push(format!("extra_sources={}", xsrc));
+            bpb.push(format!("{}", xsrc));
         }
 
         if self.dependencies.len() > 0 {
