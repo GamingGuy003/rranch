@@ -1,10 +1,10 @@
 #master config
 [master]
-addr = ""
+addr = "localhost"
 port = 27015
-authkey = ""
+authkey = "monn"
 
 #client config
 [client]
 name = "rusttop"
-loglevel = "info"
+loglevel = "trac"

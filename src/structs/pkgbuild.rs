@@ -10,10 +10,10 @@ pub struct PKGBuildJson {
     version: String,
     real_version: String,
     //optional fields
-    dependencies: String,
-    build_dependencies: String,
-    cross_dependencies: String,
     source: String,
+    dependencies: Vec<String>,
+    build_dependencies: Vec<String>,
+    cross_dependencies: Vec<String>,
     extra_sources: Vec<String>,
     description: String,
     build_script: Vec<String>,
@@ -40,28 +40,45 @@ impl PKGBuildJson {
             for src in self.extra_sources.clone() {
                 xsrc = format!("{}[{}]", xsrc, src);
             }
-            bpb.push(format!("{}", xsrc));
+            bpb.push(xsrc);
         }
 
         if self.dependencies.len() > 0 {
-            bpb.push(format!("dependencies={}", self.dependencies));
+            let mut dependencies = "dependencies=".to_owned();
+            for dependency in self.dependencies.clone() {
+                dependencies = format!("{}[{}]", dependencies, dependency);
+            }
+            bpb.push(dependencies);
         }
 
         if self.build_dependencies.len() > 0 {
-            bpb.push(format!("builddeps={}", self.build_dependencies));
+            let mut build_dependencies = "builddeps=".to_owned();
+            for build_dependency in self.build_dependencies.clone() {
+                build_dependencies = format!("{}[{}]", build_dependencies, build_dependency);
+            }
+            bpb.push(build_dependencies);
         }
 
         if self.cross_dependencies.len() > 0 {
-            bpb.push(format!("crossdeps={}", self.cross_dependencies));
+            let mut cross_dependencies = "crossdeps=".to_owned();
+            for cross_dependency in self.build_dependencies.clone() {
+                cross_dependencies = format!("{}[{}]", cross_dependencies, cross_dependency);
+            }
+            bpb.push(cross_dependencies);
         }
 
         if self.build_script.len() > 0 {
-            bpb.push(format!(
-                "build={{\n\t{}\n}}",
-                self.build_script.join("\n\t")
-            ));
+            let mut build = "build={".to_owned();
+            for build_line in self.build_script.clone() {
+                if build_line.starts_with("\t") {
+                    build = format!("{}\n{}", build, build_line);
+                } else {
+                    build = format!("{}\n\t{}", build, build_line);
+                }
+            }
+            build = format!("{}\n}}", build);
+            bpb.push(build);
         }
-
         bpb
     }
 
@@ -85,9 +102,9 @@ impl PKGBuildJson {
             name: "".to_owned(),
             version: "".to_owned(),
             real_version: "".to_owned(),
-            dependencies: "".to_owned(),
-            build_dependencies: "".to_owned(),
-            cross_dependencies: "".to_owned(),
+            dependencies: Vec::new(),
+            build_dependencies: Vec::new(),
+            cross_dependencies: Vec::new(),
             source: "".to_owned(),
             extra_sources: Vec::new(),
             description: "".to_owned(),
@@ -121,21 +138,48 @@ impl PKGBuildJson {
                             .split("[")
                             .collect::<Vec<&str>>()
                             .into_iter()
-                            .filter(|part| !part.is_empty())
                             .map(|part| part.trim_end_matches(']'))
                             .map(|part| part.to_string())
+                            .filter(|part| !part.is_empty())
                             .collect()
                     }
-                    "dependencies" => ret.dependencies = split[1].to_owned(),
-                    "builddeps" => ret.build_dependencies = split[1].to_owned(),
-                    "crossdeps" => ret.cross_dependencies = split[1].to_owned(),
+                    "dependencies" => {
+                        ret.dependencies = split[1]
+                            .split("[")
+                            .collect::<Vec<&str>>()
+                            .into_iter()
+                            .map(|part| part.trim_end_matches(']'))
+                            .map(|part| part.to_string())
+                            .filter(|part| !part.is_empty())
+                            .collect()
+                    },
+                    "builddeps" => {
+                        ret.build_dependencies = split[1]
+                            .split("[")
+                            .collect::<Vec<&str>>()
+                            .into_iter()
+                            .map(|part| part.trim_end_matches(']'))
+                            .map(|part| part.to_string())
+                            .filter(|part| !part.is_empty())
+                            .collect()
+                    },
+                    "crossdeps" => {
+                        ret.cross_dependencies = split[1]
+                            .split("[")
+                            .collect::<Vec<&str>>()
+                            .into_iter()
+                            .map(|part| part.trim_end_matches(']'))
+                            .map(|part| part.to_string())
+                            .filter(|part| !part.is_empty())
+                            .collect()
+                    },
                     "build" => build = true,
                     _ => warn!("Found invalid key at line {}", i),
                 }
             }
             i += 1;
         }
-
+        println!("{}", serde_json::to_string_pretty(&ret).unwrap());
         ret
     }
 
@@ -145,13 +189,16 @@ impl PKGBuildJson {
             version: "0".to_owned(),
             real_version: "0".to_owned(),
             description: " ".to_owned(),
-            dependencies: "[]".to_owned(),
-            build_dependencies: "[]".to_owned(),
-            cross_dependencies: "[]".to_owned(),
+            dependencies: Vec::new(),
+            build_dependencies: Vec::new(),
+            cross_dependencies: Vec::new(),
             source: " ".to_owned(),
             extra_sources: Vec::new(),
             build_script: Vec::new(),
         };
+        ret.dependencies.push(String::new());
+        ret.build_dependencies.push(String::new());
+        ret.cross_dependencies.push(String::new());
         ret.extra_sources.push(String::new());
         ret.build_script.push("cd $PKG_NAME-$PKG_VERSION".to_owned());
         ret.build_script.push("make DESTDIR=$PKG_INSTALL_DIR install".to_owned());
