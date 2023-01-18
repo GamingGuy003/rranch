@@ -153,7 +153,7 @@ impl PKGBuildJson {
             build_script: Vec::new(),
         };
         ret.extra_sources.push(String::new());
-        ret.build_script.push("".to_owned());
+        ret.build_script.push("cd $PKG_NAME-$PKG_VERSION".to_owned());
         ret
     }
 
