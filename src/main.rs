@@ -58,7 +58,7 @@ fn main() -> std::io::Result<()> {
 
     //get arg array and connect
     let funcs = argparser.funcs();
-    let yellow = Style::new().yellow();
+    let _yellow = Style::new().yellow();
     let socket = connect(
         conf.master
             .as_ref()
