@@ -1,7 +1,7 @@
 use cmds::cmds::{
     cancel_all_jobs, cancel_queued_job, checkout_pkg, clear_completed_jobs, client_status,
     diff_pkgs, managed_pkg_builds, managed_pkgs, rebuild_dependers, status, submit_build,
-    submit_pkg, submit_solution, view_log, view_sys_log, view_tree, create_template,
+    submit_pkg, submit_solution, view_log, view_sys_log, view_tree, create_template, watch_jobs,
 };
 use conn::conn::connect;
 use console::Style;
@@ -140,6 +140,7 @@ fn main() -> std::io::Result<()> {
             ("--crossbuild", name) => submit_build(&socket, &name.unwrap_or("".to_owned()), true),
             ("--viewlog", job_id) => view_log(&socket, &job_id.unwrap_or("".to_owned())),
             ("--status", _) => status(&socket),
+            ("--watch", interval) => watch_jobs(&socket, &interval.unwrap_or("".to_owned())),
             ("--clientstatus", _) => client_status(&socket),
             ("--clearjobs", _) => clear_completed_jobs(&socket),
             ("--cancelalljobs", _) => cancel_all_jobs(&socket),

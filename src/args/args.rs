@@ -101,6 +101,12 @@ impl ArgParser {
                     None,
                 ),
                 Arg::new(
+                    "w",
+                    "watchjobs",
+                    "Watches the joblist in the given interval in seconds.",
+                    Some("interval".to_owned()),
+                ),
+                Arg::new(
                     "cs",
                     "clientstatus",
                     "Requests a list of clients connected to the server.",

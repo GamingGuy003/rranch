@@ -1,7 +1,7 @@
-use std::{net::TcpStream, process::exit};
+use std::{net::TcpStream, process::exit, time::Duration};
 
 use console::Style;
-use log::{debug, error, info, trace};
+use log::{debug, error, info, trace, warn};
 
 use crate::{
     coms::coms::write_and_read,
@@ -590,4 +590,12 @@ pub fn submit_solution(socket: &TcpStream, filename: &str, cb: bool) {
 
 pub fn create_template() {
     PKGBuildJson::new_template().create_workdir();
+}
+
+pub fn watch_jobs(socket: &TcpStream, interval: &str) {
+    let n = interval.parse::<u64>().unwrap_or_else(|_| { warn!("Failed converting interval to u64; falling back to 5 secs");  0 });
+    loop {
+        status(socket);
+        std::thread::sleep(Duration::from_secs(n));
+    }
 }
