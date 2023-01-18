@@ -85,19 +85,17 @@ fn main() -> std::io::Result<()> {
             .as_str(),
         format!(
             "{}",
-            yellow.apply_to(
-                conf.client
-                    .as_ref()
-                    .unwrap_or(&Client {
-                        name: None,
-                        r#type: None,
-                        loglevel: None
-                    })
-                    .name
-                    .clone()
-                    .unwrap_or("a-rranch-client".to_owned())
-                    .clone()
-            )
+            conf.client
+                .as_ref()
+                .unwrap_or(&Client {
+                    name: None,
+                    r#type: None,
+                    loglevel: None
+                })
+                .name
+                .clone()
+                .unwrap_or("a-rranch-client".to_owned())
+                .clone()
         )
         .as_str(),
         conf.master
