@@ -2,6 +2,7 @@ use std::{net::TcpStream, process::exit, time::Duration};
 
 use console::Style;
 use log::{debug, error, info, trace, warn};
+use termion::{clear, cursor};
 
 use crate::{
     coms::coms::write_and_read,
@@ -594,8 +595,13 @@ pub fn create_template() {
 
 pub fn watch_jobs(socket: &TcpStream, interval: &str) {
     let n = interval.parse::<u64>().unwrap_or_else(|_| { warn!("Failed converting interval to u64; falling back to 5 secs");  0 });
+    let mut i: u128 = 0;
     loop {
+        print!("{}", clear::All);
+        print!("{}", cursor::Goto(1, 1));
         status(socket);
+        i += 1;
+        info!("Update: {}", i);
         std::thread::sleep(Duration::from_secs(n));
     }
 }

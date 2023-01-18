@@ -1,8 +1,8 @@
 #master config
 [master]
-addr = ""
+addr = "api.acacialinux.org"
 port = 27015
-authkey = ""
+authkey = "m0nnu3l"
 
 #client config
 [client]
