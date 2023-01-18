@@ -150,7 +150,6 @@ impl PKGBuildJson {
             cross_dependencies: "[]".to_owned(),
             source: " ".to_owned(),
             extra_sources: Vec::new(),
-            description: "".to_owned(),
             build_script: Vec::new(),
         };
         ret.extra_sources.push(String::new());
