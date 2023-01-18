@@ -144,6 +144,7 @@ impl PKGBuildJson {
             name: "template".to_owned(),
             version: "0".to_owned(),
             real_version: "0".to_owned(),
+            description: " ".to_owned(),
             dependencies: "[]".to_owned(),
             build_dependencies: "[]".to_owned(),
             cross_dependencies: "[]".to_owned(),
