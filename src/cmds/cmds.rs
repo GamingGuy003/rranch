@@ -601,8 +601,8 @@ pub fn watch_jobs(socket: &TcpStream, interval: &str) {
     let mut i: u128 = 0;
     loop {
         i += 1;
-        info!("Update: {}", i);
         print!("{}{}", clear::All, cursor::Goto(1, 1));
+        info!("Update: {}", i);
         status(socket);
         std::thread::sleep(Duration::from_secs(n));
     }
