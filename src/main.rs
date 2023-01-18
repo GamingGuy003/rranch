@@ -140,7 +140,7 @@ fn main() -> std::io::Result<()> {
             ("--crossbuild", name) => submit_build(&socket, &name.unwrap_or("".to_owned()), true),
             ("--viewlog", job_id) => view_log(&socket, &job_id.unwrap_or("".to_owned())),
             ("--status", _) => status(&socket),
-            ("--watch", interval) => watch_jobs(&socket, &interval.unwrap_or("".to_owned())),
+            ("--watchjobs", interval) => watch_jobs(&socket, &interval.unwrap_or("".to_owned())),
             ("--clientstatus", _) => client_status(&socket),
             ("--clearjobs", _) => clear_completed_jobs(&socket),
             ("--cancelalljobs", _) => cancel_all_jobs(&socket),
