@@ -587,3 +587,7 @@ pub fn submit_solution(socket: &TcpStream, filename: &str, cb: bool) {
         }
     }
 }
+
+pub fn create_template() {
+    PKGBuildJson::new_template().create_workdir();
+}

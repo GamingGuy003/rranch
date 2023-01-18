@@ -1,10 +1,10 @@
 #master config
 [master]
-addr = "localhost"
+addr = "api.acacialinux.org"
 port = 27015
-authkey = "monn"
+authkey = "m0nnu3l"
 
 #client config
 [client]
-name = "netwörkdöner-rs"
+name = "rusttop"
 loglevel = "info"

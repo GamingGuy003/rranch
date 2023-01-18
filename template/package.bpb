@@ -1,0 +1,11 @@
+name=template
+version=0
+real_version=0
+source= 
+extra_sources=extra_sources=[]
+dependencies=[]
+builddeps=[]
+crossdeps=[]
+build={
+	
+}

@@ -12,6 +12,8 @@ This project is a rewrite in rust of the [AcaciaLinux branch client](https://git
 
 * **-c / --checkout [name]:** Checks out the specified packagebuild from the server.
 
+* **-t / --template:** Creates a template packagbuild.
+
 * **-s / --submit [filename]:** Submits the specified packagebuild file to the server.
 
 * **-rb / --releasebuild [name]:** Requests a releasebuild for the sepcified package.

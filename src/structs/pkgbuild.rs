@@ -36,7 +36,11 @@ impl PKGBuildJson {
         }
 
         if self.extra_sources.len() > 0 {
-            bpb.push(format!("extra_sources={:?}", self.extra_sources));
+            let mut xsrc = "extra_sources=".to_owned();
+            for src in self.extra_sources.clone() {
+                xsrc = format!("{}[{}]", xsrc, src);
+            }
+            bpb.push(format!("extra_sources={}", xsrc));
         }
 
         if self.dependencies.len() > 0 {
@@ -132,6 +136,24 @@ impl PKGBuildJson {
             i += 1;
         }
 
+        ret
+    }
+
+    pub fn new_template() -> Self {
+        let mut ret = Self {
+            name: "template".to_owned(),
+            version: "0".to_owned(),
+            real_version: "0".to_owned(),
+            dependencies: "[]".to_owned(),
+            build_dependencies: "[]".to_owned(),
+            cross_dependencies: "[]".to_owned(),
+            source: " ".to_owned(),
+            extra_sources: Vec::new(),
+            description: "".to_owned(),
+            build_script: Vec::new(),
+        };
+        ret.extra_sources.push(String::new());
+        ret.build_script.push("".to_owned());
         ret
     }
 

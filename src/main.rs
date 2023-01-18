@@ -1,7 +1,7 @@
 use cmds::cmds::{
     cancel_all_jobs, cancel_queued_job, checkout_pkg, clear_completed_jobs, client_status,
     diff_pkgs, managed_pkg_builds, managed_pkgs, rebuild_dependers, status, submit_build,
-    submit_pkg, submit_solution, view_log, view_sys_log, view_tree,
+    submit_pkg, submit_solution, view_log, view_sys_log, view_tree, create_template,
 };
 use conn::conn::connect;
 use console::Style;
@@ -134,6 +134,7 @@ fn main() -> std::io::Result<()> {
         match fmatch {
             ("--debugshell", _) => run_dbs(&socket),
             ("--checkout", name) => checkout_pkg(&socket, &name.unwrap_or("".to_owned())),
+            ("--template", _) => create_template(),
             ("--submit", filename) => submit_pkg(&socket, &filename.unwrap_or("".to_owned())),
             ("--releasebuild", name) => {
                 submit_build(&socket, &name.unwrap_or("".to_owned()), false)
