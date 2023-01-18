@@ -1,7 +1,7 @@
 use cmds::cmds::{
     cancel_all_jobs, cancel_queued_job, checkout_pkg, clear_completed_jobs, client_status,
-    diff_pkgs, managed_pkg_builds, managed_pkgs, rebuild_dependers, status, submit_build,
-    submit_pkg, submit_solution, view_log, view_sys_log, view_tree, create_template, watch_jobs,
+    create_template, diff_pkgs, managed_pkg_builds, managed_pkgs, rebuild_dependers, status,
+    submit_build, submit_pkg, submit_solution, view_log, view_sys_log, view_tree, watch_jobs,
 };
 use conn::conn::connect;
 use console::Style;
@@ -58,7 +58,7 @@ fn main() -> std::io::Result<()> {
 
     //get arg array and connect
     let funcs = argparser.funcs();
-    let _yellow = Style::new().yellow();
+    let yellow = Style::new().yellow();
     let socket = connect(
         conf.master
             .as_ref()
@@ -85,17 +85,19 @@ fn main() -> std::io::Result<()> {
             .as_str(),
         format!(
             "{}",
-            conf.client
-                .as_ref()
-                .unwrap_or(&Client {
-                    name: None,
-                    r#type: None,
-                    loglevel: None
-                })
-                .name
-                .clone()
-                .unwrap_or("a-rranch-client".to_owned())
-                .clone()
+            yellow.apply_to(
+                conf.client
+                    .as_ref()
+                    .unwrap_or(&Client {
+                        name: None,
+                        r#type: None,
+                        loglevel: None
+                    })
+                    .name
+                    .clone()
+                    .unwrap_or("a-rranch-client".to_owned())
+                    .clone()
+            )
         )
         .as_str(),
         conf.master

@@ -152,7 +152,7 @@ impl PKGBuildJson {
                             .map(|part| part.to_string())
                             .filter(|part| !part.is_empty())
                             .collect()
-                    },
+                    }
                     "builddeps" => {
                         ret.build_dependencies = split[1]
                             .split("[")
@@ -162,7 +162,7 @@ impl PKGBuildJson {
                             .map(|part| part.to_string())
                             .filter(|part| !part.is_empty())
                             .collect()
-                    },
+                    }
                     "crossdeps" => {
                         ret.cross_dependencies = split[1]
                             .split("[")
@@ -172,14 +172,17 @@ impl PKGBuildJson {
                             .map(|part| part.to_string())
                             .filter(|part| !part.is_empty())
                             .collect()
-                    },
+                    }
                     "build" => build = true,
                     _ => warn!("Found invalid key at line {}", i),
                 }
             }
             i += 1;
         }
-        println!("Sending to server:\n{}", serde_json::to_string_pretty(&ret).unwrap());
+        println!(
+            "Sending to server:\n{}",
+            serde_json::to_string_pretty(&ret).unwrap()
+        );
         ret
     }
 
@@ -200,8 +203,10 @@ impl PKGBuildJson {
         ret.build_dependencies.push(String::new());
         ret.cross_dependencies.push(String::new());
         ret.extra_sources.push(String::new());
-        ret.build_script.push("cd $PKG_NAME-$PKG_VERSION".to_owned());
-        ret.build_script.push("make DESTDIR=$PKG_INSTALL_DIR install".to_owned());
+        ret.build_script
+            .push("cd $PKG_NAME-$PKG_VERSION".to_owned());
+        ret.build_script
+            .push("make DESTDIR=$PKG_INSTALL_DIR install".to_owned());
         ret
     }
 

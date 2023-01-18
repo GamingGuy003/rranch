@@ -154,7 +154,7 @@ pub fn status(socket: &TcpStream) {
             exit(-1)
         }
     };
-    
+
     let queued = serde_json::from_str::<Vec<Job>>(&resp).unwrap_or(Vec::new());
     trace!("Successfully received and parsed queued jobs");
 
@@ -597,7 +597,10 @@ pub fn create_template() {
 }
 
 pub fn watch_jobs(socket: &TcpStream, interval: &str) {
-    let n = interval.parse::<u64>().unwrap_or_else(|_| { warn!("Failed converting interval to u64; falling back to 5 secs");  0 });
+    let n = interval.parse::<u64>().unwrap_or_else(|_| {
+        warn!("Failed converting interval to u64; falling back to 5 secs");
+        0
+    });
     let mut i: u128 = 0;
     loop {
         i += 1;
