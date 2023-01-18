@@ -122,7 +122,7 @@ impl PKGBuildJson {
                 if line.len() == 0 {
                     continue;
                 }
-                let split: Vec<&str> = line.split("=").collect();
+                let split: Vec<&str> = line.splitn(2, "=").collect();
                 if split.len() != 2 {
                     error!("Invalid syntax at line {}", i);
                     exit(-1)
@@ -179,7 +179,7 @@ impl PKGBuildJson {
             }
             i += 1;
         }
-        println!("{}", serde_json::to_string_pretty(&ret).unwrap());
+        println!("Sending to server:\n{}", serde_json::to_string_pretty(&ret).unwrap());
         ret
     }
 
