@@ -154,6 +154,7 @@ impl PKGBuildJson {
         };
         ret.extra_sources.push(String::new());
         ret.build_script.push("cd $PKG_NAME-$PKG_VERSION".to_owned());
+        ret.build_script.push("make DESTDIR=$PKG_INSTALL_DIR install".to_owned());
         ret
     }
 
