@@ -127,6 +127,37 @@ pub fn status(socket: &TcpStream) {
 
     let running = serde_json::from_str::<Vec<Job>>(&resp).unwrap_or(Vec::new());
     trace!("Successfully received and parsed running jobs");
+
+    //completed jobs
+    let resp = match write_and_read(socket, "COMPLETED_JOBS_STATUS".to_owned()) {
+        Ok(resp) => {
+            debug!("Successfully fetched completed jobs from server");
+            resp
+        }
+        Err(err) => {
+            error!("Encountered error while communicating with server: {}", err);
+            exit(-1)
+        }
+    };
+
+    let completed = serde_json::from_str::<Vec<Job>>(&resp).unwrap_or(Vec::new());
+    trace!("Successfully received and parsed completed jobs");
+
+    //queued jobs
+    let resp = match write_and_read(socket, "QUEUED_JOBS_STATUS".to_owned()) {
+        Ok(resp) => {
+            debug!("Successfully fetched queued jobs from server");
+            resp
+        }
+        Err(err) => {
+            error!("Encountered error while communicating with server: {}", err);
+            exit(-1)
+        }
+    };
+    
+    let queued = serde_json::from_str::<Vec<Job>>(&resp).unwrap_or(Vec::new());
+    trace!("Successfully received and parsed queued jobs");
+
     println!("{}", bold.apply_to("RUNNING JOBS"));
     if running.len() == 0 {
         println!("No jobs.");
@@ -143,20 +174,6 @@ pub fn status(socket: &TcpStream) {
         }
     }
 
-    //completed jobs
-    let resp = match write_and_read(socket, "COMPLETED_JOBS_STATUS".to_owned()) {
-        Ok(resp) => {
-            debug!("Successfully fetched completed jobs from server");
-            resp
-        }
-        Err(err) => {
-            error!("Encountered error while communicating with server: {}", err);
-            exit(-1)
-        }
-    };
-
-    let completed = serde_json::from_str::<Vec<Job>>(&resp).unwrap_or(Vec::new());
-    trace!("Successfully received and parsed completed jobs");
     println!("{}", bold.apply_to("COMPLETED JOBS"));
     if completed.len() == 0 {
         println!("No jobs.");
@@ -173,20 +190,6 @@ pub fn status(socket: &TcpStream) {
         }
     }
 
-    //queued jobs
-    let resp = match write_and_read(socket, "QUEUED_JOBS_STATUS".to_owned()) {
-        Ok(resp) => {
-            debug!("Successfully fetched queued jobs from server");
-            resp
-        }
-        Err(err) => {
-            error!("Encountered error while communicating with server: {}", err);
-            exit(-1)
-        }
-    };
-
-    let queued = serde_json::from_str::<Vec<Job>>(&resp).unwrap_or(Vec::new());
-    trace!("Successfully received and parsed queued jobs");
     println!("{}", bold.apply_to("QUEUED JOBS"));
     if queued.len() == 0 {
         println!("No jobs.");
