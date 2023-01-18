@@ -24,6 +24,8 @@ This project is a rewrite in rust of the [AcaciaLinux branch client](https://git
 
 * **-st / --status:** Requests a list of running / completed / queued jobs.
 
+* **-w / --watch [interval]:** Watches the joblist in the given interval in seconds.
+
 * **-cs / --clientstatus:** Requests a list of clients connected to the server.
 
 * **-cj / --clearjobs:** Clears the completed jobs from the server.
