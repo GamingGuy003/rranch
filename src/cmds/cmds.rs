@@ -19,9 +19,10 @@ pub fn checkout_pkg(socket: &TcpStream, pkg_name: &str) {
         Ok(msg) => msg,
         Err(err) => {
             error!("{}", err);
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
     };
@@ -44,9 +45,10 @@ pub fn checkout_pkg(socket: &TcpStream, pkg_name: &str) {
         }
         Err(err) => {
             error!("Failed deserializing json received from server: {}", err);
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
     };
@@ -72,18 +74,20 @@ pub fn submit_pkg(socket: &TcpStream, filename: &str) {
         }
         Err(err) => {
             error!("Failed to send json to server: {}", err);
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
     };
     match resp.as_str() {
         "INV_PKG_BUILD" => {
             error!("Package submission rejected by server. The package build you attempted to submit is invalid.");
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
         "CMD_OK" => {
@@ -91,9 +95,10 @@ pub fn submit_pkg(socket: &TcpStream, filename: &str) {
         }
         msg => {
             error!("Received unknown message from server: {}", msg);
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
     }
@@ -111,9 +116,10 @@ pub fn submit_build(socket: &TcpStream, pkg_name: &str, cb: bool) {
         Ok(resp) => resp,
         Err(err) => {
             error!("Encountered error while communicating with server: {}", err);
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
     };
@@ -152,9 +158,10 @@ pub fn status(socket: &TcpStream) {
         }
         Err(err) => {
             error!("Encountered error while communicating with server: {}", err);
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
     };
@@ -170,9 +177,10 @@ pub fn status(socket: &TcpStream) {
         }
         Err(err) => {
             error!("Encountered error while communicating with server: {}", err);
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
     };
@@ -188,9 +196,10 @@ pub fn status(socket: &TcpStream) {
         }
         Err(err) => {
             error!("Encountered error while communicating with server: {}", err);
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
     };
@@ -257,9 +266,10 @@ pub fn client_status(socket: &TcpStream) {
         }
         Err(err) => {
             error!("Error while requesting connected controllers: {}", err);
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
     };
@@ -270,9 +280,10 @@ pub fn client_status(socket: &TcpStream) {
         }
         Err(err) => {
             error!("Error while requesting connected buildbots: {}", err);
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
     };
@@ -312,9 +323,10 @@ pub fn view_log(socket: &TcpStream, job_id: &str) {
         }
         Err(err) => {
             error!("Error while retrieving log msg: {}", err);
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
     };
@@ -341,9 +353,10 @@ pub fn cancel_queued_job(socket: &TcpStream, job_id: &str) {
         }
         Err(err) => {
             error!("Error communicating with server: {}", err);
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
     };
@@ -351,17 +364,19 @@ pub fn cancel_queued_job(socket: &TcpStream, job_id: &str) {
     match resp.as_str() {
         "INV_JOB_ID" => {
             error!("No such job queued");
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
         "JOB_CANCELED" => info!("Successfully canceled job {}", job_id),
         msg => {
             error!("Received unknown response: {}", msg);
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
     }
@@ -378,9 +393,10 @@ pub fn clear_completed_jobs(socket: &TcpStream) {
         }
         Err(err) => {
             error!("Error communicating with server: {}", err);
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
     };
@@ -407,9 +423,10 @@ pub fn cancel_all_jobs(socket: &TcpStream) {
         }
         Err(err) => {
             error!("Error communicating with server: {}", err);
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
     };
@@ -432,9 +449,10 @@ pub fn managed_pkgs(socket: &TcpStream) {
         Ok(resp) => resp,
         Err(err) => {
             error!("Error communicating with server: {}", err);
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
     };
@@ -444,7 +462,7 @@ pub fn managed_pkgs(socket: &TcpStream) {
     println!("{}", bold.apply_to("Managed packages:"));
     if pkgs.len() > 0 {
         pkgs.sort();
-        print_vec_cols(pkgs);
+        print_vec_cols(pkgs, None);
     } else {
         println!("No managed packages on server");
     }
@@ -457,22 +475,19 @@ pub fn managed_pkg_builds(socket: &TcpStream) {
         Ok(resp) => resp,
         Err(err) => {
             error!("Error communicating with server: {}", err);
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
     };
     let mut pkgb: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or(Vec::new());
-    debug!(
-        "Successfully fetched managed pkgbuilds from server: {:?}",
-        pkgb
-    );
 
     println!("{}", bold.apply_to("Managed packageuilds:"));
     if pkgb.len() > 0 {
         pkgb.sort();
-        print_vec_cols(pkgb);
+        print_vec_cols(pkgb, None);
     } else {
         println!("No managed packagebuilds on server");
     }
@@ -487,33 +502,54 @@ pub fn diff_pkgs(socket: &TcpStream) {
         Ok(resp) => resp,
         Err(err) => {
             error!("Error communicating with server: {}", err);
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
     };
     let pkgs: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or(Vec::new());
-    debug!("Successfully fetched managed pkgs from server: {:?}", pkgs);
 
     let resp = match write_and_read(socket, "MANAGED_PKGBUILDS".to_owned()) {
         Ok(resp) => resp,
         Err(err) => {
             error!("Error communicating with server: {}", err);
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
     };
     let mut pkgb: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or(Vec::new());
-    debug!(
-        "Successfully fetched managed pkgbuilds from server: {:?}",
-        pkgb
-    );
     pkgb.sort();
 
     let mut diff = Vec::new();
+    let max;
+    if !pkgb.is_empty() {
+        max = Some(
+            (pkgb
+                .iter()
+                .max_by_key(|value| value.chars().count())
+                .unwrap_or(&"default_with_some_length".to_owned())
+                .chars()
+                .count()
+                + 13) as i32,
+        );
+    } else {
+        max = Some(
+            (pkgs
+                .iter()
+                .max_by_key(|value| value.chars().count())
+                .unwrap_or(&"default_with_some_length".to_owned())
+                .chars()
+                .count()
+                + 21) as i32,
+        );
+    }
+    println!("");
+    //let max = Some((pkgb.iter().max_by_key(|s| s.chars().count()).unwrap_or(exit(-1)).chars().count() + 5) as i32);
     for pbuild in pkgb {
         if pkgs.contains(&pbuild) {
             diff.push(format!("{}", green.apply_to(pbuild)));
@@ -524,21 +560,31 @@ pub fn diff_pkgs(socket: &TcpStream) {
 
     println!("{}", bold.apply_to("Package / Packageuild diff:"));
     if diff.len() > 0 {
-        print_vec_cols(diff);
+        print_vec_cols(diff, max);
     } else {
         println!("No managed packagebuilds on server");
     }
 }
 
-fn print_vec_cols(vec: Vec<String>) {
-    let elem_width = vec.iter().max_by_key(|s| s.chars().count()).unwrap_or(&"".to_owned()).chars().count() + 5;
-    println!("max len: {}", elem_width);
+fn print_vec_cols(vec: Vec<String>, mut max: Option<i32>) {
+    if max.is_none() {
+        max = Some(
+            (vec.iter()
+                .max_by_key(|s| s.chars().count())
+                .unwrap_or(&"".to_owned())
+                .chars()
+                .count()
+                + 5) as i32,
+        );
+    }
+
+    let elem_width = max.unwrap_or(30);
     let colcount = (termion::terminal_size().unwrap_or((0, 0)).0 / elem_width as u16) as usize;
     for (idx, val) in vec.into_iter().enumerate() {
         if idx % colcount == 0 && idx != 0 {
             println!();
         }
-        print!("{:<1$}", val, elem_width);
+        print!("{:<1$}", val, elem_width as usize);
     }
     println!();
 }
@@ -553,9 +599,10 @@ pub fn view_sys_log(socket: &TcpStream) {
         }
         Err(err) => {
             error!("Error while retrieving sys log: {}", err);
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
     };
@@ -580,9 +627,10 @@ pub fn view_dependers(socket: &TcpStream, pkg_name: &str) {
                 "Error while fetching dependency tree for {}:{}",
                 pkg_name, err
             );
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
     };
@@ -596,7 +644,10 @@ pub fn view_dependers(socket: &TcpStream, pkg_name: &str) {
     }
 
     println!("{}", bold.apply_to(format!("Dependers on {}:", pkg_name)));
-    print_vec_cols(serde_json::from_str::<Vec<String>>(&resp).unwrap_or(Vec::new()));
+    print_vec_cols(
+        serde_json::from_str::<Vec<String>>(&resp).unwrap_or(Vec::new()),
+        None,
+    );
 }
 
 pub fn rebuild_dependers(socket: &TcpStream, pkg_name: &str) {
@@ -607,9 +658,10 @@ pub fn rebuild_dependers(socket: &TcpStream, pkg_name: &str) {
         }
         Err(err) => {
             error!("Error while communicating with server: {}", err);
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
     };
@@ -617,16 +669,18 @@ pub fn rebuild_dependers(socket: &TcpStream, pkg_name: &str) {
     match resp.as_str() {
         "INV_PKG_NAME" => {
             error!("No such package available");
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
         "CIRCULAR_DEPENDENCY" => {
             error!("Circular dependency detected. The requested batch build contains a circular dependency and could not be submitted.");
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
         "BATCH_QUEUED" => {
@@ -634,9 +688,10 @@ pub fn rebuild_dependers(socket: &TcpStream, pkg_name: &str) {
         }
         msg => {
             error!("Received unknown response from server: {}", msg);
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
     }
@@ -657,9 +712,10 @@ pub fn submit_solution(socket: &TcpStream, filename: &str, cb: bool) {
         }
         Err(err) => {
             error!("Error reading sol file: {}", err);
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
     };
@@ -680,9 +736,10 @@ pub fn submit_solution(socket: &TcpStream, filename: &str, cb: bool) {
         }
         Err(err) => {
             error!("Error while communicating with server: {}", err);
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
     };
@@ -693,17 +750,19 @@ pub fn submit_solution(socket: &TcpStream, filename: &str, cb: bool) {
                 "Missing packagebuild on server: {}",
                 s.splitn(2, " ").collect::<Vec<&str>>()[1]
             );
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
         "BATCH_QUEUED" => info!("Successfully queued solutionfile!"),
         msg => {
             error!("Received unknown response from server: {}", msg);
-            socket
-                .shutdown(Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
             exit(-1)
         }
     }
@@ -725,5 +784,171 @@ pub fn watch_jobs(socket: &TcpStream, interval: &str) {
         status(socket);
         info!("Update: {}", i);
         std::thread::sleep(Duration::from_secs(n));
+    }
+}
+
+pub fn show_deps(socket: &TcpStream, pkg_name: &str) {
+    info!("Trying to show dependencies of {}...", pkg_name);
+    let cpkg_resp = match write_and_read(&socket, format!("CHECKOUT_PACKAGE {}", pkg_name)) {
+        Ok(msg) => msg,
+        Err(err) => {
+            error!("{}", err);
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
+            exit(-1)
+        }
+    };
+
+    if cpkg_resp == "INV_PKG_NAME" {
+        error!("Invalid package name!");
+        exit(-1)
+    } else if cpkg_resp == "INV_PKG" {
+        error!("The packagebuild is invalid!");
+        socket
+            .shutdown(Shutdown::Both)
+            .unwrap_or(trace!("Failed to close socket"));
+        exit(-1)
+    }
+
+    let json: PKGBuildJson = match serde_json::from_str(&cpkg_resp) {
+        Ok(json) => {
+            debug!("Successfully received and deserialized json from server!");
+            json
+        }
+        Err(err) => {
+            error!("Failed deserializing json received from server: {}", err);
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
+            exit(-1)
+        }
+    };
+
+    let resp = match write_and_read(socket, "MANAGED_PACKAGES".to_owned()) {
+        Ok(resp) => resp,
+        Err(err) => {
+            error!("Error communicating with server: {}", err);
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
+            exit(-1)
+        }
+    };
+
+    let pkgs: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or(Vec::new());
+
+    let resp = match write_and_read(socket, "MANAGED_PKGBUILDS".to_owned()) {
+        Ok(resp) => resp,
+        Err(err) => {
+            error!("Error communicating with server: {}", err);
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
+            exit(-1)
+        }
+    };
+
+    let pkgb: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or(Vec::new());
+
+    let deps = json.get_dependencies();
+    let bdeps = json.get_build_dependencies();
+    let cdeps = json.get_cross_dependencies();
+
+    let bold = Style::new().bold();
+    //dep in neither
+    let red = Style::new().red();
+    //dep only in pkb
+    let yellow = Style::new().yellow();
+    //dep in pkg && pkb
+    let green = Style::new().green();
+
+    let mut diffdeps: Vec<String> = Vec::new();
+    let mut diffbdeps: Vec<String> = Vec::new();
+    let mut diffcdeps: Vec<String> = Vec::new();
+    for dep in deps.clone() {
+        if pkgb.contains(&dep) {
+            if pkgs.contains(&dep) {
+                diffdeps.push(format!("{}", green.apply_to(dep)));
+            } else {
+                diffdeps.push(format!("{}", yellow.apply_to(dep)));
+            }
+        } else {
+            diffdeps.push(format!("{}", red.apply_to(dep)));
+        }
+    }
+
+    for dep in bdeps.clone() {
+        if pkgb.contains(&dep) {
+            if pkgs.contains(&dep) {
+                diffbdeps.push(format!("{}", green.apply_to(dep)));
+            } else {
+                diffbdeps.push(format!("{}", yellow.apply_to(dep)));
+            }
+        } else {
+            diffbdeps.push(format!("{}", red.apply_to(dep)));
+        }
+    }
+
+    for dep in cdeps.clone() {
+        if pkgb.contains(&dep) {
+            if pkgs.contains(&dep) {
+                diffcdeps.push(format!("{}", green.apply_to(dep)));
+            } else {
+                diffcdeps.push(format!("{}", yellow.apply_to(dep)));
+            }
+        } else {
+            diffcdeps.push(format!("{}", red.apply_to(dep)));
+        }
+    }
+
+    let maxdeps = Some(
+        (deps
+            .iter()
+            .max_by_key(|s| s.chars().count())
+            .unwrap_or(&"".to_owned())
+            .chars()
+            .count()
+            + 5) as i32,
+    );
+    println!("{}", bold.apply_to(format!("\nDependencies for {}:", pkg_name)));
+    if diffdeps.len() > 0 {
+        print_vec_cols(diffdeps, maxdeps);
+    } else {
+        println!("No runtimedependencies.");
+    }
+    let maxbdeps = Some(
+        (bdeps
+            .iter()
+            .max_by_key(|s| s.chars().count())
+            .unwrap_or(&"".to_owned())
+            .chars()
+            .count()
+            + 5) as i32,
+    );
+    println!("{}", bold.apply_to(format!("Builddependencies for {}:", pkg_name)));
+    if diffbdeps.len() > 0 {
+        print_vec_cols(diffbdeps, maxbdeps);
+    } else {
+        println!("No builddependencies.");
+    }
+    let maxcdeps = Some(
+        (cdeps
+            .iter()
+            .max_by_key(|s| s.chars().count())
+            .unwrap_or(&"".to_owned())
+            .chars()
+            .count()
+            + 5) as i32,
+    );
+    println!("{}", bold.apply_to(format!("Crossdependencies for {}:", pkg_name)));
+    if diffcdeps.len() > 0 {
+        print_vec_cols(diffcdeps, maxcdeps);
+    } else {
+        println!("No crossdependencies.");
     }
 }

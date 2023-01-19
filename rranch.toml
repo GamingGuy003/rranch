@@ -8,4 +8,4 @@ authkey = "monn"
 [client]
 name = "blödgar"
 type = "CONTROLLER"
-loglevel = "trace"
+loglevel = "info"

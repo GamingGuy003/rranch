@@ -8,10 +8,12 @@ use log::{debug, trace};
 fn read(mut socket: &TcpStream, len: usize) -> Result<String, std::io::Error> {
     debug!("Trying to read {} bytes from socket...", len);
     let mut read = vec![0; len];
-    match socket.read(&mut read) {
-        Ok(_) => return Ok(String::from_utf8(read.into_iter().collect()).unwrap_or("".to_owned())),
+    let ret = match socket.read_exact(&mut read) {
+        Ok(_) => String::from_utf8(read.into_iter().collect()).unwrap_or("".to_owned()),
         Err(err) => return Err(err),
-    }
+    };
+    trace!("Received message was: {:?}", ret);
+    Ok(ret)
 }
 
 fn write(mut socket: &TcpStream, content: String) -> Result<(), std::io::Error> {

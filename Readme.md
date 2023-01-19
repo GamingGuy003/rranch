@@ -42,7 +42,9 @@ This project is an improved rewrite of the [AcaciaLinux branch client](https://g
 
 * **-sys / --viewsyslog:** Requests buildbot system logs from server.
 
-* **-vt / --viewtree [name]:** Requests dependency tree for specified package.
+* **-vd / --viewdependers [name]:** Requests all dependers for specified package..
+
+* **-vdp / --viewdependencies [name]:** Shows if dependencies of a package have a pkgbuild / pkg.
 
 * **-rd / --rebuilddependers [name]:** Rebuilds dependers of specified package.
 

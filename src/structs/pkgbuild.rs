@@ -245,4 +245,16 @@ impl PKGBuildJson {
             }
         }
     }
+
+    pub fn get_dependencies(&self) -> Vec<String> {
+        self.dependencies.clone()
+    }
+
+    pub fn get_build_dependencies(&self) -> Vec<String> {
+        self.build_dependencies.clone()
+    }
+
+    pub fn get_cross_dependencies(&self) -> Vec<String> {
+        self.cross_dependencies.clone()
+    }
 }

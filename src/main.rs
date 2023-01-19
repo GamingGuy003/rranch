@@ -1,7 +1,8 @@
 use cmds::cmds::{
     cancel_all_jobs, cancel_queued_job, checkout_pkg, clear_completed_jobs, client_status,
-    create_template, diff_pkgs, managed_pkg_builds, managed_pkgs, rebuild_dependers, status,
-    submit_build, submit_pkg, submit_solution, view_dependers, view_log, view_sys_log, watch_jobs,
+    create_template, diff_pkgs, managed_pkg_builds, managed_pkgs, rebuild_dependers, show_deps,
+    status, submit_build, submit_pkg, submit_solution, view_dependers, view_log, view_sys_log,
+    watch_jobs,
 };
 use conn::conn::connect;
 use console::Style;
@@ -152,6 +153,7 @@ fn main() -> std::io::Result<()> {
             ("--differencepkgs", _) => diff_pkgs(&socket),
             ("--viewsyslog", _) => view_sys_log(&socket),
             ("--viewdependers", name) => view_dependers(&socket, &name.unwrap_or("".to_owned())),
+            ("--viewdependencies", name) => show_deps(&socket, &name.unwrap_or("".to_owned())),
             ("--rebuilddependers", name) => {
                 rebuild_dependers(&socket, &name.unwrap_or("".to_owned()))
             }
@@ -166,8 +168,10 @@ fn main() -> std::io::Result<()> {
             ),
         }
     }
-    socket
-        .shutdown(std::net::Shutdown::Both)
-        .unwrap_or(trace!("Failed to close sockets"));
+
+    match socket.shutdown(std::net::Shutdown::Both) {
+        Ok(_) => {}
+        Err(err) => trace!("Failed to close socket: {}", err),
+    }
     Ok(())
 }

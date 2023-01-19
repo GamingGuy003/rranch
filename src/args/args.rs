@@ -152,7 +152,13 @@ impl ArgParser {
                 Arg::new(
                     "vd",
                     "viewdependers",
-                    "Requests all dependencies for specified package.",
+                    "Requests all dependers for specified package.",
+                    Some("name".to_owned()),
+                ),
+                Arg::new(
+                    "vdp",
+                    "viewdependencies",
+                    "Shows if dependencies of a package have a pkgbuild / pkg",
                     Some("name".to_owned()),
                 ),
                 Arg::new(
