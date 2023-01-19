@@ -150,9 +150,9 @@ impl ArgParser {
                     None,
                 ),
                 Arg::new(
-                    "vt",
-                    "viewtree",
-                    "Requests dependency tree for specified package.",
+                    "vd",
+                    "viewdependers",
+                    "Requests all dependencies for specified package.",
                     Some("name".to_owned()),
                 ),
                 Arg::new(

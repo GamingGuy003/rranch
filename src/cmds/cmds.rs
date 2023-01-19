@@ -1,4 +1,8 @@
-use std::{net::{TcpStream, Shutdown}, process::exit, time::Duration};
+use std::{
+    net::{Shutdown, TcpStream},
+    process::exit,
+    time::Duration,
+};
 
 use console::Style;
 use log::{debug, error, info, trace, warn};
@@ -15,7 +19,9 @@ pub fn checkout_pkg(socket: &TcpStream, pkg_name: &str) {
         Ok(msg) => msg,
         Err(err) => {
             error!("{}", err);
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     };
@@ -25,7 +31,9 @@ pub fn checkout_pkg(socket: &TcpStream, pkg_name: &str) {
         exit(-1)
     } else if cpkg_resp == "INV_PKG" {
         error!("The packagebuild is invalid!");
-        socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+        socket
+            .shutdown(Shutdown::Both)
+            .unwrap_or(trace!("Failed to close socket"));
         exit(-1)
     }
 
@@ -36,7 +44,9 @@ pub fn checkout_pkg(socket: &TcpStream, pkg_name: &str) {
         }
         Err(err) => {
             error!("Failed deserializing json received from server: {}", err);
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     };
@@ -50,7 +60,9 @@ pub fn submit_pkg(socket: &TcpStream, filename: &str) {
     let json = serde_json::to_string(&pkgbuild).unwrap_or("".to_owned());
     if json.len() == 0 {
         error!("Failed to serialize struct! Check pkgbuild content...");
-        socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+        socket
+            .shutdown(Shutdown::Both)
+            .unwrap_or(trace!("Failed to close socket"));
         exit(-1)
     }
     let resp = match write_and_read(socket, format!("SUBMIT_PACKAGE {}", json)) {
@@ -60,14 +72,18 @@ pub fn submit_pkg(socket: &TcpStream, filename: &str) {
         }
         Err(err) => {
             error!("Failed to send json to server: {}", err);
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     };
     match resp.as_str() {
         "INV_PKG_BUILD" => {
             error!("Package submission rejected by server. The package build you attempted to submit is invalid.");
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
         "CMD_OK" => {
@@ -75,7 +91,9 @@ pub fn submit_pkg(socket: &TcpStream, filename: &str) {
         }
         msg => {
             error!("Received unknown message from server: {}", msg);
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     }
@@ -93,7 +111,9 @@ pub fn submit_build(socket: &TcpStream, pkg_name: &str, cb: bool) {
         Ok(resp) => resp,
         Err(err) => {
             error!("Encountered error while communicating with server: {}", err);
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     };
@@ -104,17 +124,17 @@ pub fn submit_build(socket: &TcpStream, pkg_name: &str, cb: bool) {
         "BUILD_REQ_QUEUED" => info!("No buildbot is currently available to handle the build request. Build request added to queue."),
         "INV_PKG_NAME" => {
             error!("Invalid package name!");
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket.shutdown(Shutdown::Both).unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         },
         "PKG_BUILD_DAMAGED" => {
             error!("The packagebuild you attempted to queue is damaged.");
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket.shutdown(Shutdown::Both).unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         },
         msg => {
             error!("Received invalid response from server: {}", msg);
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket.shutdown(Shutdown::Both).unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     }
@@ -132,7 +152,9 @@ pub fn status(socket: &TcpStream) {
         }
         Err(err) => {
             error!("Encountered error while communicating with server: {}", err);
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     };
@@ -148,7 +170,9 @@ pub fn status(socket: &TcpStream) {
         }
         Err(err) => {
             error!("Encountered error while communicating with server: {}", err);
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     };
@@ -164,7 +188,9 @@ pub fn status(socket: &TcpStream) {
         }
         Err(err) => {
             error!("Encountered error while communicating with server: {}", err);
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     };
@@ -231,7 +257,9 @@ pub fn client_status(socket: &TcpStream) {
         }
         Err(err) => {
             error!("Error while requesting connected controllers: {}", err);
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     };
@@ -242,7 +270,9 @@ pub fn client_status(socket: &TcpStream) {
         }
         Err(err) => {
             error!("Error while requesting connected buildbots: {}", err);
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     };
@@ -282,7 +312,9 @@ pub fn view_log(socket: &TcpStream, job_id: &str) {
         }
         Err(err) => {
             error!("Error while retrieving log msg: {}", err);
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     };
@@ -309,7 +341,9 @@ pub fn cancel_queued_job(socket: &TcpStream, job_id: &str) {
         }
         Err(err) => {
             error!("Error communicating with server: {}", err);
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     };
@@ -317,13 +351,17 @@ pub fn cancel_queued_job(socket: &TcpStream, job_id: &str) {
     match resp.as_str() {
         "INV_JOB_ID" => {
             error!("No such job queued");
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
         "JOB_CANCELED" => info!("Successfully canceled job {}", job_id),
         msg => {
             error!("Received unknown response: {}", msg);
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     }
@@ -340,14 +378,18 @@ pub fn clear_completed_jobs(socket: &TcpStream) {
         }
         Err(err) => {
             error!("Error communicating with server: {}", err);
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     };
 
     if resp.as_str() != "JOBS_CLEARED" {
         error!("Failed to clear completed jobs: {}", resp);
-        socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+        socket
+            .shutdown(Shutdown::Both)
+            .unwrap_or(trace!("Failed to close socket"));
         exit(-1)
     } else {
         info!("Successfully cleared jobs");
@@ -365,14 +407,18 @@ pub fn cancel_all_jobs(socket: &TcpStream) {
         }
         Err(err) => {
             error!("Error communicating with server: {}", err);
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     };
 
     if resp.as_str() != "JOBS_CANCELED" {
         error!("Failed to cancel all queued jobs: {}", resp);
-        socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+        socket
+            .shutdown(Shutdown::Both)
+            .unwrap_or(trace!("Failed to close socket"));
         exit(-1)
     } else {
         info!("Successfully cancelled all queued jobs");
@@ -386,7 +432,9 @@ pub fn managed_pkgs(socket: &TcpStream) {
         Ok(resp) => resp,
         Err(err) => {
             error!("Error communicating with server: {}", err);
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     };
@@ -409,7 +457,9 @@ pub fn managed_pkg_builds(socket: &TcpStream) {
         Ok(resp) => resp,
         Err(err) => {
             error!("Error communicating with server: {}", err);
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     };
@@ -437,7 +487,9 @@ pub fn diff_pkgs(socket: &TcpStream) {
         Ok(resp) => resp,
         Err(err) => {
             error!("Error communicating with server: {}", err);
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     };
@@ -448,7 +500,9 @@ pub fn diff_pkgs(socket: &TcpStream) {
         Ok(resp) => resp,
         Err(err) => {
             error!("Error communicating with server: {}", err);
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     };
@@ -477,7 +531,8 @@ pub fn diff_pkgs(socket: &TcpStream) {
 }
 
 fn print_vec_cols(vec: Vec<String>) {
-    let elem_width = vec.iter().fold(0, |max, s| max.max(s.len())) + 5;
+    let elem_width = vec.iter().max_by_key(|s| s.chars().count()).unwrap_or(&"".to_owned()).chars().count() + 5;
+    println!("max len: {}", elem_width);
     let colcount = (termion::terminal_size().unwrap_or((0, 0)).0 / elem_width as u16) as usize;
     for (idx, val) in vec.into_iter().enumerate() {
         if idx % colcount == 0 && idx != 0 {
@@ -498,7 +553,9 @@ pub fn view_sys_log(socket: &TcpStream) {
         }
         Err(err) => {
             error!("Error while retrieving sys log: {}", err);
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     };
@@ -513,27 +570,33 @@ pub fn view_sys_log(socket: &TcpStream) {
     }
 }
 
-pub fn view_tree(socket: &TcpStream, pkg_name: &str) {
+pub fn view_dependers(socket: &TcpStream, pkg_name: &str) {
     let bold = Style::new().bold();
 
-    let resp = match write_and_read(socket, format!("GET_TREE_STR {}", pkg_name)) {
+    let resp = match write_and_read(socket, format!("GET_DEPENDERS {}", pkg_name)) {
         Ok(resp) => resp,
         Err(err) => {
             error!(
                 "Error while fetching dependency tree for {}:{}",
                 pkg_name, err
             );
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     };
-    print!(
-        "{}\n{}",
-        bold.apply_to(format!("Dependency tree for {}:", pkg_name)),
-        resp.trim_matches(|c| c == '"')
-            .replace("\\n", "\n")
-            .replace("\\t", "\t")
-    );
+
+    if resp == "INV_PKG_NAME" {
+        error!("Invalid package name!");
+        socket
+            .shutdown(Shutdown::Both)
+            .unwrap_or(trace!("Failed to close socket"));
+        exit(-1)
+    }
+
+    println!("{}", bold.apply_to(format!("Dependers on {}:", pkg_name)));
+    print_vec_cols(serde_json::from_str::<Vec<String>>(&resp).unwrap_or(Vec::new()));
 }
 
 pub fn rebuild_dependers(socket: &TcpStream, pkg_name: &str) {
@@ -544,7 +607,9 @@ pub fn rebuild_dependers(socket: &TcpStream, pkg_name: &str) {
         }
         Err(err) => {
             error!("Error while communicating with server: {}", err);
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     };
@@ -552,12 +617,16 @@ pub fn rebuild_dependers(socket: &TcpStream, pkg_name: &str) {
     match resp.as_str() {
         "INV_PKG_NAME" => {
             error!("No such package available");
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
         "CIRCULAR_DEPENDENCY" => {
             error!("Circular dependency detected. The requested batch build contains a circular dependency and could not be submitted.");
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
         "BATCH_QUEUED" => {
@@ -565,7 +634,9 @@ pub fn rebuild_dependers(socket: &TcpStream, pkg_name: &str) {
         }
         msg => {
             error!("Received unknown response from server: {}", msg);
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     }
@@ -586,7 +657,9 @@ pub fn submit_solution(socket: &TcpStream, filename: &str, cb: bool) {
         }
         Err(err) => {
             error!("Error reading sol file: {}", err);
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     };
@@ -607,7 +680,9 @@ pub fn submit_solution(socket: &TcpStream, filename: &str, cb: bool) {
         }
         Err(err) => {
             error!("Error while communicating with server: {}", err);
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     };
@@ -618,13 +693,17 @@ pub fn submit_solution(socket: &TcpStream, filename: &str, cb: bool) {
                 "Missing packagebuild on server: {}",
                 s.splitn(2, " ").collect::<Vec<&str>>()[1]
             );
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
         "BATCH_QUEUED" => info!("Successfully queued solutionfile!"),
         msg => {
             error!("Received unknown response from server: {}", msg);
-            socket.shutdown(Shutdown::Both).unwrap_or(warn!("Failed to close socket"));
+            socket
+                .shutdown(Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
             exit(-1)
         }
     }

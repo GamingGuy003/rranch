@@ -2,6 +2,9 @@
 # will have compiled files and executables
 /target/
 
+#config
+rranch.toml
+
 # a few template packagebuilds and other files for testing that are unnecessary to be tracked
 /testing/
  

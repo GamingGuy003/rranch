@@ -1,11 +1,11 @@
 #master config
 [master]
-addr = "localhost"
+addr = "192.168.178.129"
 port = 27015
 authkey = "monn"
 
 #client config
 [client]
-name = "bldgar"
+name = "blödgar"
 type = "CONTROLLER"
 loglevel = "trace"

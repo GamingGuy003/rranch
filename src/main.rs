@@ -1,7 +1,7 @@
 use cmds::cmds::{
     cancel_all_jobs, cancel_queued_job, checkout_pkg, clear_completed_jobs, client_status,
     create_template, diff_pkgs, managed_pkg_builds, managed_pkgs, rebuild_dependers, status,
-    submit_build, submit_pkg, submit_solution, view_log, view_sys_log, view_tree, watch_jobs,
+    submit_build, submit_pkg, submit_solution, view_dependers, view_log, view_sys_log, watch_jobs,
 };
 use conn::conn::connect;
 use console::Style;
@@ -86,16 +86,16 @@ fn main() -> std::io::Result<()> {
         format!(
             "{}",
             conf.client
-                    .as_ref()
-                    .unwrap_or(&Client {
-                        name: None,
-                        r#type: None,
-                        loglevel: None
-                    })
-                    .name
-                    .clone()
-                    .unwrap_or("a-rranch-client".to_owned())
-                    .clone()
+                .as_ref()
+                .unwrap_or(&Client {
+                    name: None,
+                    r#type: None,
+                    loglevel: None
+                })
+                .name
+                .clone()
+                .unwrap_or("a-rranch-client".to_owned())
+                .clone()
         )
         .as_str(),
         conf.master
@@ -149,7 +149,7 @@ fn main() -> std::io::Result<()> {
             ("--managedpkgbuilds", _) => managed_pkg_builds(&socket),
             ("--differencepkgs", _) => diff_pkgs(&socket),
             ("--viewsyslog", _) => view_sys_log(&socket),
-            ("--viewtree", name) => view_tree(&socket, &name.unwrap_or("".to_owned())),
+            ("--viewdependers", name) => view_dependers(&socket, &name.unwrap_or("".to_owned())),
             ("--rebuilddependers", name) => {
                 rebuild_dependers(&socket, &name.unwrap_or("".to_owned()))
             }
@@ -164,6 +164,8 @@ fn main() -> std::io::Result<()> {
             ),
         }
     }
-    socket.shutdown(std::net::Shutdown::Both).unwrap_or(warn!("Failed to close sockets"));
+    socket
+        .shutdown(std::net::Shutdown::Both)
+        .unwrap_or(warn!("Failed to close sockets"));
     Ok(())
 }

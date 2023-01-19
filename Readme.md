@@ -49,3 +49,23 @@ This project is an improved rewrite of the [AcaciaLinux branch client](https://g
 * **-rbs / --releasebuildsol [sol_file]:** Submits a branch release solution to the server.
 
 * **-cbs / --crossbuildsol [sol_file]:** Submits a branch cross solution to the server.
+
+## Config
+
+The default config (rranch.toml) should look similar to this:
+
+```toml
+#master config
+[master]
+addr = "localhost"
+port = 27015
+authkey = "key"
+
+#client config
+[client]
+name = "client-name"
+#an optional value you can omit if you just want to connect as controller
+type = "CONTROLLER"
+#info / debug / trace / none
+loglevel = "trace"
+```
