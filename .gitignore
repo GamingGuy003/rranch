@@ -4,7 +4,7 @@
 
 #config
 rranch.toml
-
+work
 # a few template packagebuilds and other files for testing that are unnecessary to be tracked
 /testing/
  

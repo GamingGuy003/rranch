@@ -6,7 +6,7 @@ use cmds::cmds::{
 use conn::conn::connect;
 use console::Style;
 use dbs::dbs::run_dbs;
-use log::{debug, error, warn};
+use log::{debug, error, trace};
 use std::process::exit;
 use structs::config::{Client, Config, Master};
 
@@ -58,7 +58,7 @@ fn main() -> std::io::Result<()> {
 
     //get arg array and connect
     let funcs = argparser.funcs();
-    let _yellow = Style::new().yellow();
+    let yellow = Style::new().yellow();
     let socket = connect(
         conf.master
             .as_ref()
@@ -85,17 +85,19 @@ fn main() -> std::io::Result<()> {
             .as_str(),
         format!(
             "{}",
-            conf.client
-                .as_ref()
-                .unwrap_or(&Client {
-                    name: None,
-                    r#type: None,
-                    loglevel: None
-                })
-                .name
-                .clone()
-                .unwrap_or("a-rranch-client".to_owned())
-                .clone()
+            yellow.apply_to(
+                conf.client
+                    .as_ref()
+                    .unwrap_or(&Client {
+                        name: None,
+                        r#type: None,
+                        loglevel: None
+                    })
+                    .name
+                    .clone()
+                    .unwrap_or("a-rranch-client".to_owned())
+                    .clone()
+            )
         )
         .as_str(),
         conf.master
@@ -166,6 +168,6 @@ fn main() -> std::io::Result<()> {
     }
     socket
         .shutdown(std::net::Shutdown::Both)
-        .unwrap_or(warn!("Failed to close sockets"));
+        .unwrap_or(trace!("Failed to close sockets"));
     Ok(())
 }
