@@ -6,5 +6,6 @@ authkey = "monn"
 
 #client config
 [client]
-name = "rusttop"
-loglevel = "info"
+name = "bldgar"
+type = "CONTROLLER"
+loglevel = "trace"

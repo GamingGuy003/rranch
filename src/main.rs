@@ -6,7 +6,7 @@ use cmds::cmds::{
 use conn::conn::connect;
 use console::Style;
 use dbs::dbs::run_dbs;
-use log::{debug, error};
+use log::{debug, error, warn};
 use std::process::exit;
 use structs::config::{Client, Config, Master};
 
@@ -58,7 +58,7 @@ fn main() -> std::io::Result<()> {
 
     //get arg array and connect
     let funcs = argparser.funcs();
-    let yellow = Style::new().yellow();
+    let _yellow = Style::new().yellow();
     let socket = connect(
         conf.master
             .as_ref()
@@ -85,8 +85,7 @@ fn main() -> std::io::Result<()> {
             .as_str(),
         format!(
             "{}",
-            yellow.apply_to(
-                conf.client
+            conf.client
                     .as_ref()
                     .unwrap_or(&Client {
                         name: None,
@@ -97,7 +96,6 @@ fn main() -> std::io::Result<()> {
                     .clone()
                     .unwrap_or("a-rranch-client".to_owned())
                     .clone()
-            )
         )
         .as_str(),
         conf.master
@@ -166,5 +164,6 @@ fn main() -> std::io::Result<()> {
             ),
         }
     }
+    socket.shutdown(std::net::Shutdown::Both).unwrap_or(warn!("Failed to close sockets"));
     Ok(())
 }
