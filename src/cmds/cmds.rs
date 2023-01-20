@@ -677,7 +677,7 @@ pub fn view_dependers(socket: &TcpStream, pkg_name: &str) {
         exit(-1)
     }
 
-    println!("{}", bold.apply_to(format!("Dependers on {}:", pkg_name)));
+    println!("{}", bold.apply_to(format!("\nDependers on {}:", pkg_name)));
     print_vec_cols(
         serde_json::from_str::<Vec<String>>(&resp).unwrap_or(Vec::new()),
         None,
