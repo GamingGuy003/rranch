@@ -496,7 +496,7 @@ pub fn managed_pkgs(socket: &TcpStream) {
     println!("{}", bold.apply_to("Managed packages:"));
     if pkgs.len() > 0 {
         pkgs.sort();
-        print_vec_cols(pkgs, None);
+        print_vec_cols(pkgs, None, 0);
     } else {
         println!("No managed packages on server");
     }
@@ -521,7 +521,7 @@ pub fn managed_pkg_builds(socket: &TcpStream) {
     println!("{}", bold.apply_to("Managed packageuilds:"));
     if pkgb.len() > 0 {
         pkgb.sort();
-        print_vec_cols(pkgb, None);
+        print_vec_cols(pkgb, None, 0);
     } else {
         println!("No managed packagebuilds on server");
     }
@@ -569,7 +569,7 @@ pub fn diff_pkgs(socket: &TcpStream) {
                 .unwrap_or(&"default_with_some_length".to_owned())
                 .chars()
                 .count()
-                + 13) as i32,
+                + 5) as i32,
         );
     } else {
         max = Some(
@@ -579,10 +579,10 @@ pub fn diff_pkgs(socket: &TcpStream) {
                 .unwrap_or(&"default_with_some_length".to_owned())
                 .chars()
                 .count()
-                + 21) as i32,
+                + 5) as i32,
         );
     }
-    println!("");
+    println!("max + 13: {:?}", max);
     //let max = Some((pkgb.iter().max_by_key(|s| s.chars().count()).unwrap_or(exit(-1)).chars().count() + 5) as i32);
     for pbuild in pkgb {
         if pkgs.contains(&pbuild) {
@@ -594,13 +594,13 @@ pub fn diff_pkgs(socket: &TcpStream) {
 
     println!("{}", bold.apply_to("Package / Packageuild diff:"));
     if diff.len() > 0 {
-        print_vec_cols(diff, max);
+        print_vec_cols(diff, max, 0);
     } else {
         println!("No managed packagebuilds on server");
     }
 }
 
-fn print_vec_cols(vec: Vec<String>, mut max: Option<i32>) {
+fn print_vec_cols(vec: Vec<String>, mut max: Option<i32>, offset: i32) {
     if max.is_none() {
         max = Some(
             (vec.iter()
@@ -612,7 +612,7 @@ fn print_vec_cols(vec: Vec<String>, mut max: Option<i32>) {
         );
     }
 
-    let elem_width = max.unwrap_or(30);
+    let elem_width = max.unwrap_or(30) + offset;
     let colcount = (termion::terminal_size().unwrap_or((0, 0)).0 / elem_width as u16) as usize;
     for (idx, val) in vec.into_iter().enumerate() {
         if idx % colcount == 0 && idx != 0 {
@@ -681,6 +681,7 @@ pub fn view_dependers(socket: &TcpStream, pkg_name: &str) {
     print_vec_cols(
         serde_json::from_str::<Vec<String>>(&resp).unwrap_or(Vec::new()),
         None,
+        0
     );
 }
 
@@ -948,11 +949,11 @@ pub fn show_deps(socket: &TcpStream, pkg_name: &str) {
             .unwrap_or(&"".to_owned())
             .chars()
             .count()
-            + 21) as i32,
+            + 5) as i32,
     );
     println!("{}", bold.apply_to(format!("\nDependencies for {}:", pkg_name)));
     if diffdeps.len() > 0 {
-        print_vec_cols(diffdeps, maxdeps);
+        print_vec_cols(diffdeps, maxdeps, 8);
     } else {
         println!("No runtimedependencies.");
     }
@@ -965,11 +966,11 @@ pub fn show_deps(socket: &TcpStream, pkg_name: &str) {
             .unwrap_or(&"".to_owned())
             .chars()
             .count()
-            + 21) as i32,
+            + 5) as i32,
     );
     println!("{}", bold.apply_to(format!("Builddependencies for {}:", pkg_name)));
     if diffbdeps.len() > 0 {
-        print_vec_cols(diffbdeps, maxbdeps);
+        print_vec_cols(diffbdeps, maxbdeps, 8);
     } else {
         println!("No builddependencies.");
     }
@@ -982,11 +983,11 @@ pub fn show_deps(socket: &TcpStream, pkg_name: &str) {
             .unwrap_or(&"".to_owned())
             .chars()
             .count()
-            + 21) as i32,
+            + 5) as i32,
     );
     println!("{}", bold.apply_to(format!("Crossdependencies for {}:", pkg_name)));
     if diffcdeps.len() > 0 {
-        print_vec_cols(diffcdeps, maxcdeps);
+        print_vec_cols(diffcdeps, maxcdeps, 8);
     } else {
         println!("No crossdependencies.");
     }

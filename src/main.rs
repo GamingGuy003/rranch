@@ -174,5 +174,6 @@ fn main() -> std::io::Result<()> {
         Ok(_) => {}
         Err(err) => trace!("Failed to close socket: {}", err),
     }
+    println!("wosn des");
     Ok(())
 }
