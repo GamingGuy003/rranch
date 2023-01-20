@@ -22,6 +22,8 @@ This project is an improved rewrite of the [AcaciaLinux branch client](https://g
 
 * **-vl / --viewlog [job_id]:** Requests build log of the specified completed job.
 
+* **-vll / --viewlastlog:** Requests the log of the last job that completed.
+
 * **-st / --status:** Requests a list of running / completed / queued jobs.
 
 * **-w / --watch [interval]:** Watches the joblist in the given interval in seconds.

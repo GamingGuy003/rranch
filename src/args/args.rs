@@ -90,6 +90,12 @@ impl ArgParser {
                     Some("job_id".to_owned()),
                 ),
                 Arg::new(
+                    "vll",
+                    "viewlastlog",
+                    "Requests the log of the last job that completed.",
+                    None
+                ),
+                Arg::new(
                     "st",
                     "status",
                     "Requests a list of running / completed / queued jobs.",

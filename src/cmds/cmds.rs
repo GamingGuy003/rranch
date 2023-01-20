@@ -342,6 +342,40 @@ pub fn view_log(socket: &TcpStream, job_id: &str) {
     }
 }
 
+pub fn latest_log(socket: &TcpStream) {
+    //completed jobs
+    let resp = match write_and_read(socket, "COMPLETED_JOBS_STATUS".to_owned()) {
+        Ok(resp) => {
+            debug!("Successfully fetched completed jobs from server");
+            resp
+        }
+        Err(err) => {
+            error!("Encountered error while communicating with server: {}", err);
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
+            exit(-1)
+        }
+    };
+
+    let completed = serde_json::from_str::<Vec<Job>>(&resp).unwrap_or(Vec::new());
+    trace!("Successfully received and parsed completed jobs");
+    let last_id = match completed.last() { 
+        Some(last) => last.get_id(),
+        None => {
+            info!("No completed jobs.");
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
+            exit(-1)
+        }
+    };
+    
+    view_log(&socket, &last_id);
+}
+
 pub fn cancel_queued_job(socket: &TcpStream, job_id: &str) {
     let resp = match write_and_read(socket, format!("CANCEL_QUEUED_JOB {}", job_id)) {
         Ok(resp) => {
@@ -906,6 +940,7 @@ pub fn show_deps(socket: &TcpStream, pkg_name: &str) {
         }
     }
 
+
     let maxdeps = Some(
         (deps
             .iter()
@@ -913,7 +948,7 @@ pub fn show_deps(socket: &TcpStream, pkg_name: &str) {
             .unwrap_or(&"".to_owned())
             .chars()
             .count()
-            + 5) as i32,
+            + 21) as i32,
     );
     println!("{}", bold.apply_to(format!("\nDependencies for {}:", pkg_name)));
     if diffdeps.len() > 0 {
@@ -921,6 +956,8 @@ pub fn show_deps(socket: &TcpStream, pkg_name: &str) {
     } else {
         println!("No runtimedependencies.");
     }
+
+
     let maxbdeps = Some(
         (bdeps
             .iter()
@@ -928,7 +965,7 @@ pub fn show_deps(socket: &TcpStream, pkg_name: &str) {
             .unwrap_or(&"".to_owned())
             .chars()
             .count()
-            + 5) as i32,
+            + 21) as i32,
     );
     println!("{}", bold.apply_to(format!("Builddependencies for {}:", pkg_name)));
     if diffbdeps.len() > 0 {
@@ -936,6 +973,8 @@ pub fn show_deps(socket: &TcpStream, pkg_name: &str) {
     } else {
         println!("No builddependencies.");
     }
+
+
     let maxcdeps = Some(
         (cdeps
             .iter()
@@ -943,7 +982,7 @@ pub fn show_deps(socket: &TcpStream, pkg_name: &str) {
             .unwrap_or(&"".to_owned())
             .chars()
             .count()
-            + 5) as i32,
+            + 21) as i32,
     );
     println!("{}", bold.apply_to(format!("Crossdependencies for {}:", pkg_name)));
     if diffcdeps.len() > 0 {

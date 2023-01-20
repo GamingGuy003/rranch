@@ -25,4 +25,8 @@ impl Job {
             self.requesting_client
         )
     }
+
+    pub fn get_id(&self) -> String {
+        self.job_id.clone()
+    }
 }

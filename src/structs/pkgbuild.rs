@@ -117,7 +117,7 @@ impl PKGBuildJson {
                     build = false;
                     continue;
                 }
-                ret.build_script.push(line.replace("\t", ""));
+                ret.build_script.push(line.to_owned());
             } else {
                 if line.len() == 0 {
                     continue;
