@@ -568,7 +568,7 @@ pub fn diff_pkgs(socket: &TcpStream) {
                 .unwrap_or(&"default_with_some_length".to_owned())
                 .chars()
                 .count()
-                + 5) as i32,
+                + 13) as i32,
         );
     } else {
         max = Some(
@@ -578,10 +578,10 @@ pub fn diff_pkgs(socket: &TcpStream) {
                 .unwrap_or(&"default_with_some_length".to_owned())
                 .chars()
                 .count()
-                + 5) as i32,
+                + 13) as i32,
         );
     }
-    //let max = Some((pkgb.iter().max_by_key(|s| s.chars().count()).unwrap_or(exit(-1)).chars().count() + 5) as i32);
+
     for pbuild in pkgb {
         if pkgs.contains(&pbuild) {
             diff.push(format!("{}", green.apply_to(pbuild)));
@@ -611,7 +611,7 @@ fn print_vec_cols(vec: Vec<String>, mut max: Option<i32>, offset: i32) {
     }
 
     let elem_width = max.unwrap_or(30) + offset;
-    let colcount = (Term::stdout().size().0 / elem_width as u16) as usize;
+    let colcount = (Term::stdout().size().1 / elem_width as u16) as usize;
     for (idx, val) in vec.into_iter().enumerate() {
         if idx % colcount == 0 && idx != 0 {
             println!();
@@ -952,7 +952,7 @@ pub fn show_deps(socket: &TcpStream, pkg_name: &str) {
     );
     println!(
         "{}",
-        bold.apply_to(format!("\nDependencies for {}:", pkg_name))
+        bold.apply_to(format!("Dependencies for {}:", pkg_name))
     );
     if diffdeps.len() > 0 {
         print_vec_cols(diffdeps, maxdeps, 8);
