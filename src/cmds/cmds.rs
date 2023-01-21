@@ -581,7 +581,6 @@ pub fn diff_pkgs(socket: &TcpStream) {
                 + 5) as i32,
         );
     }
-    println!("max + 13: {:?}", max);
     //let max = Some((pkgb.iter().max_by_key(|s| s.chars().count()).unwrap_or(exit(-1)).chars().count() + 5) as i32);
     for pbuild in pkgb {
         if pkgs.contains(&pbuild) {
