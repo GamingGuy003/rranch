@@ -93,7 +93,7 @@ impl ArgParser {
                     "vll",
                     "viewlastlog",
                     "Requests the log of the last job that completed.",
-                    None
+                    None,
                 ),
                 Arg::new(
                     "st",

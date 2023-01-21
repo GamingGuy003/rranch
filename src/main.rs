@@ -1,8 +1,8 @@
 use cmds::cmds::{
     cancel_all_jobs, cancel_queued_job, checkout_pkg, clear_completed_jobs, client_status,
-    create_template, diff_pkgs, managed_pkg_builds, managed_pkgs, rebuild_dependers, show_deps,
-    status, submit_build, submit_pkg, submit_solution, view_dependers, view_log, view_sys_log,
-    watch_jobs, latest_log,
+    create_template, diff_pkgs, latest_log, managed_pkg_builds, managed_pkgs, rebuild_dependers,
+    show_deps, status, submit_build, submit_pkg, submit_solution, view_dependers, view_log,
+    view_sys_log, watch_jobs,
 };
 use conn::conn::connect;
 use console::Style;

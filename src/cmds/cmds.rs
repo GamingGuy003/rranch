@@ -360,7 +360,7 @@ pub fn latest_log(socket: &TcpStream) {
 
     let completed = serde_json::from_str::<Vec<Job>>(&resp).unwrap_or(Vec::new());
     trace!("Successfully received and parsed completed jobs");
-    let last_id = match completed.last() { 
+    let last_id = match completed.last() {
         Some(last) => last.get_id(),
         None => {
             info!("No completed jobs.");
@@ -371,7 +371,7 @@ pub fn latest_log(socket: &TcpStream) {
             exit(-1)
         }
     };
-    
+
     view_log(&socket, &last_id);
 }
 
@@ -680,7 +680,7 @@ pub fn view_dependers(socket: &TcpStream, pkg_name: &str) {
     print_vec_cols(
         serde_json::from_str::<Vec<String>>(&resp).unwrap_or(Vec::new()),
         None,
-        0
+        0,
     );
 }
 
@@ -816,7 +816,7 @@ pub fn watch_jobs(socket: &TcpStream, interval: &str) {
     loop {
         i += 1;
         term.clear_screen().unwrap_or(());
-        term.move_cursor_to(1, 1).unwrap_or(());      
+        term.move_cursor_to(1, 1).unwrap_or(());
         status(socket);
         info!("Update: {}", i);
         std::thread::sleep(Duration::from_secs(n));
@@ -942,7 +942,6 @@ pub fn show_deps(socket: &TcpStream, pkg_name: &str) {
         }
     }
 
-
     let maxdeps = Some(
         (deps
             .iter()
@@ -952,13 +951,15 @@ pub fn show_deps(socket: &TcpStream, pkg_name: &str) {
             .count()
             + 5) as i32,
     );
-    println!("{}", bold.apply_to(format!("\nDependencies for {}:", pkg_name)));
+    println!(
+        "{}",
+        bold.apply_to(format!("\nDependencies for {}:", pkg_name))
+    );
     if diffdeps.len() > 0 {
         print_vec_cols(diffdeps, maxdeps, 8);
     } else {
         println!("No runtimedependencies.");
     }
-
 
     let maxbdeps = Some(
         (bdeps
@@ -969,13 +970,15 @@ pub fn show_deps(socket: &TcpStream, pkg_name: &str) {
             .count()
             + 5) as i32,
     );
-    println!("{}", bold.apply_to(format!("Builddependencies for {}:", pkg_name)));
+    println!(
+        "{}",
+        bold.apply_to(format!("Builddependencies for {}:", pkg_name))
+    );
     if diffbdeps.len() > 0 {
         print_vec_cols(diffbdeps, maxbdeps, 8);
     } else {
         println!("No builddependencies.");
     }
-
 
     let maxcdeps = Some(
         (cdeps
@@ -986,7 +989,10 @@ pub fn show_deps(socket: &TcpStream, pkg_name: &str) {
             .count()
             + 5) as i32,
     );
-    println!("{}", bold.apply_to(format!("Crossdependencies for {}:", pkg_name)));
+    println!(
+        "{}",
+        bold.apply_to(format!("Crossdependencies for {}:", pkg_name))
+    );
     if diffcdeps.len() > 0 {
         print_vec_cols(diffcdeps, maxcdeps, 8);
     } else {
