@@ -816,7 +816,7 @@ pub fn watch_jobs(socket: &TcpStream, interval: &str) {
     loop {
         i += 1;
         term.clear_screen().unwrap_or(());
-        term.move_cursor_to(1, 1).unwrap_or(());
+        term.move_cursor_to(0, 1).unwrap_or(());
         status(socket);
         info!("Update: {}", i);
         std::thread::sleep(Duration::from_secs(n));
