@@ -4,9 +4,8 @@ use std::{
     time::Duration,
 };
 
-use console::Style;
+use console::{Style, Term};
 use log::{debug, error, info, trace, warn};
-use termion::{clear, cursor};
 
 use crate::{
     coms::coms::write_and_read,
@@ -613,7 +612,7 @@ fn print_vec_cols(vec: Vec<String>, mut max: Option<i32>, offset: i32) {
     }
 
     let elem_width = max.unwrap_or(30) + offset;
-    let colcount = (termion::terminal_size().unwrap_or((0, 0)).0 / elem_width as u16) as usize;
+    let colcount = (Term::stdout().size().0 / elem_width as u16) as usize;
     for (idx, val) in vec.into_iter().enumerate() {
         if idx % colcount == 0 && idx != 0 {
             println!();
@@ -813,9 +812,11 @@ pub fn watch_jobs(socket: &TcpStream, interval: &str) {
         0
     });
     let mut i: u128 = 0;
+    let term = Term::stdout();
     loop {
         i += 1;
-        print!("{}{}", clear::All, cursor::Goto(1, 1));
+        term.clear_screen().unwrap_or(());
+        term.move_cursor_to(1, 1).unwrap_or(());      
         status(socket);
         info!("Update: {}", i);
         std::thread::sleep(Duration::from_secs(n));
