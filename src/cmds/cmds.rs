@@ -1,7 +1,7 @@
 use std::{
     net::{Shutdown, TcpStream},
-    process::exit,
-    time::Duration,
+    process::{exit, Command},
+    time::Duration, io::Write,
 };
 
 use console::{Style, Term};
@@ -53,11 +53,36 @@ pub fn checkout_pkg(socket: &TcpStream, pkg_name: &str) {
     };
 
     json.create_workdir();
-    info!("Successfully checked out package {}", pkg_name);
 }
 
 pub fn submit_pkg(socket: &TcpStream, filename: &str) {
     let pkgbuild = PKGBuildJson::from_pkgbuild(filename);
+
+    let resp = match write_and_read(socket, "MANAGED_PKGBUILDS".to_owned()) {
+        Ok(resp) => resp,
+        Err(err) => {
+            error!("Error communicating with server: {}", err);
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
+            exit(-1)
+        }
+    };
+
+    let pkgb: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or(Vec::new());
+    if pkgb.contains(&pkgbuild.get_name()) {
+        if !get_choice("Packagebuild exists on remote. Do you want to overwrite it?") {
+            error!("Aborted submit due to user choice");
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
+            exit(-1)
+        }
+    }
+
+
     let json = serde_json::to_string(&pkgbuild).unwrap_or("".to_owned());
     if json.len() == 0 {
         error!("Failed to serialize struct! Check pkgbuild content...");
@@ -996,5 +1021,75 @@ pub fn show_deps(socket: &TcpStream, pkg_name: &str) {
         print_vec_cols(diffcdeps, maxcdeps, 8);
     } else {
         println!("No crossdependencies.");
+    }
+}
+
+pub fn get_choice(text: &str) -> bool {
+    let red = Style::new().red();
+    let green = Style::new().green();
+    let bold = Style::new().bold();
+
+    let mut _failed = false;
+    loop {
+        let mut input = String::new();
+        if _failed {
+            println!("Invalid input, please try again");
+            _failed = false;
+        }
+        print!("{}? [{}/{}] ", text, format!("{}", green.apply_to(format!("{}{}", bold.apply_to("Y"), "es"))), format!("{}", red.apply_to(format!("{}{}", bold.apply_to("N"), "o"))));
+        std::io::stdout().flush().unwrap_or(());
+        std::io::stdin().read_line(&mut input).unwrap_or(0);
+        let input = input.trim();
+        if input.len() == 0 || input.to_lowercase() == "no" || input.to_lowercase() == "n" {
+            return false
+        } else if input.to_lowercase() == "yes" || input.to_lowercase() == "y" {
+            return true
+        } else {
+            _failed = true;
+        }
+        
+    }
+}
+
+pub fn edit(socket: &TcpStream, pkg_name: &str, editor: &str) {
+    checkout_pkg(socket, pkg_name);
+    let path = format!("{}/package.bpb", pkg_name);
+
+    let child = Command::new(editor).arg(path.clone()).spawn();
+    match child {
+        Ok(mut child) => {
+            let exit_status = match child.wait() {
+                Ok(status) => status,
+                Err(err) => {
+                    error!("Failed to wait on child: {}", err);
+                    match socket.shutdown(std::net::Shutdown::Both) {
+                        Ok(_) => {}
+                        Err(err) => trace!("Failed to close socket: {}", err),
+                    }
+                    exit(-1)
+                },
+            };
+            if !exit_status.success() {
+                error!("Editor closed with error");
+                match socket.shutdown(std::net::Shutdown::Both) {
+                    Ok(_) => {}
+                    Err(err) => trace!("Failed to close socket: {}", err),
+                }
+                exit(-1)
+            }
+        },
+        Err(_) => {
+            error!("Editor {} not found", editor);
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
+            exit(-1)
+        }
+    }
+    if get_choice("Do you want to submit the changes?") {
+        submit_pkg(socket, path.clone().as_str());
+    } else {
+        info!("Aborted submit due to user choice.");
     }
 }

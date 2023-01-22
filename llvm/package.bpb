@@ -1,0 +1,47 @@
+name=llvm
+version=15.0.7
+description=The LLVM package contains a collection of modular and reusable compiler and toolchain technologies.
+real_version=0
+source=https://github.com/llvm/llvm-project/releases/download/llvmorg-15.0.7/llvm-15.0.7.src.tar.xz
+extra_sources=[https://anduin.linuxfromscratch.org/BLFS/llvm/llvm-cmake-15.0.7.src.tar.xz][https://github.com/llvm/llvm-project/releases/download/llvmorg-15.0.7/clang-15.0.7.src.tar.xz][https://www.linuxfromscratch.org/patches/blfs/svn/clang-15.0.7-enable_default_ssp-1.patch][https://github.com/llvm/llvm-project/releases/download/llvmorg-15.0.7/compiler-rt-15.0.7.src.tar.xz]
+dependencies=[perl]
+builddeps=[perl][cmake][libxml2][rsync][python3][ninja][libstdcpp]
+build={
+	cd $PKG_NAME-$PKG_VERSION.src
+	tar -xf ../llvm-cmake-15.0.7.src.tar.xz &&
+	mv cmake-15.0.7.src ../cmake
+	
+	tar -xf ../clang-15.0.7.src.tar.xz -C tools &&
+	mv tools/clang-15.0.7.src tools/clang
+	
+	tar -xf ../compiler-rt-15.0.7.src.tar.xz -C projects &&
+	mv projects/compiler-rt-15.0.7.src projects/compiler-rt
+	
+	grep -rl '#!.*python' | xargs sed -i '1s/python$/python3/'
+	
+	pip3 install psutil
+	
+	patch -Np2 -d tools/clang <../clang-15.0.7-enable_default_ssp-1.patch
+	
+	mkdir -v build &&
+	cd       build &&
+	
+	CC=gcc CXX=g++                                  \
+	cmake -DCMAKE_INSTALL_PREFIX=/usr               \
+	      -DLLVM_ENABLE_FFI=ON                      \
+	      -DCMAKE_BUILD_TYPE=Release                \
+	      -DLLVM_BUILD_LLVM_DYLIB=ON                \
+	      -DLLVM_LINK_LLVM_DYLIB=ON                 \
+	      -DLLVM_ENABLE_RTTI=ON                     \
+	      -DLLVM_TARGETS_TO_BUILD="host;AMDGPU;BPF" \
+	      -DLLVM_BINUTILS_INCDIR=/usr/include       \
+	      -DLLVM_INCLUDE_BENCHMARKS=OFF             \
+	      -DCLANG_DEFAULT_PIE_ON_LINUX=ON           \
+	      -Wno-dev -G Ninja ..                      &&
+	ninja -j$(nproc)
+	
+	ninja check-all
+	
+	ninja install -D DESTDIR=$PKG_INSTALL_DIR &&
+	cp bin/FileCheck $PKG_INSTALL_DIR/usr/bin
+}

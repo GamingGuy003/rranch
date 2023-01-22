@@ -21,9 +21,11 @@ pub struct Client {
     pub name: Option<String>,
     pub r#type: Option<String>,
     pub loglevel: Option<String>,
+    pub editor: Option<String>,
 }
 
 impl Config {
+
     pub fn new_from_cfg(filename: &str) -> Self {
         let file = match std::fs::read_to_string(filename) {
             Ok(file) => {
@@ -51,6 +53,7 @@ impl Config {
         let mut name = "a-rranch-client".to_owned();
         let mut r#type = "CONTROLLER".to_owned();
         let mut loglevel = "NONE".to_owned();
+        let mut editor = "vim".to_owned();
         let mut addr = "localhost".to_owned();
         let mut port = 27015;
         let mut authkey = "".to_owned();
@@ -59,22 +62,14 @@ impl Config {
             && config
                 .client
                 .as_ref()
-                .unwrap_or(&Client {
-                    name: None,
-                    r#type: None,
-                    loglevel: None,
-                })
+                .unwrap_or(&Client::empty())
                 .name
                 .is_some()
         {
             name = config
                 .client
                 .as_ref()
-                .unwrap_or(&Client {
-                    name: None,
-                    r#type: None,
-                    loglevel: None,
-                })
+                .unwrap_or(&Client::empty())
                 .name
                 .as_ref()
                 .unwrap_or(&"a-rranch-client".to_string())
@@ -85,22 +80,14 @@ impl Config {
             && config
                 .client
                 .as_ref()
-                .unwrap_or(&Client {
-                    name: None,
-                    r#type: None,
-                    loglevel: None,
-                })
+                .unwrap_or(&Client::empty())
                 .r#type
                 .is_some()
         {
             r#type = config
                 .client
                 .as_ref()
-                .unwrap_or(&Client {
-                    name: None,
-                    r#type: None,
-                    loglevel: None,
-                })
+                .unwrap_or(&Client::empty())
                 .r#type
                 .as_ref()
                 .unwrap_or(&"CONTROLLER".to_string())
@@ -111,25 +98,28 @@ impl Config {
             && config
                 .client
                 .as_ref()
-                .unwrap_or(&Client {
-                    name: None,
-                    r#type: None,
-                    loglevel: None,
-                })
+                .unwrap_or(&Client::empty())
                 .loglevel
                 .is_some()
         {
             loglevel = config
                 .client
                 .as_ref()
-                .unwrap_or(&Client {
-                    name: None,
-                    r#type: None,
-                    loglevel: None,
-                })
+                .unwrap_or(&Client::empty())
                 .loglevel
                 .as_ref()
                 .unwrap_or(&"none".to_string())
+                .to_string();
+        }
+
+        if config.client.as_ref().is_some() && config.client.as_ref().unwrap_or(&Client::empty()).editor.is_some(){
+            editor = config
+                .client
+                .as_ref()
+                .unwrap_or(&Client::empty())
+                .editor
+                .as_ref()
+                .unwrap_or(&"vim".to_string())
                 .to_string();
         }
 
@@ -137,22 +127,14 @@ impl Config {
             && config
                 .master
                 .as_ref()
-                .unwrap_or(&Master {
-                    addr: None,
-                    port: None,
-                    authkey: None,
-                })
+                .unwrap_or(&Master::empty())
                 .addr
                 .is_some()
         {
             addr = config
                 .master
                 .as_ref()
-                .unwrap_or(&Master {
-                    addr: None,
-                    port: None,
-                    authkey: None,
-                })
+                .unwrap_or(&Master::empty())
                 .addr
                 .as_ref()
                 .unwrap_or(&"localhost".to_string())
@@ -163,22 +145,14 @@ impl Config {
             && config
                 .master
                 .as_ref()
-                .unwrap_or(&Master {
-                    addr: None,
-                    port: None,
-                    authkey: None,
-                })
+                .unwrap_or(&Master::empty())
                 .port
                 .is_some()
         {
             port = *config
                 .master
                 .as_ref()
-                .unwrap_or(&Master {
-                    addr: None,
-                    port: None,
-                    authkey: None,
-                })
+                .unwrap_or(&Master::empty())
                 .port
                 .as_ref()
                 .unwrap_or(&27015);
@@ -188,22 +162,14 @@ impl Config {
             && config
                 .master
                 .as_ref()
-                .unwrap_or(&Master {
-                    addr: None,
-                    port: None,
-                    authkey: None,
-                })
+                .unwrap_or(&Master::empty())
                 .authkey
                 .is_some()
         {
             authkey = config
                 .master
                 .as_ref()
-                .unwrap_or(&Master {
-                    addr: None,
-                    port: None,
-                    authkey: None,
-                })
+                .unwrap_or(&Master::empty())
                 .authkey
                 .as_ref()
                 .unwrap_or(&"defautl".to_string())
@@ -220,7 +186,20 @@ impl Config {
                 name: Some(name),
                 r#type: Some(r#type),
                 loglevel: Some(loglevel),
+                editor: Some(editor),
             }),
         }
+    }
+}
+
+impl Master {
+    pub fn empty() -> Self {
+        Self { addr: None, port: None, authkey: None }
+    }
+}
+
+impl Client {
+    pub fn empty() -> Self {
+        Self { name: None, r#type: None, loglevel: None, editor: None }
     }
 }

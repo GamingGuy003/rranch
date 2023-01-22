@@ -2,7 +2,7 @@ use cmds::cmds::{
     cancel_all_jobs, cancel_queued_job, checkout_pkg, clear_completed_jobs, client_status,
     create_template, diff_pkgs, latest_log, managed_pkg_builds, managed_pkgs, rebuild_dependers,
     show_deps, status, submit_build, submit_pkg, submit_solution, view_dependers, view_log,
-    view_sys_log, watch_jobs,
+    view_sys_log, watch_jobs, edit,
 };
 use conn::conn::connect;
 use console::Style;
@@ -27,11 +27,7 @@ fn main() -> std::io::Result<()> {
     match conf
         .client
         .as_ref()
-        .unwrap_or(&Client {
-            name: None,
-            r#type: None,
-            loglevel: None,
-        })
+        .unwrap_or(&Client::empty())
         .loglevel
         .clone()
         .unwrap_or("".to_owned())
@@ -63,22 +59,14 @@ fn main() -> std::io::Result<()> {
     let socket = connect(
         conf.master
             .as_ref()
-            .unwrap_or(&Master {
-                addr: None,
-                port: None,
-                authkey: None,
-            })
+            .unwrap_or(&Master::empty())
             .addr
             .clone()
             .unwrap_or("localhost".to_owned())
             .as_str(),
         conf.master
             .as_ref()
-            .unwrap_or(&Master {
-                addr: None,
-                port: None,
-                authkey: None,
-            })
+            .unwrap_or(&Master::empty())
             .port
             .clone()
             .unwrap_or(27015)
@@ -89,11 +77,7 @@ fn main() -> std::io::Result<()> {
             yellow.apply_to(
                 conf.client
                     .as_ref()
-                    .unwrap_or(&Client {
-                        name: None,
-                        r#type: None,
-                        loglevel: None
-                    })
+                    .unwrap_or(&Client::empty())
                     .name
                     .clone()
                     .unwrap_or("a-rranch-client".to_owned())
@@ -103,22 +87,14 @@ fn main() -> std::io::Result<()> {
         .as_str(),
         conf.master
             .as_ref()
-            .unwrap_or(&Master {
-                addr: None,
-                port: None,
-                authkey: None,
-            })
+            .unwrap_or(&Master::empty())
             .authkey
             .clone()
             .unwrap_or("default".to_owned())
             .as_str(),
         conf.client
             .as_ref()
-            .unwrap_or(&Client {
-                name: None,
-                r#type: None,
-                loglevel: None,
-            })
+            .unwrap_or(&Client::empty())
             .r#type
             .clone()
             .unwrap_or("CONTROLLER".to_owned())
@@ -129,12 +105,15 @@ fn main() -> std::io::Result<()> {
         argparser.help();
         exit(0)
     }
+
+    let editor = conf.client.unwrap_or(Client::empty()).editor.unwrap_or("".to_owned());
     //work out which function to execute
     for func in funcs {
         let fmatch = (func.0.as_str(), func.1);
         match fmatch {
             ("--debugshell", _) => run_dbs(&socket),
             ("--checkout", name) => checkout_pkg(&socket, &name.unwrap_or("".to_owned())),
+            ("--edit", name) => edit(&socket, &name.unwrap_or("".to_owned()), editor.as_str()),
             ("--template", _) => create_template(),
             ("--submit", filename) => submit_pkg(&socket, &filename.unwrap_or("".to_owned())),
             ("--releasebuild", name) => {

@@ -64,6 +64,12 @@ impl ArgParser {
                     "Checks out the specified packagebuild from the server.",
                     Some("name".to_owned()),
                 ),
+                Arg::new(
+                    "e",
+                    "edit",
+                    "Checks out packagebuild, opens it in a editor and submits the changed packagebuild.",
+                    Some("name".to_owned()),
+                ),
                 Arg::new("t", "template", "Creates a template packagebuild.", None),
                 Arg::new(
                     "s",

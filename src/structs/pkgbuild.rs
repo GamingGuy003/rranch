@@ -3,6 +3,8 @@ use std::process::exit;
 use log::{debug, error, info, trace, warn};
 use serde_derive::{Deserialize, Serialize};
 
+use crate::cmds::cmds::get_choice;
+
 #[derive(Deserialize, Serialize)]
 pub struct PKGBuildJson {
     //mandatory fields
@@ -214,13 +216,18 @@ impl PKGBuildJson {
         trace!("Creating workdir for {}", self.name);
         let path = self.name.as_str();
         if let Ok(_) = std::fs::metadata(path) {
-            warn!("Build dir exists, overwriting...");
-            match std::fs::remove_dir_all(path) {
-                Ok(_) => debug!("Removed old dir"),
-                Err(err) => {
-                    error!("Error removing directory: {}", err);
-                    exit(-1)
+            if get_choice("Build dir already exists. Do you want to overwrite it?") {
+                warn!("Overwriting existing builddir...");
+                match std::fs::remove_dir_all(path) {
+                    Ok(_) => debug!("Removed old dir"),
+                    Err(err) => {
+                        error!("Error removing directory: {}", err);
+                        exit(-1)
+                    }
                 }
+            } else {
+                error!("Abortet due to user choice");
+                return;
             }
         } else {
             info!("Creating build workdir...");
@@ -256,5 +263,9 @@ impl PKGBuildJson {
 
     pub fn get_cross_dependencies(&self) -> Vec<String> {
         self.cross_dependencies.clone()
+    }
+
+    pub fn get_name(&self) -> String {
+        self.name.clone()
     }
 }

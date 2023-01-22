@@ -1,11 +1,12 @@
 #master config
 [master]
-addr = "192.168.178.128"
+addr = "master"
 port = 27015
-authkey = "monn"
+authkey = "key"
 
 #client config
 [client]
-name = "blödgar"
+name = "name"
 type = "CONTROLLER"
 loglevel = "info"
+editor = "vim"

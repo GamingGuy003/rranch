@@ -12,6 +12,8 @@ This project is an improved rewrite of the [AcaciaLinux branch client](https://g
 
 * **-c / --checkout [name]:** Checks out the specified packagebuild from the server.
 
+* **-e / --edit [name]:** Checks out packagebuild, opens it in a editor and submits the changed packagebuild.
+
 * **-t / --template:** Creates a template packagbuild.
 
 * **-s / --submit [filename]:** Submits the specified packagebuild file to the server.
@@ -72,4 +74,6 @@ name = "client-name"
 type = "CONTROLLER"
 #info / debug / trace / none
 loglevel = "trace"
+#the editor to use for the edit command
+editor = "vim"
 ```
