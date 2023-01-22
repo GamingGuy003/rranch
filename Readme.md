@@ -1,6 +1,6 @@
 ## Rranch (Rusty Branch)
 
-This project is an improved rewrite of the [AcaciaLinux branch client](https://github.com/AcaciaLinux/branch) in rust because why not and for a few COL improvements. The code is a mess so good luck every trying to maintain it. All features might work as expected though i do not know.
+This project is an improved rewrite of the [AcaciaLinux branch client](https://github.com/AcaciaLinux/branch) in rust because why not and for a few QOL improvements. The code is a mess so good luck every trying to maintain it. All features might work as expected though i do not know.
 
 
 
