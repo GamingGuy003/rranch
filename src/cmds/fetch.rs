@@ -1,4 +1,4 @@
-use std::{net::TcpStream, process::exit};
+use std::net::TcpStream;
 
 use console::Style;
 use log::{debug, error, info};
@@ -9,7 +9,7 @@ use crate::{
 
 pub fn fetch_dependencies_for(socket: &TcpStream, pkg_name: &str) -> i32 {
     info!("Trying to show dependencies of {}...", pkg_name);
-    let cpkg_resp = match write_and_read(&socket, format!("CHECKOUT_PACKAGE {}", pkg_name)) {
+    let dependencies = match write_and_read(&socket, format!("CHECKOUT_PACKAGE {}", pkg_name)) {
         Ok(msg) => msg,
         Err(err) => {
             error!("{}", err);
@@ -17,15 +17,19 @@ pub fn fetch_dependencies_for(socket: &TcpStream, pkg_name: &str) -> i32 {
         }
     };
 
-    if cpkg_resp == "INV_PKG_NAME" {
-        error!("Invalid package name!");
-        exit(-1)
-    } else if cpkg_resp == "INV_PKG" {
-        error!("The packagebuild is invalid!");
-        return -1;
+    match dependencies.as_str() {
+        "INV_PKG_NAME" => {
+            error!("Invalid package name!");
+            return -1;
+        },
+        "INV_PKG" => {
+            error!("Invalid packagebuild!");
+            return -1;
+        },
+        _ => {}
     }
 
-    let json: PKGBuildJson = match serde_json::from_str(&cpkg_resp) {
+    let packagebuild: PKGBuildJson = match serde_json::from_str(&dependencies) {
         Ok(json) => {
             debug!("Successfully received and deserialized json from server!");
             json
@@ -56,54 +60,55 @@ pub fn fetch_dependencies_for(socket: &TcpStream, pkg_name: &str) -> i32 {
 
     let pkgb: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or(Vec::new());
 
-    let deps = json.get_dependencies();
-    let bdeps = json.get_build_dependencies();
-    let cdeps = json.get_cross_dependencies();
+    let deps = packagebuild.get_dependencies();
+    let bdeps = packagebuild.get_build_dependencies();
+    let cdeps = packagebuild.get_cross_dependencies();
 
-    let bold = Style::new().bold();
-    //dep in neither
-    let red = Style::new().red();
-    //dep only in pkb
-    let yellow = Style::new().yellow();
-    //dep in pkg && pkb
-    let green = Style::new().green();
+    let bold = Style::new().bold();                             //title
+    let red = Style::new().red();                               //dependencies not built nor with packagebuild
+    let yellow = Style::new().yellow();                         //dependencies with packagebuild but not built
+    let green = Style::new().green();                           //dependencies build with packagebuild
 
     let mut diffdeps: Vec<String> = Vec::new();
     let mut diffbdeps: Vec<String> = Vec::new();
     let mut diffcdeps: Vec<String> = Vec::new();
+
+    //adds colors to dependency vector
     for dep in deps.clone() {
         if pkgb.contains(&dep) {
             if pkgs.contains(&dep) {
-                diffdeps.push(format!("{}", green.apply_to(dep)));
+                diffdeps.push(format!("{}", green.apply_to(dep)));      //packagebuild and binary
             } else {
-                diffdeps.push(format!("{}", yellow.apply_to(dep)));
+                diffdeps.push(format!("{}", yellow.apply_to(dep)));     //packagebuild no binary
             }
         } else {
-            diffdeps.push(format!("{}", red.apply_to(dep)));
+            diffdeps.push(format!("{}", red.apply_to(dep)));            //no packagebuild and no binary
         }
     }
 
+    //adds color to build dependecy vector
     for dep in bdeps.clone() {
         if pkgb.contains(&dep) {
             if pkgs.contains(&dep) {
-                diffbdeps.push(format!("{}", green.apply_to(dep)));
+                diffbdeps.push(format!("{}", green.apply_to(dep)));     //packagebuild and binary
             } else {
-                diffbdeps.push(format!("{}", yellow.apply_to(dep)));
+                diffbdeps.push(format!("{}", yellow.apply_to(dep)));    //packagebuild no binary
             }
         } else {
-            diffbdeps.push(format!("{}", red.apply_to(dep)));
+            diffbdeps.push(format!("{}", red.apply_to(dep)));           //no packagebuild and no binary
         }
     }
 
+    //adds color to crossbuild dependency vector
     for dep in cdeps.clone() {
         if pkgb.contains(&dep) {
             if pkgs.contains(&dep) {
-                diffcdeps.push(format!("{}", green.apply_to(dep)));
+                diffcdeps.push(format!("{}", green.apply_to(dep)));     //packagebuild and binary
             } else {
-                diffcdeps.push(format!("{}", yellow.apply_to(dep)));
+                diffcdeps.push(format!("{}", yellow.apply_to(dep)));    //packagebuild no binary
             }
         } else {
-            diffcdeps.push(format!("{}", red.apply_to(dep)));
+            diffcdeps.push(format!("{}", red.apply_to(dep)));           //no packagebuild no binary
         }
     }
 

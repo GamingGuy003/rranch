@@ -8,6 +8,8 @@ This project is an improved rewrite of the [AcaciaLinux branch client](https://g
 
 * **-h / --help:** Shows a handy help text for every possible cli option.
 
+* **-cf / --config [path]:** Tries loading the specified config file.
+
 * **-ds / --debugshell:** Runs a debugshell on the remote server.
 
 * **-c / --checkout [name]:** Checks out the specified packagebuild from the server.

@@ -1,6 +1,4 @@
 use std::process::exit;
-
-use log::{debug, error};
 use serde_derive::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -28,13 +26,12 @@ impl Config {
     pub fn new_from_cfg(filename: &str) -> Self {
         let file = match std::fs::read_to_string(filename) {
             Ok(file) => {
-                debug!("Successfully read config file {}", filename);
                 file
             }
             Err(err) => {
                 println!("Error reading config file: {}", err);
                 println!("Falling back to default config...");
-                println!("To configure the client, create and edit rranch.toml at {}, according to the instructions on the github repo", filename);
+                println!("To configure the client, create and edit rranch.toml at {}, according to the instructions on the github repo or specify an alternate config using the -cf flag.", filename);
                 "".to_owned()
             }
         };
@@ -42,7 +39,7 @@ impl Config {
         let config: Config = match toml::from_str(file.as_str()) {
             Ok(config) => config,
             Err(err) => {
-                error!(
+                println!(
                     "Failed to parse toml from config file {}: {}",
                     filename, err
                 );

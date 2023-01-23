@@ -53,6 +53,12 @@ impl ArgParser {
             validarg: vec![
                 Arg::new("h", "help", "Prints this help dialogue.", None),
                 Arg::new(
+                    "cf",
+                    "config",
+                    "Tries loading the specified config file.",
+                    Some("path".to_owned()),
+                ),
+                Arg::new(
                     "ds",
                     "debugshell",
                     "Runs a debugshell on the remote server.",

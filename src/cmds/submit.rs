@@ -2,7 +2,7 @@ use std::net::TcpStream;
 
 use log::{debug, error, info};
 
-use crate::{coms::coms::write_and_read, structs::pkgbuild::PKGBuildJson, util::util::get_choice};
+use crate::{coms::coms::write_and_read, structs::pkgbuild::PKGBuildJson, util::util::get_choice, cmds::job::request_status};
 
 pub fn submit_solution(socket: &TcpStream, filename: &str, cb: bool) -> i32 {
     let cmd;
@@ -103,7 +103,7 @@ pub fn submit_packagebuild(socket: &TcpStream, filename: &str) -> i32 {
         }
         "CMD_OK" => {
             info!("Package submission accepted by server.");
-            0
+            request_status(socket, false)
         }
         msg => {
             error!("Received unknown message from server: {}", msg);

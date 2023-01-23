@@ -28,42 +28,21 @@ mod structs;
 mod util;
 
 fn main() -> std::io::Result<()> {
-    let conf = Config::new_from_cfg(&format!(
+    let mut confpath = format!(
         "{}/.config/rranch.toml",
         dirs::home_dir()
-            .unwrap_or_else(|| {
-                error!("Failed getting home dir");
-                exit(-1)
-            })
-            .to_str()
-            .unwrap_or_else(|| {
-                trace!("Failed to convert home dir to string!");
-                exit(-1)
-            })
-    ));
-    //set loglevel
-    let mut loglevel = "";
-    match conf
-        .client
-        .as_ref()
-        .unwrap_or(&Client::empty())
-        .loglevel
-        .clone()
-        .unwrap_or("".to_owned())
-        .to_lowercase()
-        .as_str()
-    {
-        "trace" => loglevel = "trace",
-        "debug" => loglevel = "debug",
-        "info" => loglevel = "info",
-        "none" => {}
-        _ => {}
-    }
-    std::env::set_var("rranch_log", loglevel);
-    //init env logger
-    pretty_env_logger::init_custom_env("rranch_log");
-    let mut argparser = ArgParser::new();
+    .unwrap_or_else(|| {
+        error!("Failed getting home dir");
+        exit(-1)
+    })
+    .to_str()
+    .unwrap_or_else(|| {
+        trace!("Failed to convert home dir to string!");
+        exit(-1)
+    }));
+
     //try to fetch arguments from cli and parse them
+    let mut argparser = ArgParser::new();
     match argparser.args() {
         Ok(_) => debug!("Got args: {:?}", argparser.funcs()),
         Err(err) => {
@@ -72,11 +51,48 @@ fn main() -> std::io::Result<()> {
             exit(-1);
         }
     };
+    //check if config has been passed
+    for func in argparser.funcs() {
+        if func.0 == "--config".to_owned() {
+            confpath = func.1.unwrap_or("".to_owned());
+            break
+        }
+    }
 
-    //get arg array and connect
-    let funcs = argparser.funcs();
-    let socketres = connect(
-        conf.master
+    let conf = Config::new_from_cfg(&confpath);
+    //set loglevel
+    let mut loglevel = "";
+    match conf
+    .client
+    .as_ref()
+        .unwrap_or(&Client::empty())
+        .loglevel
+        .clone()
+        .unwrap_or("".to_owned())
+        .to_lowercase()
+        .as_str()
+        {
+            "trace" => loglevel = "trace",
+            "debug" => loglevel = "debug",
+            "info" => loglevel = "info",
+            "none" => {}
+            _ => {}
+        }
+        std::env::set_var("rranch_log", loglevel);
+        //init env logger
+        pretty_env_logger::init_custom_env("rranch_log");
+        
+        for arg in argparser.funcs() {
+            if arg.0 == "--config".to_owned() {
+                //confpath = &arg.1.unwrap_or("".to_owned());
+            }
+        }
+        
+
+        //get arg array and connect
+        let funcs = argparser.funcs();
+        let socketres = connect(
+            conf.master
             .as_ref()
             .unwrap_or(&Master::empty())
             .addr
