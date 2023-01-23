@@ -1,5 +1,5 @@
 use std::{
-    net::{Shutdown, TcpStream},
+    net::TcpStream,
     process::exit,
 };
 
@@ -25,10 +25,7 @@ pub fn fetch_dependencies_for(socket: &TcpStream, pkg_name: &str) -> i32 {
         exit(-1)
     } else if cpkg_resp == "INV_PKG" {
         error!("The packagebuild is invalid!");
-        socket
-            .shutdown(Shutdown::Both)
-            .unwrap_or(trace!("Failed to close socket"));
-        exit(-1)
+        return -1;
     }
 
     let json: PKGBuildJson = match serde_json::from_str(&cpkg_resp) {
@@ -188,10 +185,7 @@ pub fn fetch_dependers_on(socket: &TcpStream, pkg_name: &str) -> i32 {
 
     if resp == "INV_PKG_NAME" {
         error!("Invalid package name!");
-        socket
-            .shutdown(Shutdown::Both)
-            .unwrap_or(trace!("Failed to close socket"));
-        exit(-1)
+        return -1;
     }
 
     println!("{}", bold.apply_to(format!("\nDependers on {}:", pkg_name)));

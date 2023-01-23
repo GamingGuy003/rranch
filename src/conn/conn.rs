@@ -4,7 +4,13 @@ use log::{debug, error, info};
 
 use crate::coms::coms::write_and_read;
 
-pub fn connect(host: &str, port: &str, name: &str, key: &str, ctype: &str) -> Result<TcpStream, i32> {
+pub fn connect(
+    host: &str,
+    port: &str,
+    name: &str,
+    key: &str,
+    ctype: &str,
+) -> Result<TcpStream, i32> {
     info!(
         "Trying to set up master connection to {}:{}. Using client name {} with type {}...",
         host, port, name, ctype
@@ -18,7 +24,7 @@ pub fn connect(host: &str, port: &str, name: &str, key: &str, ctype: &str) -> Re
         }
         Err(err) => {
             error!("Failed to establish connection: {}", err);
-            return Err(-1)
+            return Err(-1);
         }
     };
 

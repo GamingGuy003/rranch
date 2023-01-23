@@ -2,7 +2,7 @@ use std::{io::Write, net::TcpStream};
 
 use log::{debug, error};
 
-use crate::{coms::coms::write_and_read};
+use crate::coms::coms::write_and_read;
 
 //a little debug shell
 pub fn run_dbs(sock: &TcpStream) -> i32 {

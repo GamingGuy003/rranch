@@ -1,7 +1,4 @@
-use std::{
-    net::{Shutdown, TcpStream},
-    process::exit,
-};
+use std::net::TcpStream;
 
 use console::{Style, Term};
 use log::{debug, error, info, trace};
@@ -159,10 +156,7 @@ pub fn request_clear_completed_jobs(socket: &TcpStream) -> i32 {
 
     if resp.as_str() != "JOBS_CLEARED" {
         error!("Failed to clear completed jobs: {}", resp);
-        socket
-            .shutdown(Shutdown::Both)
-            .unwrap_or(trace!("Failed to close socket"));
-        exit(-1)
+        return -1;
     } else {
         info!("Successfully cleared jobs");
     }
@@ -187,10 +181,7 @@ pub fn request_cancel_all_jobs(socket: &TcpStream) -> i32 {
 
     if resp.as_str() != "JOBS_CANCELED" {
         error!("Failed to cancel all queued jobs: {}", resp);
-        socket
-            .shutdown(Shutdown::Both)
-            .unwrap_or(trace!("Failed to close socket"));
-        exit(-1)
+        return -1;
     } else {
         info!("Successfully cancelled all queued jobs");
     }

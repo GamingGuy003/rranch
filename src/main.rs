@@ -14,9 +14,9 @@ use cmds::{
 use conn::conn::connect;
 use dbs::dbs::run_dbs;
 use log::{debug, error};
-use util::util::cleanup;
 use std::process::exit;
 use structs::config::{Client, Config, Master};
+use util::util::cleanup;
 
 use crate::args::args::ArgParser;
 mod args;

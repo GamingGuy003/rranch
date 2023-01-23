@@ -1,6 +1,6 @@
 use std::{
     net::TcpStream,
-    process::{exit, Command},
+    process::Command,
     time::Duration,
 };
 
@@ -67,29 +67,17 @@ pub fn edit(socket: &TcpStream, pkg_name: &str, editor: &str) -> i32 {
                 Ok(status) => status,
                 Err(err) => {
                     error!("Failed to wait on child: {}", err);
-                    match socket.shutdown(std::net::Shutdown::Both) {
-                        Ok(_) => {}
-                        Err(err) => trace!("Failed to close socket: {}", err),
-                    }
-                    exit(-1)
+                    return -1;
                 }
             };
             if !exit_status.success() {
                 error!("Editor closed with error");
-                match socket.shutdown(std::net::Shutdown::Both) {
-                    Ok(_) => {}
-                    Err(err) => trace!("Failed to close socket: {}", err),
-                }
-                exit(-1)
+                return -1;
             }
         }
         Err(_) => {
             error!("Editor {} not found", editor);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     }
     if get_choice("Do you want to submit the changes?") {
