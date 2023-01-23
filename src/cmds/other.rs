@@ -1,0 +1,111 @@
+use std::{
+    net::TcpStream,
+    process::{exit, Command},
+    time::Duration,
+};
+
+use log::{debug, error, info, trace, warn};
+
+use crate::{
+    cmds::{fetch::fetch_log_of, job::request_status},
+    coms::coms::write_and_read,
+    structs::{job::Job, pkgbuild::PKGBuildJson},
+    util::util::get_choice,
+};
+
+use super::{fetch::fetch_packagebuild_for, submit::submit_packagebuild};
+
+pub fn latest_log(socket: &TcpStream) {
+    //completed jobs
+    let resp = match write_and_read(socket, "COMPLETED_JOBS_STATUS".to_owned()) {
+        Ok(resp) => {
+            debug!("Successfully fetched completed jobs from server");
+            resp
+        }
+        Err(err) => {
+            error!("Encountered error while communicating with server: {}", err);
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
+            exit(-1)
+        }
+    };
+
+    let completed = serde_json::from_str::<Vec<Job>>(&resp).unwrap_or(Vec::new());
+    trace!("Successfully received and parsed completed jobs");
+    let last_id = match completed.last() {
+        Some(last) => last.get_id(),
+        None => {
+            info!("No completed jobs.");
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
+            exit(-1)
+        }
+    };
+
+    fetch_log_of(socket, &last_id);
+}
+
+pub fn watch_jobs(socket: &TcpStream, interval: &str) {
+    let n = interval.parse::<u64>().unwrap_or_else(|_| {
+        warn!("Failed converting interval to u64; falling back to 5 secs");
+        0
+    });
+    let mut i: u128 = 0;
+    loop {
+        i += 1;
+        request_status(socket, true);
+        info!("Update: {}", i);
+        std::thread::sleep(Duration::from_secs(n));
+    }
+}
+
+pub fn edit(socket: &TcpStream, pkg_name: &str, editor: &str) {
+    fetch_packagebuild_for(socket, pkg_name);
+    let path = format!("{}/package.bpb", pkg_name);
+
+    let child = Command::new(editor).arg(path.clone()).spawn();
+    match child {
+        Ok(mut child) => {
+            let exit_status = match child.wait() {
+                Ok(status) => status,
+                Err(err) => {
+                    error!("Failed to wait on child: {}", err);
+                    match socket.shutdown(std::net::Shutdown::Both) {
+                        Ok(_) => {}
+                        Err(err) => trace!("Failed to close socket: {}", err),
+                    }
+                    exit(-1)
+                }
+            };
+            if !exit_status.success() {
+                error!("Editor closed with error");
+                match socket.shutdown(std::net::Shutdown::Both) {
+                    Ok(_) => {}
+                    Err(err) => trace!("Failed to close socket: {}", err),
+                }
+                exit(-1)
+            }
+        }
+        Err(_) => {
+            error!("Editor {} not found", editor);
+            match socket.shutdown(std::net::Shutdown::Both) {
+                Ok(_) => {}
+                Err(err) => trace!("Failed to close socket: {}", err),
+            }
+            exit(-1)
+        }
+    }
+    if get_choice("Do you want to submit the changes?") {
+        submit_packagebuild(socket, path.clone().as_str());
+    } else {
+        info!("Aborted submit due to user choice.");
+    }
+}
+
+pub fn create_template() {
+    PKGBuildJson::new_template().create_workdir();
+}

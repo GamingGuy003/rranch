@@ -25,7 +25,6 @@ pub struct Client {
 }
 
 impl Config {
-
     pub fn new_from_cfg(filename: &str) -> Self {
         let file = match std::fs::read_to_string(filename) {
             Ok(file) => {
@@ -112,7 +111,14 @@ impl Config {
                 .to_string();
         }
 
-        if config.client.as_ref().is_some() && config.client.as_ref().unwrap_or(&Client::empty()).editor.is_some(){
+        if config.client.as_ref().is_some()
+            && config
+                .client
+                .as_ref()
+                .unwrap_or(&Client::empty())
+                .editor
+                .is_some()
+        {
             editor = config
                 .client
                 .as_ref()
@@ -194,12 +200,21 @@ impl Config {
 
 impl Master {
     pub fn empty() -> Self {
-        Self { addr: None, port: None, authkey: None }
+        Self {
+            addr: None,
+            port: None,
+            authkey: None,
+        }
     }
 }
 
 impl Client {
     pub fn empty() -> Self {
-        Self { name: None, r#type: None, loglevel: None, editor: None }
+        Self {
+            name: None,
+            r#type: None,
+            loglevel: None,
+            editor: None,
+        }
     }
 }

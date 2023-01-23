@@ -3,7 +3,7 @@ use std::process::exit;
 use log::{debug, error, info, trace, warn};
 use serde_derive::{Deserialize, Serialize};
 
-use crate::cmds::cmds::get_choice;
+use crate::util::util::get_choice;
 
 #[derive(Deserialize, Serialize)]
 pub struct PKGBuildJson {

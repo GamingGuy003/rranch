@@ -1,8 +1,15 @@
-use cmds::cmds::{
-    cancel_all_jobs, cancel_queued_job, checkout_pkg, clear_completed_jobs, client_status,
-    create_template, diff_pkgs, latest_log, managed_pkg_builds, managed_pkgs, rebuild_dependers,
-    show_deps, status, submit_build, submit_pkg, submit_solution, view_dependers, view_log,
-    view_sys_log, watch_jobs, edit,
+use cmds::{
+    fetch::{
+        fetch_client_status, fetch_dependencies_for, fetch_dependers_on,
+        fetch_difference_pkgb_pkgs, fetch_log_of, fetch_managed_packagebuilds,
+        fetch_managed_packages, fetch_packagebuild_for, fetch_sys_log,
+    },
+    job::{
+        request_build, request_cancel_all_jobs, request_cancel_queued_job,
+        request_clear_completed_jobs, request_rebuild_dependers, request_status,
+    },
+    other::{create_template, edit, latest_log, watch_jobs},
+    submit::{submit_packagebuild, submit_solution},
 };
 use conn::conn::connect;
 use dbs::dbs::run_dbs;
@@ -17,6 +24,7 @@ mod coms;
 mod conn;
 mod dbs;
 mod structs;
+mod util;
 
 fn main() -> std::io::Result<()> {
     //init env logger
@@ -102,36 +110,48 @@ fn main() -> std::io::Result<()> {
         exit(0)
     }
 
-    let editor = conf.client.unwrap_or(Client::empty()).editor.unwrap_or("".to_owned());
+    let editor = conf
+        .client
+        .unwrap_or(Client::empty())
+        .editor
+        .unwrap_or("".to_owned());
     //work out which function to execute
     for func in funcs {
         let fmatch = (func.0.as_str(), func.1);
         match fmatch {
             ("--debugshell", _) => run_dbs(&socket),
-            ("--checkout", name) => checkout_pkg(&socket, &name.unwrap_or("".to_owned())),
+            ("--checkout", name) => fetch_packagebuild_for(&socket, &name.unwrap_or("".to_owned())),
             ("--edit", name) => edit(&socket, &name.unwrap_or("".to_owned()), editor.as_str()),
             ("--template", _) => create_template(),
-            ("--submit", filename) => submit_pkg(&socket, &filename.unwrap_or("".to_owned())),
-            ("--releasebuild", name) => {
-                submit_build(&socket, &name.unwrap_or("".to_owned()), false)
+            ("--submit", filename) => {
+                submit_packagebuild(&socket, &filename.unwrap_or("".to_owned()))
             }
-            ("--crossbuild", name) => submit_build(&socket, &name.unwrap_or("".to_owned()), true),
-            ("--viewlog", job_id) => view_log(&socket, &job_id.unwrap_or("".to_owned())),
+            ("--releasebuild", name) => {
+                request_build(&socket, &name.unwrap_or("".to_owned()), false)
+            }
+            ("--crossbuild", name) => request_build(&socket, &name.unwrap_or("".to_owned()), true),
+            ("--viewlog", job_id) => fetch_log_of(&socket, &job_id.unwrap_or("".to_owned())),
             ("--viewlastlog", _) => latest_log(&socket),
-            ("--status", _) => status(&socket, false),
+            ("--status", _) => request_status(&socket, false),
             ("--watchjobs", interval) => watch_jobs(&socket, &interval.unwrap_or("".to_owned())),
-            ("--clientstatus", _) => client_status(&socket),
-            ("--clearjobs", _) => clear_completed_jobs(&socket),
-            ("--cancelalljobs", _) => cancel_all_jobs(&socket),
-            ("--canceljob", job_id) => cancel_queued_job(&socket, &job_id.unwrap_or("".to_owned())),
-            ("--managedpkgs", _) => managed_pkgs(&socket),
-            ("--managedpkgbuilds", _) => managed_pkg_builds(&socket),
-            ("--differencepkgs", _) => diff_pkgs(&socket),
-            ("--viewsyslog", _) => view_sys_log(&socket),
-            ("--viewdependers", name) => view_dependers(&socket, &name.unwrap_or("".to_owned())),
-            ("--viewdependencies", name) => show_deps(&socket, &name.unwrap_or("".to_owned())),
+            ("--clientstatus", _) => fetch_client_status(&socket),
+            ("--clearjobs", _) => request_clear_completed_jobs(&socket),
+            ("--cancelalljobs", _) => request_cancel_all_jobs(&socket),
+            ("--canceljob", job_id) => {
+                request_cancel_queued_job(&socket, &job_id.unwrap_or("".to_owned()))
+            }
+            ("--managedpkgs", _) => fetch_managed_packages(&socket),
+            ("--managedpkgbuilds", _) => fetch_managed_packagebuilds(&socket),
+            ("--differencepkgs", _) => fetch_difference_pkgb_pkgs(&socket),
+            ("--viewsyslog", _) => fetch_sys_log(&socket),
+            ("--viewdependers", name) => {
+                fetch_dependers_on(&socket, &name.unwrap_or("".to_owned()))
+            }
+            ("--viewdependencies", name) => {
+                fetch_dependencies_for(&socket, &name.unwrap_or("".to_owned()))
+            }
             ("--rebuilddependers", name) => {
-                rebuild_dependers(&socket, &name.unwrap_or("".to_owned()))
+                request_rebuild_dependers(&socket, &name.unwrap_or("".to_owned()))
             }
             ("--releasebuildsol", filename) => {
                 submit_solution(&socket, &filename.unwrap_or("".to_owned()), false)
