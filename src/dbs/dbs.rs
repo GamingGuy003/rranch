@@ -1,11 +1,11 @@
-use std::{io::Write, net::TcpStream, process::exit};
+use std::{io::Write, net::TcpStream};
 
 use log::{debug, error};
 
-use crate::coms::coms::write_and_read;
+use crate::{coms::coms::write_and_read};
 
 //a little debug shell
-pub fn run_dbs(sock: &TcpStream) {
+pub fn run_dbs(sock: &TcpStream) -> i32 {
     debug!("Starting debug shell...");
     println!("Type quit to quit client or enter to quit dbs");
     loop {
@@ -18,7 +18,7 @@ pub fn run_dbs(sock: &TcpStream) {
         //enter to quit dbs quit to quit program
         match send {
             "" => break,
-            "quit" => exit(0),
+            "quit" => return -1,
             _ => {}
         }
 
@@ -26,8 +26,9 @@ pub fn run_dbs(sock: &TcpStream) {
             Ok(msg) => println!("Response: {}", msg),
             Err(err) => {
                 error!("{}", err);
-                exit(-1)
+                return -1;
             }
         };
     }
+    0
 }

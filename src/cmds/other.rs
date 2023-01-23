@@ -15,7 +15,7 @@ use crate::{
 
 use super::{fetch::fetch_packagebuild_for, submit::submit_packagebuild};
 
-pub fn latest_log(socket: &TcpStream) {
+pub fn latest_log(socket: &TcpStream) -> i32 {
     //completed jobs
     let resp = match write_and_read(socket, "COMPLETED_JOBS_STATUS".to_owned()) {
         Ok(resp) => {
@@ -24,11 +24,7 @@ pub fn latest_log(socket: &TcpStream) {
         }
         Err(err) => {
             error!("Encountered error while communicating with server: {}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
 
@@ -38,21 +34,18 @@ pub fn latest_log(socket: &TcpStream) {
         Some(last) => last.get_id(),
         None => {
             info!("No completed jobs.");
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
 
     fetch_log_of(socket, &last_id);
+    0
 }
 
-pub fn watch_jobs(socket: &TcpStream, interval: &str) {
+pub fn watch_jobs(socket: &TcpStream, interval: &str) -> i32 {
     let n = interval.parse::<u64>().unwrap_or_else(|_| {
         warn!("Failed converting interval to u64; falling back to 5 secs");
-        0
+        5
     });
     let mut i: u128 = 0;
     loop {
@@ -63,7 +56,7 @@ pub fn watch_jobs(socket: &TcpStream, interval: &str) {
     }
 }
 
-pub fn edit(socket: &TcpStream, pkg_name: &str, editor: &str) {
+pub fn edit(socket: &TcpStream, pkg_name: &str, editor: &str) -> i32 {
     fetch_packagebuild_for(socket, pkg_name);
     let path = format!("{}/package.bpb", pkg_name);
 
@@ -104,8 +97,9 @@ pub fn edit(socket: &TcpStream, pkg_name: &str, editor: &str) {
     } else {
         info!("Aborted submit due to user choice.");
     }
+    0
 }
 
-pub fn create_template() {
-    PKGBuildJson::new_template().create_workdir();
+pub fn create_template() -> i32 {
+    PKGBuildJson::new_template().create_workdir()
 }

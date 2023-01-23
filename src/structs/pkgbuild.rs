@@ -212,7 +212,7 @@ impl PKGBuildJson {
         ret
     }
 
-    pub fn create_workdir(&self) {
+    pub fn create_workdir(&self) -> i32 {
         trace!("Creating workdir for {}", self.name);
         let path = self.name.as_str();
         if let Ok(_) = std::fs::metadata(path) {
@@ -222,12 +222,12 @@ impl PKGBuildJson {
                     Ok(_) => debug!("Removed old dir"),
                     Err(err) => {
                         error!("Error removing directory: {}", err);
-                        exit(-1)
+                        return -1;
                     }
                 }
             } else {
                 error!("Abortet due to user choice");
-                return;
+                return -1;
             }
         } else {
             info!("Creating build workdir...");
@@ -237,7 +237,7 @@ impl PKGBuildJson {
             Ok(_) => debug!("Successfully created directory {}", path),
             Err(err) => {
                 error!("Error creating directory: {}", err);
-                exit(-1)
+                return -1;
             }
         }
 
@@ -245,10 +245,13 @@ impl PKGBuildJson {
             format!("{}/package.bpb", path),
             self.to_pkgbuild().join("\n"),
         ) {
-            Ok(_) => debug!("Successfully wrote pkgbuild file"),
+            Ok(_) => {
+                debug!("Successfully wrote pkgbuild file");
+                0
+            }
             Err(err) => {
                 error!("Error creating pkgbuild file: {}", err);
-                exit(-1)
+                -1
             }
         }
     }

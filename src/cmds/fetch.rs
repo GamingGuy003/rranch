@@ -10,17 +10,13 @@ use crate::{
     coms::coms::write_and_read, structs::pkgbuild::PKGBuildJson, util::util::print_vec_cols,
 };
 
-pub fn fetch_dependencies_for(socket: &TcpStream, pkg_name: &str) {
+pub fn fetch_dependencies_for(socket: &TcpStream, pkg_name: &str) -> i32 {
     info!("Trying to show dependencies of {}...", pkg_name);
     let cpkg_resp = match write_and_read(&socket, format!("CHECKOUT_PACKAGE {}", pkg_name)) {
         Ok(msg) => msg,
         Err(err) => {
             error!("{}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
 
@@ -42,11 +38,7 @@ pub fn fetch_dependencies_for(socket: &TcpStream, pkg_name: &str) {
         }
         Err(err) => {
             error!("Failed deserializing json received from server: {}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
 
@@ -54,11 +46,7 @@ pub fn fetch_dependencies_for(socket: &TcpStream, pkg_name: &str) {
         Ok(resp) => resp,
         Err(err) => {
             error!("Error communicating with server: {}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
 
@@ -68,11 +56,7 @@ pub fn fetch_dependencies_for(socket: &TcpStream, pkg_name: &str) {
         Ok(resp) => resp,
         Err(err) => {
             error!("Error communicating with server: {}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
 
@@ -185,9 +169,10 @@ pub fn fetch_dependencies_for(socket: &TcpStream, pkg_name: &str) {
     } else {
         println!("No crossdependencies.");
     }
+    0
 }
 
-pub fn fetch_dependers_on(socket: &TcpStream, pkg_name: &str) {
+pub fn fetch_dependers_on(socket: &TcpStream, pkg_name: &str) -> i32 {
     let bold = Style::new().bold();
 
     let resp = match write_and_read(socket, format!("GET_DEPENDERS {}", pkg_name)) {
@@ -197,11 +182,7 @@ pub fn fetch_dependers_on(socket: &TcpStream, pkg_name: &str) {
                 "Error while fetching dependency tree for {}:{}",
                 pkg_name, err
             );
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
 
@@ -219,9 +200,10 @@ pub fn fetch_dependers_on(socket: &TcpStream, pkg_name: &str) {
         None,
         0,
     );
+    0
 }
 
-pub fn fetch_sys_log(socket: &TcpStream) {
+pub fn fetch_sys_log(socket: &TcpStream) -> i32 {
     let bold = Style::new().bold();
 
     let log = match write_and_read(socket, "VIEW_SYS_EVENTS".to_owned()) {
@@ -231,11 +213,7 @@ pub fn fetch_sys_log(socket: &TcpStream) {
         }
         Err(err) => {
             error!("Error while retrieving sys log: {}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
     let log_as_lines: Vec<String> = serde_json::from_str(log.as_str()).unwrap_or(Vec::new());
@@ -247,9 +225,10 @@ pub fn fetch_sys_log(socket: &TcpStream) {
     } else {
         println!("Syslog is empty.");
     }
+    0
 }
 
-pub fn fetch_difference_pkgb_pkgs(socket: &TcpStream) {
+pub fn fetch_difference_pkgb_pkgs(socket: &TcpStream) -> i32 {
     let red = Style::new().red();
     let green = Style::new().green();
     let bold = Style::new().bold();
@@ -258,11 +237,7 @@ pub fn fetch_difference_pkgb_pkgs(socket: &TcpStream) {
         Ok(resp) => resp,
         Err(err) => {
             error!("Error communicating with server: {}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
     let pkgs: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or(Vec::new());
@@ -271,11 +246,7 @@ pub fn fetch_difference_pkgb_pkgs(socket: &TcpStream) {
         Ok(resp) => resp,
         Err(err) => {
             error!("Error communicating with server: {}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
     let mut pkgb: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or(Vec::new());
@@ -319,20 +290,17 @@ pub fn fetch_difference_pkgb_pkgs(socket: &TcpStream) {
     } else {
         println!("No managed packagebuilds on server");
     }
+    0
 }
 
-pub fn fetch_managed_packagebuilds(socket: &TcpStream) {
+pub fn fetch_managed_packagebuilds(socket: &TcpStream) -> i32 {
     let bold = Style::new().bold();
 
     let resp = match write_and_read(socket, "MANAGED_PKGBUILDS".to_owned()) {
         Ok(resp) => resp,
         Err(err) => {
             error!("Error communicating with server: {}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
     let mut pkgb: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or(Vec::new());
@@ -344,20 +312,17 @@ pub fn fetch_managed_packagebuilds(socket: &TcpStream) {
     } else {
         println!("No managed packagebuilds on server");
     }
+    0
 }
 
-pub fn fetch_managed_packages(socket: &TcpStream) {
+pub fn fetch_managed_packages(socket: &TcpStream) -> i32 {
     let bold = Style::new().bold();
 
     let resp = match write_and_read(socket, "MANAGED_PACKAGES".to_owned()) {
         Ok(resp) => resp,
         Err(err) => {
             error!("Error communicating with server: {}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
     let mut pkgs: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or(Vec::new());
@@ -370,9 +335,10 @@ pub fn fetch_managed_packages(socket: &TcpStream) {
     } else {
         println!("No managed packages on server");
     }
+    0
 }
 
-pub fn fetch_log_of(socket: &TcpStream, job_id: &str) {
+pub fn fetch_log_of(socket: &TcpStream, job_id: &str) -> i32 {
     let bold = Style::new().bold();
 
     let log = match write_and_read(socket, format!("VIEW_LOG {}", job_id)) {
@@ -382,11 +348,7 @@ pub fn fetch_log_of(socket: &TcpStream, job_id: &str) {
         }
         Err(err) => {
             error!("Error while retrieving log msg: {}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
 
@@ -399,9 +361,10 @@ pub fn fetch_log_of(socket: &TcpStream, job_id: &str) {
     } else {
         println!("Log was empty.");
     }
+    0
 }
 
-pub fn fetch_client_status(socket: &TcpStream) {
+pub fn fetch_client_status(socket: &TcpStream) -> i32 {
     let bold = Style::new().bold();
 
     let conn = match write_and_read(socket, "CONNECTED_CONTROLLERS".to_owned()) {
@@ -411,11 +374,7 @@ pub fn fetch_client_status(socket: &TcpStream) {
         }
         Err(err) => {
             error!("Error while requesting connected controllers: {}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
     let bots = match write_and_read(socket, "CONNECTED_BUILDBOTS".to_owned()) {
@@ -425,11 +384,7 @@ pub fn fetch_client_status(socket: &TcpStream) {
         }
         Err(err) => {
             error!("Error while requesting connected buildbots: {}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
 
@@ -456,31 +411,25 @@ pub fn fetch_client_status(socket: &TcpStream) {
     } else {
         println!("No buildbots connected.");
     }
+    0
 }
 
-pub fn fetch_packagebuild_for(socket: &TcpStream, pkg_name: &str) {
+pub fn fetch_packagebuild_for(socket: &TcpStream, pkg_name: &str) -> i32 {
     info!("Trying to checkout {}...", pkg_name);
     let cpkg_resp = match write_and_read(&socket, format!("CHECKOUT_PACKAGE {}", pkg_name)) {
         Ok(msg) => msg,
         Err(err) => {
             error!("{}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
 
     if cpkg_resp == "INV_PKG_NAME" {
         error!("Invalid package name!");
-        exit(-1)
+        return -1;
     } else if cpkg_resp == "INV_PKG" {
         error!("The packagebuild is invalid!");
-        socket
-            .shutdown(Shutdown::Both)
-            .unwrap_or(trace!("Failed to close socket"));
-        exit(-1)
+        return -1;
     }
 
     let json: PKGBuildJson = match serde_json::from_str(&cpkg_resp) {
@@ -490,13 +439,10 @@ pub fn fetch_packagebuild_for(socket: &TcpStream, pkg_name: &str) {
         }
         Err(err) => {
             error!("Failed deserializing json received from server: {}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
 
     json.create_workdir();
+    0
 }

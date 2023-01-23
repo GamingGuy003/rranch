@@ -1,6 +1,7 @@
-use std::io::Write;
+use std::{io::Write, net::TcpStream, process::exit};
 
 use console::{Style, Term};
+use log::trace;
 
 pub fn print_vec_cols(vec: Vec<String>, mut max: Option<i32>, offset: i32) {
     if max.is_none() {
@@ -56,5 +57,18 @@ pub fn get_choice(text: &str) -> bool {
         } else {
             _failed = true;
         }
+    }
+}
+
+pub fn cleanup(socket: Option<TcpStream>, code: Option<i32>) {
+    match socket {
+        Some(sock) => {
+            sock.shutdown(std::net::Shutdown::Both)
+                .unwrap_or(trace!("Failed to close socket"));
+        }
+        None => trace!("No socket to close"),
+    }
+    if code.is_some() {
+        exit(code.unwrap_or(-1))
     }
 }

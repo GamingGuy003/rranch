@@ -13,7 +13,8 @@ use cmds::{
 };
 use conn::conn::connect;
 use dbs::dbs::run_dbs;
-use log::{debug, error, trace};
+use log::{debug, error};
+use util::util::cleanup;
 use std::process::exit;
 use structs::config::{Client, Config, Master};
 
@@ -62,7 +63,7 @@ fn main() -> std::io::Result<()> {
 
     //get arg array and connect
     let funcs = argparser.funcs();
-    let socket = connect(
+    let socketres = connect(
         conf.master
             .as_ref()
             .unwrap_or(&Master::empty())
@@ -104,6 +105,15 @@ fn main() -> std::io::Result<()> {
             .unwrap_or("CONTROLLER".to_owned())
             .as_str(),
     );
+
+    let socket = match socketres {
+        Ok(socket) => socket,
+        Err(err) => {
+            error!("Exiting on code {} while creating socket...", err);
+            exit(err)
+        }
+    };
+
     if funcs.len() == 0 {
         error!("No arguments have been provided!");
         argparser.help();
@@ -116,9 +126,10 @@ fn main() -> std::io::Result<()> {
         .editor
         .unwrap_or("".to_owned());
     //work out which function to execute
+    let mut retc = -1;
     for func in funcs {
         let fmatch = (func.0.as_str(), func.1);
-        match fmatch {
+        retc = match fmatch {
             ("--debugshell", _) => run_dbs(&socket),
             ("--checkout", name) => fetch_packagebuild_for(&socket, &name.unwrap_or("".to_owned())),
             ("--edit", name) => edit(&socket, &name.unwrap_or("".to_owned()), editor.as_str()),
@@ -159,15 +170,15 @@ fn main() -> std::io::Result<()> {
             ("--crossbuildsol", filename) => {
                 submit_solution(&socket, &filename.unwrap_or("".to_owned()), true)
             }
-            _ => debug!(
+            _ => {
+                debug!(
                 "No arg found; This is likely a bug or this argument has not been implemented yet."
-            ),
-        }
+            );
+                0
+            }
+        };
     }
 
-    match socket.shutdown(std::net::Shutdown::Both) {
-        Ok(_) => {}
-        Err(err) => trace!("Failed to close socket: {}", err),
-    }
+    cleanup(Some(socket), Some(retc));
     Ok(())
 }

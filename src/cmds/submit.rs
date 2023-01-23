@@ -1,13 +1,10 @@
-use std::{
-    net::{Shutdown, TcpStream},
-    process::exit,
-};
+use std::net::TcpStream;
 
-use log::{debug, error, info, trace};
+use log::{debug, error, info};
 
 use crate::{coms::coms::write_and_read, structs::pkgbuild::PKGBuildJson, util::util::get_choice};
 
-pub fn submit_solution(socket: &TcpStream, filename: &str, cb: bool) {
+pub fn submit_solution(socket: &TcpStream, filename: &str, cb: bool) -> i32 {
     let cmd;
     if cb {
         cmd = "SUBMIT_SOLUTION_CB";
@@ -22,11 +19,7 @@ pub fn submit_solution(socket: &TcpStream, filename: &str, cb: bool) {
         }
         Err(err) => {
             error!("Error reading sol file: {}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
 
@@ -46,11 +39,7 @@ pub fn submit_solution(socket: &TcpStream, filename: &str, cb: bool) {
         }
         Err(err) => {
             error!("Error while communicating with server: {}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
 
@@ -60,36 +49,27 @@ pub fn submit_solution(socket: &TcpStream, filename: &str, cb: bool) {
                 "Missing packagebuild on server: {}",
                 s.splitn(2, " ").collect::<Vec<&str>>()[1]
             );
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            -1
         }
-        "BATCH_QUEUED" => info!("Successfully queued solutionfile!"),
+        "BATCH_QUEUED" => {
+            info!("Successfully queued solutionfile!");
+            0
+        }
         msg => {
             error!("Received unknown response from server: {}", msg);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            -1
         }
     }
 }
 
-pub fn submit_packagebuild(socket: &TcpStream, filename: &str) {
+pub fn submit_packagebuild(socket: &TcpStream, filename: &str) -> i32 {
     let pkgbuild = PKGBuildJson::from_pkgbuild(filename);
 
     let resp = match write_and_read(socket, "MANAGED_PKGBUILDS".to_owned()) {
         Ok(resp) => resp,
         Err(err) => {
             error!("Error communicating with server: {}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
 
@@ -97,21 +77,14 @@ pub fn submit_packagebuild(socket: &TcpStream, filename: &str) {
     if pkgb.contains(&pkgbuild.get_name()) {
         if !get_choice("Packagebuild exists on remote. Do you want to overwrite it?") {
             error!("Aborted submit due to user choice");
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     }
 
     let json = serde_json::to_string(&pkgbuild).unwrap_or("".to_owned());
     if json.len() == 0 {
         error!("Failed to serialize struct! Check pkgbuild content...");
-        socket
-            .shutdown(Shutdown::Both)
-            .unwrap_or(trace!("Failed to close socket"));
-        exit(-1)
+        return -1;
     }
     let resp = match write_and_read(socket, format!("SUBMIT_PACKAGE {}", json)) {
         Ok(resp) => {
@@ -120,32 +93,21 @@ pub fn submit_packagebuild(socket: &TcpStream, filename: &str) {
         }
         Err(err) => {
             error!("Failed to send json to server: {}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
     match resp.as_str() {
         "INV_PKG_BUILD" => {
             error!("Package submission rejected by server. The package build you attempted to submit is invalid.");
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            -1
         }
         "CMD_OK" => {
             info!("Package submission accepted by server.");
+            0
         }
         msg => {
             error!("Received unknown message from server: {}", msg);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            -1
         }
     }
 }

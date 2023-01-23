@@ -8,7 +8,7 @@ use log::{debug, error, info, trace};
 
 use crate::{coms::coms::write_and_read, structs::job::Job};
 
-pub fn request_status(socket: &TcpStream, clear: bool) {
+pub fn request_status(socket: &TcpStream, clear: bool) -> i32 {
     let bold = Style::new().bold();
     let ital = Style::new().italic();
 
@@ -20,11 +20,7 @@ pub fn request_status(socket: &TcpStream, clear: bool) {
         }
         Err(err) => {
             error!("Encountered error while communicating with server: {}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
 
@@ -39,11 +35,7 @@ pub fn request_status(socket: &TcpStream, clear: bool) {
         }
         Err(err) => {
             error!("Encountered error while communicating with server: {}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
 
@@ -58,11 +50,7 @@ pub fn request_status(socket: &TcpStream, clear: bool) {
         }
         Err(err) => {
             error!("Encountered error while communicating with server: {}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
 
@@ -121,9 +109,10 @@ pub fn request_status(socket: &TcpStream, clear: bool) {
             println!("{}", job.to_string());
         }
     }
+    0
 }
 
-pub fn request_cancel_queued_job(socket: &TcpStream, job_id: &str) {
+pub fn request_cancel_queued_job(socket: &TcpStream, job_id: &str) -> i32 {
     let resp = match write_and_read(socket, format!("CANCEL_QUEUED_JOB {}", job_id)) {
         Ok(resp) => {
             debug!(
@@ -134,37 +123,26 @@ pub fn request_cancel_queued_job(socket: &TcpStream, job_id: &str) {
         }
         Err(err) => {
             error!("Error communicating with server: {}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
 
     match resp.as_str() {
         "INV_JOB_ID" => {
             error!("No such job queued");
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
         "JOB_CANCELED" => info!("Successfully canceled job {}", job_id),
         msg => {
             error!("Received unknown response: {}", msg);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     }
     request_status(socket, false);
+    0
 }
 
-pub fn request_clear_completed_jobs(socket: &TcpStream) {
+pub fn request_clear_completed_jobs(socket: &TcpStream) -> i32 {
     let resp = match write_and_read(socket, "CLEAR_COMPLETED_JOBS".to_owned()) {
         Ok(resp) => {
             debug!(
@@ -175,11 +153,7 @@ pub fn request_clear_completed_jobs(socket: &TcpStream) {
         }
         Err(err) => {
             error!("Error communicating with server: {}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
 
@@ -193,9 +167,10 @@ pub fn request_clear_completed_jobs(socket: &TcpStream) {
         info!("Successfully cleared jobs");
     }
     request_status(socket, false);
+    0
 }
 
-pub fn request_cancel_all_jobs(socket: &TcpStream) {
+pub fn request_cancel_all_jobs(socket: &TcpStream) -> i32 {
     let resp = match write_and_read(socket, "CANCEL_ALL_QUEUED_JOBS".to_owned()) {
         Ok(resp) => {
             debug!(
@@ -206,11 +181,7 @@ pub fn request_cancel_all_jobs(socket: &TcpStream) {
         }
         Err(err) => {
             error!("Error communicating with server: {}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
 
@@ -224,9 +195,10 @@ pub fn request_cancel_all_jobs(socket: &TcpStream) {
         info!("Successfully cancelled all queued jobs");
     }
     request_status(socket, false);
+    0
 }
 
-pub fn request_rebuild_dependers(socket: &TcpStream, pkg_name: &str) {
+pub fn request_rebuild_dependers(socket: &TcpStream, pkg_name: &str) -> i32 {
     let resp = match write_and_read(socket, format!("REBUILD_DEPENDERS {}", pkg_name)) {
         Ok(resp) => {
             debug!("Successfully requested dependers rebuild for {}", pkg_name);
@@ -234,46 +206,31 @@ pub fn request_rebuild_dependers(socket: &TcpStream, pkg_name: &str) {
         }
         Err(err) => {
             error!("Error while communicating with server: {}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
 
     match resp.as_str() {
         "INV_PKG_NAME" => {
             error!("No such package available");
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            -1
         }
         "CIRCULAR_DEPENDENCY" => {
             error!("Circular dependency detected. The requested batch build contains a circular dependency and could not be submitted.");
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            -1
         }
         "BATCH_QUEUED" => {
             info!("Successfully queued batch");
+            0
         }
         msg => {
             error!("Received unknown response from server: {}", msg);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            -1
         }
     }
 }
 
-pub fn request_build(socket: &TcpStream, pkg_name: &str, cb: bool) {
+pub fn request_build(socket: &TcpStream, pkg_name: &str, cb: bool) -> i32 {
     let cmd;
     if cb {
         cmd = "CROSS_BUILD";
@@ -285,32 +242,31 @@ pub fn request_build(socket: &TcpStream, pkg_name: &str, cb: bool) {
         Ok(resp) => resp,
         Err(err) => {
             error!("Encountered error while communicating with server: {}", err);
-            match socket.shutdown(std::net::Shutdown::Both) {
-                Ok(_) => {}
-                Err(err) => trace!("Failed to close socket: {}", err),
-            }
-            exit(-1)
+            return -1;
         }
     };
     let resp = binding.as_str();
 
     match resp {
-        "BUILD_REQ_SUBMIT_IMMEDIATELY" => info!("The package build was immediately handled by a ready build bot."),
-        "BUILD_REQ_QUEUED" => info!("No buildbot is currently available to handle the build request. Build request added to queue."),
+        "BUILD_REQ_SUBMIT_IMMEDIATELY" => {
+            info!("The package build was immediately handled by a ready build bot.");
+            0
+        }
+        "BUILD_REQ_QUEUED" => {
+            info!("No buildbot is currently available to handle the build request. Build request added to queue.");
+            0
+        }
         "INV_PKG_NAME" => {
             error!("Invalid package name!");
-            socket.shutdown(Shutdown::Both).unwrap_or(trace!("Failed to close socket"));
-            exit(-1)
-        },
+            -1
+        }
         "PKG_BUILD_DAMAGED" => {
             error!("The packagebuild you attempted to queue is damaged.");
-            socket.shutdown(Shutdown::Both).unwrap_or(trace!("Failed to close socket"));
-            exit(-1)
-        },
+            -1
+        }
         msg => {
             error!("Received invalid response from server: {}", msg);
-            socket.shutdown(Shutdown::Both).unwrap_or(trace!("Failed to close socket"));
-            exit(-1)
+            -1
         }
     }
 }
