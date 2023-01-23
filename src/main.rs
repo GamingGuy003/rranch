@@ -5,7 +5,6 @@ use cmds::cmds::{
     view_sys_log, watch_jobs, edit,
 };
 use conn::conn::connect;
-use console::Style;
 use dbs::dbs::run_dbs;
 use log::{debug, error, trace};
 use std::process::exit;
@@ -55,7 +54,6 @@ fn main() -> std::io::Result<()> {
 
     //get arg array and connect
     let funcs = argparser.funcs();
-    let yellow = Style::new().yellow();
     let socket = connect(
         conf.master
             .as_ref()
@@ -74,15 +72,13 @@ fn main() -> std::io::Result<()> {
             .as_str(),
         format!(
             "{}",
-            yellow.apply_to(
-                conf.client
-                    .as_ref()
-                    .unwrap_or(&Client::empty())
-                    .name
-                    .clone()
-                    .unwrap_or("a-rranch-client".to_owned())
-                    .clone()
-            )
+            conf.client
+                .as_ref()
+                .unwrap_or(&Client::empty())
+                .name
+                .clone()
+                .unwrap_or("a-rranch-client".to_owned())
+                .clone()
         )
         .as_str(),
         conf.master
