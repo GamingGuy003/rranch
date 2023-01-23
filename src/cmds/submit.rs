@@ -53,7 +53,7 @@ pub fn submit_solution(socket: &TcpStream, filename: &str, cb: bool) -> i32 {
         }
         "BATCH_QUEUED" => {
             info!("Successfully queued solutionfile!");
-            0
+            request_status(socket, false)
         }
         msg => {
             error!("Received unknown response from server: {}", msg);
@@ -75,7 +75,7 @@ pub fn submit_packagebuild(socket: &TcpStream, filename: &str) -> i32 {
 
     let pkgb: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or(Vec::new());
     if pkgb.contains(&pkgbuild.get_name()) {
-        if !get_choice("Packagebuild exists on remote. Do you want to overwrite it?") {
+        if !get_choice("Packagebuild exists on remote. Do you want to overwrite it") {
             error!("Aborted submit due to user choice");
             return -1;
         }
@@ -103,7 +103,7 @@ pub fn submit_packagebuild(socket: &TcpStream, filename: &str) -> i32 {
         }
         "CMD_OK" => {
             info!("Package submission accepted by server.");
-            request_status(socket, false)
+            0
         }
         msg => {
             error!("Received unknown message from server: {}", msg);

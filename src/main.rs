@@ -145,7 +145,8 @@ fn main() -> std::io::Result<()> {
     if funcs.len() == 0 {
         error!("No arguments have been provided!");
         argparser.help();
-        exit(0)
+        cleanup(Some(socket), None);
+        exit(-1)
     }
 
     let editor = conf
