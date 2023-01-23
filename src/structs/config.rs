@@ -1,6 +1,6 @@
 use std::process::exit;
 
-use log::{debug, error, warn};
+use log::{debug, error};
 use serde_derive::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -32,8 +32,9 @@ impl Config {
                 file
             }
             Err(err) => {
-                error!("Error reading config file: {}", err);
-                warn!("Falling back to default config...");
+                println!("Error reading config file: {}", err);
+                println!("Falling back to default config...");
+                println!("To configure the client, create and edit rranch.toml at {}, according to the instructions on the github repo", filename);
                 "".to_owned()
             }
         };

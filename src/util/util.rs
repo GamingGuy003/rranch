@@ -28,8 +28,9 @@ pub fn print_vec_cols(vec: Vec<String>, mut max: Option<i32>, offset: i32) {
 
 pub fn get_choice(text: &str) -> bool {
     let red = Style::new().red();
+    let red_b = Style::new().red().bold();
     let green = Style::new().green();
-    let bold = Style::new().bold();
+    let green_b = Style::new().green().bold();
 
     let mut _failed = false;
     loop {
@@ -39,13 +40,12 @@ pub fn get_choice(text: &str) -> bool {
             _failed = false;
         }
         print!(
-            "{}? [{}/{}] ",
+            "{}? [{}{}/{}{}] ",
             text,
-            format!(
-                "{}",
-                green.apply_to(format!("{}{}", bold.apply_to("Y"), "es"))
-            ),
-            format!("{}", red.apply_to(format!("{}{}", bold.apply_to("N"), "o")))
+            green_b.apply_to("Y"),
+            green.apply_to("es"),
+            red_b.apply_to("N"),
+            red.apply_to("o"),
         );
         std::io::stdout().flush().unwrap_or(());
         std::io::stdin().read_line(&mut input).unwrap_or(0);
