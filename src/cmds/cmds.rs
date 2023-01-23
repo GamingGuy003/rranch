@@ -170,7 +170,7 @@ pub fn submit_build(socket: &TcpStream, pkg_name: &str, cb: bool) {
     }
 }
 
-pub fn status(socket: &TcpStream) {
+pub fn status(socket: &TcpStream, clear: bool) {
     let bold = Style::new().bold();
     let ital = Style::new().italic();
 
@@ -230,6 +230,11 @@ pub fn status(socket: &TcpStream) {
 
     let queued = serde_json::from_str::<Vec<Job>>(&resp).unwrap_or(Vec::new());
     trace!("Successfully received and parsed queued jobs");
+
+    if clear {
+        Term::stdout().clear_screen().unwrap_or(());
+        Term::stdout().move_cursor_to(0, 1).unwrap_or(());
+    }
 
     println!("{}", bold.apply_to("RUNNING JOBS"));
     if running.len() == 0 {
@@ -438,6 +443,7 @@ pub fn cancel_queued_job(socket: &TcpStream, job_id: &str) {
             exit(-1)
         }
     }
+    status(socket, false);
 }
 
 pub fn clear_completed_jobs(socket: &TcpStream) {
@@ -468,6 +474,7 @@ pub fn clear_completed_jobs(socket: &TcpStream) {
     } else {
         info!("Successfully cleared jobs");
     }
+    status(socket, false);
 }
 
 pub fn cancel_all_jobs(socket: &TcpStream) {
@@ -498,6 +505,7 @@ pub fn cancel_all_jobs(socket: &TcpStream) {
     } else {
         info!("Successfully cancelled all queued jobs");
     }
+    status(socket, false);
 }
 
 pub fn managed_pkgs(socket: &TcpStream) {
@@ -836,12 +844,9 @@ pub fn watch_jobs(socket: &TcpStream, interval: &str) {
         0
     });
     let mut i: u128 = 0;
-    let term = Term::stdout();
     loop {
         i += 1;
-        term.clear_screen().unwrap_or(());
-        term.move_cursor_to(0, 1).unwrap_or(());
-        status(socket);
+        status(socket, true);
         info!("Update: {}", i);
         std::thread::sleep(Duration::from_secs(n));
     }
