@@ -13,7 +13,7 @@ use cmds::{
 };
 use conn::conn::connect;
 use dbs::dbs::run_dbs;
-use log::{debug, error};
+use log::{debug, error, trace};
 use std::process::exit;
 use structs::config::{Client, Config, Master};
 use util::util::cleanup;
@@ -28,8 +28,19 @@ mod structs;
 mod util;
 
 fn main() -> std::io::Result<()> {
-    //init env logger
-    let conf = Config::new_from_cfg("rranch.toml");
+    let conf = Config::new_from_cfg(&format!(
+        "{}/.config/rranch.toml",
+        dirs::home_dir()
+            .unwrap_or_else(|| {
+                error!("Failed getting home dir");
+                exit(-1)
+            })
+            .to_str()
+            .unwrap_or_else(|| {
+                trace!("Failed to convert home dir to string!");
+                exit(-1)
+            })
+    ));
     //set loglevel
     let mut loglevel = "";
     match conf
@@ -49,6 +60,7 @@ fn main() -> std::io::Result<()> {
         _ => {}
     }
     std::env::set_var("rranch_log", loglevel);
+    //init env logger
     pretty_env_logger::init_custom_env("rranch_log");
     let mut argparser = ArgParser::new();
     //try to fetch arguments from cli and parse them

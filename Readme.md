@@ -58,7 +58,7 @@ This project is an improved rewrite of the [AcaciaLinux branch client](https://g
 
 ## Config
 
-The default config (rranch.toml) should look similar to this:
+The default config (~/.config/rranch.toml) should look similar to this:
 
 ```toml
 #master config
