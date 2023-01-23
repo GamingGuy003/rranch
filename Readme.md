@@ -1,6 +1,6 @@
 ## Rranch (Rusty Branch)
 
-This project is an improved rewrite of the [AcaciaLinux branch client](https://github.com/AcaciaLinux/branch) in rust because why not and for a few QOL improvements. The code is a mess so good luck every trying to maintain it. All features might work as expected though i do not know.
+This project is an improved rewrite of the [AcaciaLinux branch client](https://github.com/AcaciaLinux/branch) in rust because why not and for a few QOL improvements. The code is a mess so good luck every trying to maintain it. All features might work as expected though I do not know.
 
 
 
@@ -55,6 +55,10 @@ This project is an improved rewrite of the [AcaciaLinux branch client](https://g
 * **-rbs / --releasebuildsol [sol_file]:** Submits a branch release solution to the server.
 
 * **-cbs / --crossbuildsol [sol_file]:** Submits a branch cross solution to the server.
+
+## Install
+
+On Unix Systems you can cd into the local repo and run <code>make && sudo make install</code> to build a release binary and install it to /usr/bin. On other Systems you might have to do the two steps manually.
 
 ## Config
 
