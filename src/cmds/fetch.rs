@@ -1,10 +1,7 @@
-use std::{
-    net::TcpStream,
-    process::exit,
-};
+use std::{net::TcpStream, process::exit};
 
 use console::Style;
-use log::{debug, error, info, trace};
+use log::{debug, error, info};
 
 use crate::{
     coms::coms::write_and_read, structs::pkgbuild::PKGBuildJson, util::util::print_vec_cols,
@@ -188,7 +185,7 @@ pub fn fetch_dependers_on(socket: &TcpStream, pkg_name: &str) -> i32 {
         return -1;
     }
 
-    println!("{}", bold.apply_to(format!("\nDependers on {}:", pkg_name)));
+    println!("{}", bold.apply_to(format!("Dependers on {}:", pkg_name)));
     print_vec_cols(
         serde_json::from_str::<Vec<String>>(&resp).unwrap_or(Vec::new()),
         None,

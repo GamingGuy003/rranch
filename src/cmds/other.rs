@@ -1,8 +1,4 @@
-use std::{
-    net::TcpStream,
-    process::Command,
-    time::Duration,
-};
+use std::{net::TcpStream, process::Command, time::Duration};
 
 use log::{debug, error, info, trace, warn};
 
