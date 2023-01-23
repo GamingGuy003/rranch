@@ -212,7 +212,7 @@ pub fn request_rebuild_dependers(socket: &TcpStream, pkg_name: &str) -> i32 {
         }
         "BATCH_QUEUED" => {
             info!("Successfully queued batch");
-            0
+            request_status(socket, false)
         }
         msg => {
             error!("Received unknown response from server: {}", msg);
@@ -245,7 +245,7 @@ pub fn request_build(socket: &TcpStream, pkg_name: &str, cb: bool) -> i32 {
         }
         "BUILD_REQ_QUEUED" => {
             info!("No buildbot is currently available to handle the build request. Build request added to queue.");
-            0
+            request_status(socket, false)
         }
         "INV_PKG_NAME" => {
             error!("Invalid package name!");
