@@ -3,7 +3,7 @@ use std::process::exit;
 use log::{debug, error, info, trace, warn};
 use serde_derive::{Deserialize, Serialize};
 
-use crate::util::util::get_choice;
+use crate::util::funcs::get_choice;
 
 #[derive(Deserialize, Serialize)]
 pub struct PKGBuildJson {
@@ -27,17 +27,17 @@ impl PKGBuildJson {
         bpb.push(format!("name={}", self.name));
         bpb.push(format!("version={}", self.version));
 
-        if self.description.len() > 0 {
+        if !self.description.is_empty() {
             bpb.push(format!("description={}", self.description));
         }
 
         bpb.push(format!("real_version={}", self.real_version));
 
-        if self.source.len() > 0 {
+        if !self.source.is_empty() {
             bpb.push(format!("source={}", self.source));
         }
 
-        if self.extra_sources.len() > 0 {
+        if !self.extra_sources.is_empty() {
             let mut xsrc = "extra_sources=".to_owned();
             for src in self.extra_sources.clone() {
                 xsrc = format!("{}[{}]", xsrc, src);
@@ -45,7 +45,7 @@ impl PKGBuildJson {
             bpb.push(xsrc);
         }
 
-        if self.dependencies.len() > 0 {
+        if !self.dependencies.is_empty() {
             let mut dependencies = "dependencies=".to_owned();
             for dependency in self.dependencies.clone() {
                 dependencies = format!("{}[{}]", dependencies, dependency);
@@ -53,7 +53,7 @@ impl PKGBuildJson {
             bpb.push(dependencies);
         }
 
-        if self.build_dependencies.len() > 0 {
+        if !self.build_dependencies.is_empty() {
             let mut build_dependencies = "builddeps=".to_owned();
             for build_dependency in self.build_dependencies.clone() {
                 build_dependencies = format!("{}[{}]", build_dependencies, build_dependency);
@@ -61,7 +61,7 @@ impl PKGBuildJson {
             bpb.push(build_dependencies);
         }
 
-        if self.cross_dependencies.len() > 0 {
+        if !self.cross_dependencies.is_empty() {
             let mut cross_dependencies = "crossdeps=".to_owned();
             for cross_dependency in self.build_dependencies.clone() {
                 cross_dependencies = format!("{}[{}]", cross_dependencies, cross_dependency);
@@ -69,14 +69,10 @@ impl PKGBuildJson {
             bpb.push(cross_dependencies);
         }
 
-        if self.build_script.len() > 0 {
+        if !self.build_script.is_empty() {
             let mut build = "build={".to_owned();
             for build_line in self.build_script.clone() {
-                if build_line.starts_with("\t") {
-                    build = format!("{}\n{}", build, build_line);
-                } else {
-                    build = format!("{}\n\t{}", build, build_line);
-                }
+                build = format!("{}\n{}", build, build_line);
             }
             build = format!("{}\n}}", build);
             bpb.push(build);
@@ -115,16 +111,16 @@ impl PKGBuildJson {
 
         for line in lines {
             if build {
-                if line.starts_with("}") {
+                if line.starts_with('}') {
                     build = false;
                     continue;
                 }
                 ret.build_script.push(line.to_owned());
             } else {
-                if line.len() == 0 {
+                if line.is_empty() {
                     continue;
                 }
-                let split: Vec<&str> = line.splitn(2, "=").collect();
+                let split: Vec<&str> = line.splitn(2, '=').collect();
                 if split.len() != 2 {
                     error!("Invalid syntax at line {}", i);
                     exit(-1)
@@ -137,7 +133,7 @@ impl PKGBuildJson {
                     "source" => ret.source = split[1].to_owned(),
                     "extra_sources" => {
                         ret.extra_sources = split[1]
-                            .split("[")
+                            .split('[')
                             .collect::<Vec<&str>>()
                             .into_iter()
                             .map(|part| part.trim_end_matches(']'))
@@ -147,7 +143,7 @@ impl PKGBuildJson {
                     }
                     "dependencies" => {
                         ret.dependencies = split[1]
-                            .split("[")
+                            .split('[')
                             .collect::<Vec<&str>>()
                             .into_iter()
                             .map(|part| part.trim_end_matches(']'))
@@ -157,7 +153,7 @@ impl PKGBuildJson {
                     }
                     "builddeps" => {
                         ret.build_dependencies = split[1]
-                            .split("[")
+                            .split('[')
                             .collect::<Vec<&str>>()
                             .into_iter()
                             .map(|part| part.trim_end_matches(']'))
@@ -167,7 +163,7 @@ impl PKGBuildJson {
                     }
                     "crossdeps" => {
                         ret.cross_dependencies = split[1]
-                            .split("[")
+                            .split('[')
                             .collect::<Vec<&str>>()
                             .into_iter()
                             .map(|part| part.trim_end_matches(']'))
@@ -190,14 +186,14 @@ impl PKGBuildJson {
 
     pub fn new_template() -> Self {
         let mut ret = Self {
-            name: "template".to_owned(),
-            version: "0".to_owned(),
-            real_version: "0".to_owned(),
-            description: " ".to_owned(),
+            name: String::from("template"),
+            version: String::from("0"),
+            real_version: String::from("0"),
+            description: String::new(),
             dependencies: Vec::new(),
             build_dependencies: Vec::new(),
             cross_dependencies: Vec::new(),
-            source: " ".to_owned(),
+            source: String::new(),
             extra_sources: Vec::new(),
             build_script: Vec::new(),
         };
@@ -215,7 +211,7 @@ impl PKGBuildJson {
     pub fn create_workdir(&self) -> i32 {
         trace!("Creating workdir for {}", self.name);
         let path = self.name.as_str();
-        if let Ok(_) = std::fs::metadata(path) {
+        if std::fs::metadata(path).is_ok() {
             if get_choice("Build dir already exists. Do you want to overwrite it") {
                 warn!("Overwriting existing builddir...");
                 match std::fs::remove_dir_all(path) {

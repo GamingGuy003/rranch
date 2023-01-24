@@ -2,15 +2,13 @@ use std::net::TcpStream;
 
 use log::{debug, error, info};
 
-use crate::{coms::coms::write_and_read, structs::pkgbuild::PKGBuildJson, util::util::get_choice, cmds::job::request_status};
+use crate::{
+    cmds::job::request_status, sockops::coms::write_and_read, structs::pkgbuild::PKGBuildJson,
+    util::funcs::get_choice,
+};
 
 pub fn submit_solution(socket: &TcpStream, filename: &str, cb: bool) -> i32 {
-    let cmd;
-    if cb {
-        cmd = "SUBMIT_SOLUTION_CB";
-    } else {
-        cmd = "SUBMIT_SOLUTION_RB";
-    }
+    let cmd = if cb { "CB" } else { "RB" };
 
     let file = match std::fs::read_to_string(filename) {
         Ok(file) => {
@@ -26,13 +24,13 @@ pub fn submit_solution(socket: &TcpStream, filename: &str, cb: bool) -> i32 {
     let mut ret: Vec<Vec<String>> = Vec::new();
     file.lines().for_each(|line| {
         ret.push(
-            line.split(";")
+            line.split(';')
                 .into_iter()
                 .map(|value| value.to_owned())
                 .collect(),
         )
     });
-    let resp = match write_and_read(socket, format!("{} {:?}", cmd, ret)) {
+    let resp = match write_and_read(socket, format!("SUBMIT_SOLUTION_{} {:?}", cmd, ret)) {
         Ok(resp) => {
             debug!("Server responded with: {}", resp);
             resp
@@ -47,7 +45,7 @@ pub fn submit_solution(socket: &TcpStream, filename: &str, cb: bool) -> i32 {
         s if s.starts_with("PKG_BUILD_MISSING") => {
             error!(
                 "Missing packagebuild on server: {}",
-                s.splitn(2, " ").collect::<Vec<&str>>()[1]
+                s.splitn(2, ' ').collect::<Vec<&str>>()[1]
             );
             -1
         }
@@ -73,16 +71,16 @@ pub fn submit_packagebuild(socket: &TcpStream, filename: &str) -> i32 {
         }
     };
 
-    let pkgb: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or(Vec::new());
-    if pkgb.contains(&pkgbuild.get_name()) {
-        if !get_choice("Packagebuild exists on remote. Do you want to overwrite it") {
-            error!("Aborted submit due to user choice");
-            return -1;
-        }
+    let pkgb: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or_default();
+    if pkgb.contains(&pkgbuild.get_name())
+        && !get_choice("Packagebuild exists on remote. Do you want to overwrite it")
+    {
+        error!("Aborted submit due to user choice");
+        return -1;
     }
 
-    let json = serde_json::to_string(&pkgbuild).unwrap_or("".to_owned());
-    if json.len() == 0 {
+    let json = serde_json::to_string(&pkgbuild).unwrap_or_else(|_| "".to_owned());
+    if json.is_empty() {
         error!("Failed to serialize struct! Check pkgbuild content...");
         return -1;
     }

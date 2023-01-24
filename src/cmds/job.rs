@@ -3,7 +3,7 @@ use std::net::TcpStream;
 use console::{Style, Term};
 use log::{debug, error, info, trace};
 
-use crate::{coms::coms::write_and_read, structs::job::Job};
+use crate::{sockops::coms::write_and_read, structs::job::Job};
 
 pub fn request_status(socket: &TcpStream, clear: bool) -> i32 {
     let bold = Style::new().bold();
@@ -21,7 +21,7 @@ pub fn request_status(socket: &TcpStream, clear: bool) -> i32 {
         }
     };
 
-    let running = serde_json::from_str::<Vec<Job>>(&resp).unwrap_or(Vec::new());
+    let running = serde_json::from_str::<Vec<Job>>(&resp).unwrap_or_default();
     trace!("Successfully received and parsed running jobs");
 
     //completed jobs
@@ -36,7 +36,7 @@ pub fn request_status(socket: &TcpStream, clear: bool) -> i32 {
         }
     };
 
-    let completed = serde_json::from_str::<Vec<Job>>(&resp).unwrap_or(Vec::new());
+    let completed = serde_json::from_str::<Vec<Job>>(&resp).unwrap_or_default();
     trace!("Successfully received and parsed completed jobs");
 
     //queued jobs
@@ -51,7 +51,7 @@ pub fn request_status(socket: &TcpStream, clear: bool) -> i32 {
         }
     };
 
-    let queued = serde_json::from_str::<Vec<Job>>(&resp).unwrap_or(Vec::new());
+    let queued = serde_json::from_str::<Vec<Job>>(&resp).unwrap_or_default();
     trace!("Successfully received and parsed queued jobs");
 
     if clear {
@@ -60,7 +60,7 @@ pub fn request_status(socket: &TcpStream, clear: bool) -> i32 {
     }
 
     println!("{}", bold.apply_to("RUNNING JOBS"));
-    if running.len() == 0 {
+    if running.is_empty() {
         println!("No jobs.");
     } else {
         println!(
@@ -71,12 +71,12 @@ pub fn request_status(socket: &TcpStream, clear: bool) -> i32 {
             ))
         );
         for job in running {
-            println!("{}", job.to_string());
+            println!("{}", job);
         }
     }
 
     println!("{}", bold.apply_to("COMPLETED JOBS"));
-    if completed.len() == 0 {
+    if completed.is_empty() {
         println!("No jobs.");
     } else {
         println!(
@@ -87,12 +87,12 @@ pub fn request_status(socket: &TcpStream, clear: bool) -> i32 {
             ))
         );
         for job in completed {
-            println!("{}", job.to_string());
+            println!("{}", job);
         }
     }
 
     println!("{}", bold.apply_to("QUEUED JOBS"));
-    if queued.len() == 0 {
+    if queued.is_empty() {
         println!("No jobs.");
     } else {
         println!(
@@ -103,7 +103,7 @@ pub fn request_status(socket: &TcpStream, clear: bool) -> i32 {
             ))
         );
         for job in queued {
-            println!("{}", job.to_string());
+            println!("{}", job);
         }
     }
     0
@@ -222,12 +222,7 @@ pub fn request_rebuild_dependers(socket: &TcpStream, pkg_name: &str) -> i32 {
 }
 
 pub fn request_build(socket: &TcpStream, pkg_name: &str, cb: bool) -> i32 {
-    let cmd;
-    if cb {
-        cmd = "CROSS_BUILD";
-    } else {
-        cmd = "RELEASE_BUILD";
-    }
+    let cmd = if cb { "CROSS_BUILD" } else { "RELEASE_BUILD" };
 
     let binding = match write_and_read(socket, format!("{} {}", cmd, pkg_name)) {
         Ok(resp) => resp,

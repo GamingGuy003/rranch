@@ -2,7 +2,7 @@ use cmds::{
     fetch::{
         fetch_client_status, fetch_dependencies_for, fetch_dependers_on,
         fetch_difference_pkgb_pkgs, fetch_log_of, fetch_managed_packagebuilds,
-        fetch_managed_packages, fetch_packagebuild_for, fetch_sys_log, fetch_package,
+        fetch_managed_packages, fetch_package, fetch_packagebuild_for, fetch_sys_log,
     },
     job::{
         request_build, request_cancel_all_jobs, request_cancel_queued_job,
@@ -11,19 +11,16 @@ use cmds::{
     other::{create_template, edit, latest_log, watch_jobs},
     submit::{submit_packagebuild, submit_solution},
 };
-use conn::conn::connect;
-use dbs::dbs::run_dbs;
-use log::{debug, error, trace};
-use std::process::exit;
-use structs::config::{Client, Config, Master};
-use util::util::cleanup;
 
-use crate::args::args::ArgParser;
+use log::{debug, error};
+use std::process::exit;
+use structs::config::Config;
+use util::funcs::cleanup;
+
+use crate::{args::argparser::ArgParser, cmds::dbs::run_dbs, sockops::connect::connect};
 mod args;
 mod cmds;
-mod coms;
-mod conn;
-mod dbs;
+mod sockops;
 mod structs;
 mod util;
 
@@ -31,15 +28,10 @@ fn main() -> std::io::Result<()> {
     let mut confpath = format!(
         "{}/.config/rranch.toml",
         dirs::home_dir()
-    .unwrap_or_else(|| {
-        error!("Failed getting home dir");
-        exit(-1)
-    })
-    .to_str()
-    .unwrap_or_else(|| {
-        trace!("Failed to convert home dir to string!");
-        exit(-1)
-    }));
+            .unwrap_or_default()
+            .to_str()
+            .unwrap_or_default()
+    );
 
     //try to fetch arguments from cli and parse them
     let mut argparser = ArgParser::new();
@@ -53,85 +45,27 @@ fn main() -> std::io::Result<()> {
     };
     //check if config has been passed
     for func in argparser.funcs() {
-        if func.0 == "--config".to_owned() {
-            confpath = func.1.unwrap_or("".to_owned());
-            break
+        if func.0 == *"--config" {
+            confpath = func.1.unwrap_or_default();
+            break;
         }
     }
 
     let conf = Config::new_from_cfg(&confpath);
     //set loglevel
-    let mut loglevel = "";
-    match conf
-    .client
-    .as_ref()
-        .unwrap_or(&Client::empty())
-        .loglevel
-        .clone()
-        .unwrap_or("".to_owned())
-        .to_lowercase()
-        .as_str()
-        {
-            "trace" => loglevel = "trace",
-            "debug" => loglevel = "debug",
-            "info" => loglevel = "info",
-            "none" => {}
-            _ => {}
-        }
-        std::env::set_var("rranch_log", loglevel);
-        //init env logger
-        pretty_env_logger::init_custom_env("rranch_log");
-        
-        for arg in argparser.funcs() {
-            if arg.0 == "--config".to_owned() {
-                //confpath = &arg.1.unwrap_or("".to_owned());
-            }
-        }
-        
 
-        //get arg array and connect
-        let funcs = argparser.funcs();
-        let socketres = connect(
-            conf.master
-            .as_ref()
-            .unwrap_or(&Master::empty())
-            .addr
-            .clone()
-            .unwrap_or("localhost".to_owned())
-            .as_str(),
-        conf.master
-            .as_ref()
-            .unwrap_or(&Master::empty())
-            .port
-            .clone()
-            .unwrap_or(27015)
-            .to_string()
-            .as_str(),
-        format!(
-            "{}",
-            conf.client
-                .as_ref()
-                .unwrap_or(&Client::empty())
-                .name
-                .clone()
-                .unwrap_or("a-rranch-client".to_owned())
-                .clone()
-        )
-        .as_str(),
-        conf.master
-            .as_ref()
-            .unwrap_or(&Master::empty())
-            .authkey
-            .clone()
-            .unwrap_or("default".to_owned())
-            .as_str(),
-        conf.client
-            .as_ref()
-            .unwrap_or(&Client::empty())
-            .r#type
-            .clone()
-            .unwrap_or("CONTROLLER".to_owned())
-            .as_str(),
+    std::env::set_var("rranch_log", conf.get_client().get_loglevel());
+    //init env logger
+    pretty_env_logger::init_custom_env("rranch_log");
+
+    //get arg array and connect
+    let funcs = argparser.funcs();
+    let socketres = connect(
+        &conf.get_master().get_addr(),
+        &conf.get_master().get_port().to_string(),
+        &conf.get_client().get_name(),
+        &conf.get_master().get_authkey(),
+        &conf.get_client().get_type(),
     );
 
     let socket = match socketres {
@@ -142,69 +76,58 @@ fn main() -> std::io::Result<()> {
         }
     };
 
-    if funcs.len() == 0 {
+    if funcs.is_empty() {
         error!("No arguments have been provided!");
         argparser.help();
         cleanup(Some(socket), None);
         exit(-1)
     }
 
-    let editor = conf
-        .client
-        .unwrap_or(Client::empty())
-        .editor
-        .unwrap_or("".to_owned());
     //work out which function to execute
     let mut retc = -1;
     for func in funcs {
         let fmatch = (func.0.as_str(), func.1);
         retc = match fmatch {
             ("--debugshell", _) => run_dbs(&socket),
-            ("--checkout", name) => fetch_packagebuild_for(&socket, &name.unwrap_or("".to_owned())),
-            ("--download", name) => fetch_package(conf.master
-                .as_ref()
-                .unwrap_or(&Master::empty())
-                .addr
-                .clone()
-                .unwrap_or("localhost".to_owned())
-                .as_str(), &name.unwrap_or("".to_owned())),
-            ("--edit", name) => edit(&socket, &name.unwrap_or("".to_owned()), editor.as_str()),
+            ("--checkout", name) => fetch_packagebuild_for(&socket, &name.unwrap_or_default()),
+            ("--download", name) => {
+                fetch_package(&conf.get_master().get_addr(), &name.unwrap_or_default())
+            }
+            ("--edit", name) => edit(
+                &socket,
+                &name.unwrap_or_default(),
+                &conf.get_client().get_editor(),
+            ),
             ("--template", _) => create_template(),
-            ("--submit", filename) => {
-                submit_packagebuild(&socket, &filename.unwrap_or("".to_owned()))
-            }
-            ("--releasebuild", name) => {
-                request_build(&socket, &name.unwrap_or("".to_owned()), false)
-            }
-            ("--crossbuild", name) => request_build(&socket, &name.unwrap_or("".to_owned()), true),
-            ("--viewlog", job_id) => fetch_log_of(&socket, &job_id.unwrap_or("".to_owned())),
+            ("--submit", filename) => submit_packagebuild(&socket, &filename.unwrap_or_default()),
+            ("--releasebuild", name) => request_build(&socket, &name.unwrap_or_default(), false),
+            ("--crossbuild", name) => request_build(&socket, &name.unwrap_or_default(), true),
+            ("--viewlog", job_id) => fetch_log_of(&socket, &job_id.unwrap_or_default()),
             ("--viewlastlog", _) => latest_log(&socket),
             ("--status", _) => request_status(&socket, false),
-            ("--watchjobs", interval) => watch_jobs(&socket, &interval.unwrap_or("".to_owned())),
+            ("--watchjobs", interval) => watch_jobs(&socket, &interval.unwrap_or_default()),
             ("--clientstatus", _) => fetch_client_status(&socket),
             ("--clearjobs", _) => request_clear_completed_jobs(&socket),
             ("--cancelalljobs", _) => request_cancel_all_jobs(&socket),
             ("--canceljob", job_id) => {
-                request_cancel_queued_job(&socket, &job_id.unwrap_or("".to_owned()))
+                request_cancel_queued_job(&socket, &job_id.unwrap_or_default())
             }
             ("--managedpkgs", _) => fetch_managed_packages(&socket),
             ("--managedpkgbuilds", _) => fetch_managed_packagebuilds(&socket),
             ("--differencepkgs", _) => fetch_difference_pkgb_pkgs(&socket),
             ("--viewsyslog", _) => fetch_sys_log(&socket),
-            ("--viewdependers", name) => {
-                fetch_dependers_on(&socket, &name.unwrap_or("".to_owned()))
-            }
+            ("--viewdependers", name) => fetch_dependers_on(&socket, &name.unwrap_or_default()),
             ("--viewdependencies", name) => {
-                fetch_dependencies_for(&socket, &name.unwrap_or("".to_owned()))
+                fetch_dependencies_for(&socket, &name.unwrap_or_default())
             }
             ("--rebuilddependers", name) => {
-                request_rebuild_dependers(&socket, &name.unwrap_or("".to_owned()))
+                request_rebuild_dependers(&socket, &name.unwrap_or_default())
             }
             ("--releasebuildsol", filename) => {
-                submit_solution(&socket, &filename.unwrap_or("".to_owned()), false)
+                submit_solution(&socket, &filename.unwrap_or_default(), false)
             }
             ("--crossbuildsol", filename) => {
-                submit_solution(&socket, &filename.unwrap_or("".to_owned()), true)
+                submit_solution(&socket, &filename.unwrap_or_default(), true)
             }
             _ => {
                 debug!(

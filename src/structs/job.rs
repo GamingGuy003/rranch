@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use console::Style;
 use serde_derive::{Deserialize, Serialize};
 
@@ -9,15 +11,16 @@ pub struct Job {
     requesting_client: String,
 }
 
-impl Job {
-    pub fn to_string(&self) -> String {
+impl Display for Job {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let color = match self.job_status.as_str() {
             "FAILED" => Style::new().red(),
             "COMPLETED" => Style::new().green(),
             "WAITING" => Style::new().yellow(),
             _ => Style::new().yellow(),
         };
-        format!(
+        write!(
+            f,
             "{:<20} {:<15} {:<40} {:10}",
             self.build_pkg_name,
             color.apply_to(self.job_status.clone()),
@@ -25,7 +28,9 @@ impl Job {
             self.requesting_client
         )
     }
+}
 
+impl Job {
     pub fn get_id(&self) -> String {
         self.job_id.clone()
     }

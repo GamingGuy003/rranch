@@ -50,7 +50,7 @@ pub fn get_choice(text: &str) -> bool {
         std::io::stdout().flush().unwrap_or(());
         std::io::stdin().read_line(&mut input).unwrap_or(0);
         let input = input.trim();
-        if input.len() == 0 || input.to_lowercase() == "no" || input.to_lowercase() == "n" {
+        if input.is_empty() || input.to_lowercase() == "no" || input.to_lowercase() == "n" {
             return false;
         } else if input.to_lowercase() == "yes" || input.to_lowercase() == "y" {
             return true;

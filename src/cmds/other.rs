@@ -4,9 +4,9 @@ use log::{debug, error, info, trace, warn};
 
 use crate::{
     cmds::{fetch::fetch_log_of, job::request_status},
-    coms::coms::write_and_read,
+    sockops::coms::write_and_read,
     structs::{job::Job, pkgbuild::PKGBuildJson},
-    util::util::get_choice,
+    util::funcs::get_choice,
 };
 
 use super::{fetch::fetch_packagebuild_for, submit::submit_packagebuild};
@@ -24,7 +24,7 @@ pub fn latest_log(socket: &TcpStream) -> i32 {
         }
     };
 
-    let completed = serde_json::from_str::<Vec<Job>>(&resp).unwrap_or(Vec::new());
+    let completed = serde_json::from_str::<Vec<Job>>(&resp).unwrap_or_default();
     trace!("Successfully received and parsed completed jobs");
     let last_id = match completed.last() {
         Some(last) => last.get_id(),
@@ -77,7 +77,7 @@ pub fn edit(socket: &TcpStream, pkg_name: &str, editor: &str) -> i32 {
         }
     }
     if get_choice("Do you want to submit the changes") {
-        submit_packagebuild(socket, path.clone().as_str());
+        submit_packagebuild(socket, path.as_str());
     } else {
         info!("Aborted submit due to user choice.");
     }

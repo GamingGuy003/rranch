@@ -1,4 +1,4 @@
-use std::process::exit;
+use std::{fmt::Display, process::exit};
 
 use log::debug;
 
@@ -26,22 +26,28 @@ impl Arg {
             short: format!("-{}", short),
             long: format!("--{}", long),
             desc: desc.to_string(),
-            param: param,
+            param,
         }
     }
+}
 
-    pub fn to_string(&self) -> String {
-        if self.param.is_some() {
-            format!(
-                "{:6} {:20} = {:10}\t{}",
-                self.short,
-                self.long,
-                format!("<{}>", self.param.clone().unwrap_or("".to_string())),
-                self.desc
-            )
-        } else {
-            format!("{:6} {:33}\t{}", self.short, self.long, self.desc)
-        }
+impl Display for Arg {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            if self.param.is_some() {
+                format!(
+                    "{:6} {:20} = {:10}\t{}",
+                    self.short,
+                    self.long,
+                    format!("<{}>", self.param.clone().unwrap_or_default()),
+                    self.desc
+                )
+            } else {
+                format!("{:6} {:33}\t{}", self.short, self.long, self.desc)
+            }
+        )
     }
 }
 
@@ -216,7 +222,7 @@ impl ArgParser {
             if !skip {
                 idx += 1;
                 let option: (String, Option<String>);
-                let complete = match self.is_valid(&arg) {
+                let complete = match self.is_valid(arg) {
                     Ok(complete) => complete,
                     Err(err) => {
                         return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, err))
@@ -224,15 +230,15 @@ impl ArgParser {
                 };
                 //complete
                 if complete {
-                    if match self.has_value(&arg) {
+                    if match self.has_value(arg) {
                         Ok(value) => value,
                         Err(err) => {
                             return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, err))
                         }
                     } {
                         //complete and has value (arg=value)
-                        let parts = arg.split("=").collect::<Vec<&str>>();
-                        let long = match self.get_arg_long(&parts[0]) {
+                        let parts = arg.split('=').collect::<Vec<&str>>();
+                        let long = match self.get_arg_long(parts[0]) {
                             Ok(long) => long,
                             Err(err) => {
                                 // gehirn leistung
@@ -246,7 +252,7 @@ impl ArgParser {
                         self.recargs.push(option);
                     } else {
                         //complete and has no value (arg)
-                        let long = match self.get_arg_long(&arg) {
+                        let long = match self.get_arg_long(arg) {
                             Ok(long) => long,
                             Err(err) => {
                                 // gehirn leistung
@@ -257,45 +263,39 @@ impl ArgParser {
                             }
                         };
                         option = (long.to_owned(), None);
-                        if option.0 == "--help".to_owned() {
+                        if option.0 == *"--help" {
                             self.help();
                             exit(0)
                         }
                         self.recargs.push(option);
                     }
                     //incomplete
+                } else if args.get(idx).is_some() {
+                    let next_elem = match args.get(idx) {
+                        Some(next) => next,
+                        None => {
+                            return Err(std::io::Error::new(
+                                std::io::ErrorKind::InvalidInput,
+                                format!("No value supplied for {}", *arg),
+                            ))
+                        }
+                    };
+                    let long = match self.get_arg_long(arg) {
+                        Ok(long) => long,
+                        Err(err) => {
+                            return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, err));
+                        }
+                    };
+                    option = (long, Some(next_elem.to_string()));
+                    self.recargs.push(option);
+                    idx += 1;
+                    let _ = idx;
+                    skip = true;
                 } else {
-                    if args.get(idx) != None {
-                        let next_elem = match args.get(idx) {
-                            Some(next) => next,
-                            None => {
-                                return Err(std::io::Error::new(
-                                    std::io::ErrorKind::InvalidInput,
-                                    format!("No value supplied supplied for {}", *arg),
-                                ))
-                            }
-                        };
-                        let long = match self.get_arg_long(&arg) {
-                            Ok(long) => long,
-                            Err(err) => {
-                                // gehirn leistung
-                                return Err(std::io::Error::new(
-                                    std::io::ErrorKind::InvalidInput,
-                                    err,
-                                ));
-                            }
-                        };
-                        option = (long, Some(next_elem.to_string()));
-                        self.recargs.push(option);
-                        idx += 1;
-                        let _ = idx;
-                        skip = true;
-                    } else {
-                        return Err(std::io::Error::new(
-                            std::io::ErrorKind::InvalidInput,
-                            format!("No value supplied supplied for {}", *arg),
-                        ));
-                    }
+                    return Err(std::io::Error::new(
+                        std::io::ErrorKind::InvalidInput,
+                        format!("No value supplied for {}", *arg),
+                    ));
                 }
             } else {
                 skip = false;
@@ -316,13 +316,13 @@ impl ArgParser {
             self.desc
         );
         for h in self.validarg.clone() {
-            println!("\t{}", h.to_string());
+            println!("\t{}", h);
         }
     }
 
     //checks if argument is valid and syntax correct. returns true if argument complete and false if argument needs value, err(string) if something else is wrong
     pub fn is_valid(&self, arg: &str) -> Result<bool, String> {
-        let split = arg.split("=").collect::<Vec<&str>>();
+        let split = arg.split('=').collect::<Vec<&str>>();
         let arghead = split[0];
         for element in self.validarg.clone() {
             //args exists
@@ -331,7 +331,7 @@ impl ArgParser {
                 if element.param.is_none() {
                     return Ok(true);
                 } else if split.len() == 2 {
-                    if split[1].len() == 0 {
+                    if split[1].is_empty() {
                         return Err("Invalid value".to_owned());
                     } else {
                         return Ok(true);
@@ -346,7 +346,7 @@ impl ArgParser {
 
     //checks if argument needs value
     pub fn has_value(&self, arg: &str) -> Result<bool, String> {
-        let arghead = arg.split("=").collect::<Vec<&str>>()[0];
+        let arghead = arg.split('=').collect::<Vec<&str>>()[0];
         for element in self.validarg.clone() {
             //args exists
             if arghead == element.short || arghead == element.long {
@@ -366,7 +366,7 @@ impl ArgParser {
         for element in self.validarg.clone() {
             //args exists
             if arg == element.short || arg == element.long {
-                return Ok(element.long.clone());
+                return Ok(element.long);
             }
         }
         Err(String::from("Invalid argument"))

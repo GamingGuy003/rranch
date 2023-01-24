@@ -1,14 +1,14 @@
-use std::{net::TcpStream, io::copy};
 use console::Style;
 use log::{debug, error, info};
+use std::{io::copy, net::TcpStream};
 
 use crate::{
-    coms::coms::write_and_read, structs::pkgbuild::PKGBuildJson, util::util::print_vec_cols,
+    sockops::coms::write_and_read, structs::pkgbuild::PKGBuildJson, util::funcs::print_vec_cols,
 };
 
 pub fn fetch_dependencies_for(socket: &TcpStream, pkg_name: &str) -> i32 {
     info!("Trying to show dependencies of {}...", pkg_name);
-    let dependencies = match write_and_read(&socket, format!("CHECKOUT_PACKAGE {}", pkg_name)) {
+    let dependencies = match write_and_read(socket, format!("CHECKOUT_PACKAGE {}", pkg_name)) {
         Ok(msg) => msg,
         Err(err) => {
             error!("{}", err);
@@ -20,11 +20,11 @@ pub fn fetch_dependencies_for(socket: &TcpStream, pkg_name: &str) -> i32 {
         "INV_PKG_NAME" => {
             error!("Invalid package name!");
             return -1;
-        },
+        }
         "INV_PKG" => {
             error!("Invalid packagebuild!");
             return -1;
-        },
+        }
         _ => {}
     }
 
@@ -47,7 +47,7 @@ pub fn fetch_dependencies_for(socket: &TcpStream, pkg_name: &str) -> i32 {
         }
     };
 
-    let pkgs: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or(Vec::new());
+    let pkgs: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or_default();
 
     let resp = match write_and_read(socket, "MANAGED_PKGBUILDS".to_owned()) {
         Ok(resp) => resp,
@@ -57,16 +57,16 @@ pub fn fetch_dependencies_for(socket: &TcpStream, pkg_name: &str) -> i32 {
         }
     };
 
-    let pkgb: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or(Vec::new());
+    let pkgb: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or_default();
 
     let deps = packagebuild.get_dependencies();
     let bdeps = packagebuild.get_build_dependencies();
     let cdeps = packagebuild.get_cross_dependencies();
 
-    let bold = Style::new().bold();                             //title
-    let red = Style::new().red();                               //dependencies not built nor with packagebuild
-    let yellow = Style::new().yellow();                         //dependencies with packagebuild but not built
-    let green = Style::new().green();                           //dependencies build with packagebuild
+    let bold = Style::new().bold(); //title
+    let red = Style::new().red(); //dependencies not built nor with packagebuild
+    let yellow = Style::new().yellow(); //dependencies with packagebuild but not built
+    let green = Style::new().green(); //dependencies build with packagebuild
 
     let mut diffdeps: Vec<String> = Vec::new();
     let mut diffbdeps: Vec<String> = Vec::new();
@@ -76,12 +76,12 @@ pub fn fetch_dependencies_for(socket: &TcpStream, pkg_name: &str) -> i32 {
     for dep in deps.clone() {
         if pkgb.contains(&dep) {
             if pkgs.contains(&dep) {
-                diffdeps.push(format!("{}", green.apply_to(dep)));      //packagebuild and binary
+                diffdeps.push(format!("{}", green.apply_to(dep))); //packagebuild and binary
             } else {
-                diffdeps.push(format!("{}", yellow.apply_to(dep)));     //packagebuild no binary
+                diffdeps.push(format!("{}", yellow.apply_to(dep))); //packagebuild no binary
             }
         } else {
-            diffdeps.push(format!("{}", red.apply_to(dep)));            //no packagebuild and no binary
+            diffdeps.push(format!("{}", red.apply_to(dep))); //no packagebuild and no binary
         }
     }
 
@@ -89,12 +89,12 @@ pub fn fetch_dependencies_for(socket: &TcpStream, pkg_name: &str) -> i32 {
     for dep in bdeps.clone() {
         if pkgb.contains(&dep) {
             if pkgs.contains(&dep) {
-                diffbdeps.push(format!("{}", green.apply_to(dep)));     //packagebuild and binary
+                diffbdeps.push(format!("{}", green.apply_to(dep))); //packagebuild and binary
             } else {
-                diffbdeps.push(format!("{}", yellow.apply_to(dep)));    //packagebuild no binary
+                diffbdeps.push(format!("{}", yellow.apply_to(dep))); //packagebuild no binary
             }
         } else {
-            diffbdeps.push(format!("{}", red.apply_to(dep)));           //no packagebuild and no binary
+            diffbdeps.push(format!("{}", red.apply_to(dep))); //no packagebuild and no binary
         }
     }
 
@@ -102,12 +102,12 @@ pub fn fetch_dependencies_for(socket: &TcpStream, pkg_name: &str) -> i32 {
     for dep in cdeps.clone() {
         if pkgb.contains(&dep) {
             if pkgs.contains(&dep) {
-                diffcdeps.push(format!("{}", green.apply_to(dep)));     //packagebuild and binary
+                diffcdeps.push(format!("{}", green.apply_to(dep))); //packagebuild and binary
             } else {
-                diffcdeps.push(format!("{}", yellow.apply_to(dep)));    //packagebuild no binary
+                diffcdeps.push(format!("{}", yellow.apply_to(dep))); //packagebuild no binary
             }
         } else {
-            diffcdeps.push(format!("{}", red.apply_to(dep)));           //no packagebuild no binary
+            diffcdeps.push(format!("{}", red.apply_to(dep))); //no packagebuild no binary
         }
     }
 
@@ -124,10 +124,10 @@ pub fn fetch_dependencies_for(socket: &TcpStream, pkg_name: &str) -> i32 {
         "{}",
         bold.apply_to(format!("Dependencies for {}:", pkg_name))
     );
-    if diffdeps.len() > 0 {
-        print_vec_cols(diffdeps, maxdeps, 8);
-    } else {
+    if diffdeps.is_empty() {
         println!("No runtimedependencies.");
+    } else {
+        print_vec_cols(diffdeps, maxdeps, 8);
     }
 
     let maxbdeps = Some(
@@ -143,10 +143,10 @@ pub fn fetch_dependencies_for(socket: &TcpStream, pkg_name: &str) -> i32 {
         "{}",
         bold.apply_to(format!("Builddependencies for {}:", pkg_name))
     );
-    if diffbdeps.len() > 0 {
-        print_vec_cols(diffbdeps, maxbdeps, 8);
-    } else {
+    if diffbdeps.is_empty() {
         println!("No builddependencies.");
+    } else {
+        print_vec_cols(diffbdeps, maxbdeps, 8);
     }
 
     let maxcdeps = Some(
@@ -162,10 +162,10 @@ pub fn fetch_dependencies_for(socket: &TcpStream, pkg_name: &str) -> i32 {
         "{}",
         bold.apply_to(format!("Crossdependencies for {}:", pkg_name))
     );
-    if diffcdeps.len() > 0 {
-        print_vec_cols(diffcdeps, maxcdeps, 8);
-    } else {
+    if diffcdeps.is_empty() {
         println!("No crossdependencies.");
+    } else {
+        print_vec_cols(diffcdeps, maxcdeps, 8);
     }
     0
 }
@@ -191,7 +191,7 @@ pub fn fetch_dependers_on(socket: &TcpStream, pkg_name: &str) -> i32 {
 
     println!("{}", bold.apply_to(format!("Dependers on {}:", pkg_name)));
     print_vec_cols(
-        serde_json::from_str::<Vec<String>>(&resp).unwrap_or(Vec::new()),
+        serde_json::from_str::<Vec<String>>(&resp).unwrap_or_default(),
         None,
         0,
     );
@@ -211,14 +211,14 @@ pub fn fetch_sys_log(socket: &TcpStream) -> i32 {
             return -1;
         }
     };
-    let log_as_lines: Vec<String> = serde_json::from_str(log.as_str()).unwrap_or(Vec::new());
+    let log_as_lines: Vec<String> = serde_json::from_str(log.as_str()).unwrap_or_default();
     println!("{}", bold.apply_to("Syslog:"));
-    if log_as_lines.len() > 0 {
+    if log_as_lines.is_empty() {
+        println!("Syslog is empty.");
+    } else {
         for line in log_as_lines {
             println!("{}", line);
         }
-    } else {
-        println!("Syslog is empty.");
     }
     0
 }
@@ -235,7 +235,7 @@ pub fn fetch_difference_pkgb_pkgs(socket: &TcpStream) -> i32 {
             return -1;
         }
     };
-    let pkgs: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or(Vec::new());
+    let pkgs: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or_default();
 
     let resp = match write_and_read(socket, "MANAGED_PKGBUILDS".to_owned()) {
         Ok(resp) => resp,
@@ -244,13 +244,12 @@ pub fn fetch_difference_pkgb_pkgs(socket: &TcpStream) -> i32 {
             return -1;
         }
     };
-    let mut pkgb: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or(Vec::new());
+    let mut pkgb: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or_default();
     pkgb.sort();
 
     let mut diff = Vec::new();
-    let max;
-    if !pkgb.is_empty() {
-        max = Some(
+    let max = if pkgb.is_empty() {
+        Some(
             (pkgb
                 .iter()
                 .max_by_key(|value| value.chars().count())
@@ -258,9 +257,9 @@ pub fn fetch_difference_pkgb_pkgs(socket: &TcpStream) -> i32 {
                 .chars()
                 .count()
                 + 13) as i32,
-        );
+        )
     } else {
-        max = Some(
+        Some(
             (pkgs
                 .iter()
                 .max_by_key(|value| value.chars().count())
@@ -268,8 +267,8 @@ pub fn fetch_difference_pkgb_pkgs(socket: &TcpStream) -> i32 {
                 .chars()
                 .count()
                 + 13) as i32,
-        );
-    }
+        )
+    };
 
     for pbuild in pkgb {
         if pkgs.contains(&pbuild) {
@@ -280,10 +279,10 @@ pub fn fetch_difference_pkgb_pkgs(socket: &TcpStream) -> i32 {
     }
 
     println!("{}", bold.apply_to("Package / Packageuild diff:"));
-    if diff.len() > 0 {
-        print_vec_cols(diff, max, 0);
-    } else {
+    if diff.is_empty() {
         println!("No managed packagebuilds on server");
+    } else {
+        print_vec_cols(diff, max, 0);
     }
     0
 }
@@ -298,14 +297,14 @@ pub fn fetch_managed_packagebuilds(socket: &TcpStream) -> i32 {
             return -1;
         }
     };
-    let mut pkgb: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or(Vec::new());
+    let mut pkgb: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or_default();
 
     println!("{}", bold.apply_to("Managed packageuilds:"));
-    if pkgb.len() > 0 {
+    if pkgb.is_empty() {
+        println!("No managed packagebuilds on server");
+    } else {
         pkgb.sort();
         print_vec_cols(pkgb, None, 0);
-    } else {
-        println!("No managed packagebuilds on server");
     }
     0
 }
@@ -320,15 +319,15 @@ pub fn fetch_managed_packages(socket: &TcpStream) -> i32 {
             return -1;
         }
     };
-    let mut pkgs: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or(Vec::new());
+    let mut pkgs: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or_default();
     debug!("Successfully fetched managed pkgs from server: {:?}", pkgs);
 
     println!("{}", bold.apply_to("Managed packages:"));
-    if pkgs.len() > 0 {
+    if pkgs.is_empty() {
+        println!("No managed packages on server");
+    } else {
         pkgs.sort();
         print_vec_cols(pkgs, None, 0);
-    } else {
-        println!("No managed packages on server");
     }
     0
 }
@@ -347,14 +346,14 @@ pub fn fetch_log_of(socket: &TcpStream, job_id: &str) -> i32 {
         }
     };
 
-    let log_as_lines: Vec<String> = serde_json::from_str(log.as_str()).unwrap_or(Vec::new());
+    let log_as_lines: Vec<String> = serde_json::from_str(log.as_str()).unwrap_or_default();
     println!("{}", bold.apply_to(format!("Buildlog for {}:\n", job_id)));
-    if log_as_lines.len() > 0 {
+    if log_as_lines.is_empty() {
+        println!("Log was empty.");
+    } else {
         for line in log_as_lines {
             println!("{}", line);
         }
-    } else {
-        println!("Log was empty.");
     }
     0
 }
@@ -384,34 +383,34 @@ pub fn fetch_client_status(socket: &TcpStream) -> i32 {
     };
 
     debug!("Trying to deserialize...");
-    let connlist: Vec<String> = serde_json::from_str(conn.as_str()).unwrap_or(Vec::new());
+    let connlist: Vec<String> = serde_json::from_str(conn.as_str()).unwrap_or_default();
     debug!("Connlist was: {:?}", connlist);
-    let botslist: Vec<String> = serde_json::from_str(bots.as_str()).unwrap_or(Vec::new());
+    let botslist: Vec<String> = serde_json::from_str(bots.as_str()).unwrap_or_default();
     debug!("Botslist was: {:?}", botslist);
 
     println!("{}", bold.apply_to("CONNECTED CLIENTS"));
-    if connlist.len() > 0 {
+    if connlist.is_empty() {
+        println!("No clients connected.");
+    } else {
         for c in connlist {
             println!("{}", c);
         }
-    } else {
-        println!("No clients connected.");
     }
 
     println!("{}", bold.apply_to("CONNECTED BUILDBOTS"));
-    if botslist.len() > 0 {
+    if !botslist.is_empty() {
+        println!("No buildbots connected.");
+    } else {
         for b in botslist {
             println!("{}", b);
         }
-    } else {
-        println!("No buildbots connected.");
     }
     0
 }
 
 pub fn fetch_packagebuild_for(socket: &TcpStream, pkg_name: &str) -> i32 {
     info!("Trying to checkout {}...", pkg_name);
-    let cpkg_resp = match write_and_read(&socket, format!("CHECKOUT_PACKAGE {}", pkg_name)) {
+    let cpkg_resp = match write_and_read(socket, format!("CHECKOUT_PACKAGE {}", pkg_name)) {
         Ok(msg) => msg,
         Err(err) => {
             error!("{}", err);
@@ -451,12 +450,18 @@ pub fn fetch_package(api_url: &str, pkg_name: &str) -> i32 {
                 error!("Invalid packagename or link. Length was 0");
                 return -1;
             }
-            info!("Downloading file with size {}", response.content_length().unwrap_or(0));
+            info!(
+                "Downloading file with size {}",
+                response.content_length().unwrap_or(0)
+            );
             response
-        },
+        }
         Err(_) => {
-            error!("Failed to fetch file from {}. (Does the package exist?)", api_url);
-            return -1
+            error!(
+                "Failed to fetch file from {}. (Does the package exist?)",
+                api_url
+            );
+            return -1;
         }
     };
 
