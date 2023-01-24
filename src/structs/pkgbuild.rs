@@ -216,7 +216,7 @@ impl PKGBuildJson {
         trace!("Creating workdir for {}", self.name);
         let path = self.name.as_str();
         if let Ok(_) = std::fs::metadata(path) {
-            if get_choice("Build dir already exists. Do you want to overwrite it?") {
+            if get_choice("Build dir already exists. Do you want to overwrite it") {
                 warn!("Overwriting existing builddir...");
                 match std::fs::remove_dir_all(path) {
                     Ok(_) => debug!("Removed old dir"),

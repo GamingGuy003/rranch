@@ -76,7 +76,7 @@ pub fn edit(socket: &TcpStream, pkg_name: &str, editor: &str) -> i32 {
             return -1;
         }
     }
-    if get_choice("Do you want to submit the changes?") {
+    if get_choice("Do you want to submit the changes") {
         submit_packagebuild(socket, path.clone().as_str());
     } else {
         info!("Aborted submit due to user choice.");
