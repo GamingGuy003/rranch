@@ -1,5 +1,4 @@
-use std::net::TcpStream;
-
+use std::{net::TcpStream, io::copy};
 use console::Style;
 use log::{debug, error, info};
 
@@ -440,5 +439,40 @@ pub fn fetch_packagebuild_for(socket: &TcpStream, pkg_name: &str) -> i32 {
     };
 
     json.create_workdir();
+    0
+}
+
+pub fn fetch_package(api_url: &str, pkg_name: &str) -> i32 {
+    let url = format!("https://{}?get=package&pkgname={}", api_url, pkg_name);
+    debug!("Trying to download {}", url);
+    let mut response = match reqwest::blocking::get(url) {
+        Ok(response) => {
+            if response.content_length().unwrap_or(0) == 0 {
+                error!("Invalid packagename or link. Length was 0");
+                return -1;
+            }
+            info!("Downloading file with size {}", response.content_length().unwrap_or(0));
+            response
+        },
+        Err(_) => {
+            error!("Failed to fetch file from {}. (Does the package exist?)", api_url);
+            return -1
+        }
+    };
+
+    let mut out = match std::fs::File::create(format!("{}.tar.xz", pkg_name)) {
+        Ok(file) => file,
+        Err(err) => {
+            error!("Failed creating output file {}.tar.xz: {}", pkg_name, err);
+            return -1;
+        }
+    };
+    match copy(&mut response, &mut out) {
+        Ok(_) => debug!("Successfully copied content to file."),
+        Err(err) => {
+            error!("Failed writing content to file: {}", err);
+            return -1;
+        }
+    }
     0
 }

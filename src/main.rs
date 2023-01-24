@@ -2,7 +2,7 @@ use cmds::{
     fetch::{
         fetch_client_status, fetch_dependencies_for, fetch_dependers_on,
         fetch_difference_pkgb_pkgs, fetch_log_of, fetch_managed_packagebuilds,
-        fetch_managed_packages, fetch_packagebuild_for, fetch_sys_log,
+        fetch_managed_packages, fetch_packagebuild_for, fetch_sys_log, fetch_package,
     },
     job::{
         request_build, request_cancel_all_jobs, request_cancel_queued_job,
@@ -161,6 +161,13 @@ fn main() -> std::io::Result<()> {
         retc = match fmatch {
             ("--debugshell", _) => run_dbs(&socket),
             ("--checkout", name) => fetch_packagebuild_for(&socket, &name.unwrap_or("".to_owned())),
+            ("--download", name) => fetch_package(conf.master
+                .as_ref()
+                .unwrap_or(&Master::empty())
+                .addr
+                .clone()
+                .unwrap_or("localhost".to_owned())
+                .as_str(), &name.unwrap_or("".to_owned())),
             ("--edit", name) => edit(&socket, &name.unwrap_or("".to_owned()), editor.as_str()),
             ("--template", _) => create_template(),
             ("--submit", filename) => {

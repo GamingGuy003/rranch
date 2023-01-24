@@ -14,6 +14,8 @@ This project is an improved rewrite of the [AcaciaLinux branch client](https://g
 
 * **-c / --checkout [name]:** Checks out the specified packagebuild from the server.
 
+* **-d / --download [name]:** Downloads a package from the master server.
+
 * **-e / --edit [name]:** Checks out packagebuild, opens it in a editor and submits the changed packagebuild.
 
 * **-t / --template:** Creates a template packagbuild.

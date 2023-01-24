@@ -71,6 +71,12 @@ impl ArgParser {
                     Some("name".to_owned()),
                 ),
                 Arg::new(
+                    "d",
+                    "download",
+                    "Downloads a package from the remote server.",
+                    Some("name".to_owned()),
+                ),
+                Arg::new(
                     "e",
                     "edit",
                     "Checks out packagebuild, opens it in a editor and submits the changed packagebuild.",

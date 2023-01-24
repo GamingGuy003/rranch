@@ -56,7 +56,7 @@ pub fn request_status(socket: &TcpStream, clear: bool) -> i32 {
 
     if clear {
         Term::stdout().clear_screen().unwrap_or(());
-        Term::stdout().move_cursor_to(0, 1).unwrap_or(());
+        Term::stdout().move_cursor_to(0, 0).unwrap_or(());
     }
 
     println!("{}", bold.apply_to("RUNNING JOBS"));
