@@ -76,10 +76,19 @@ pub fn edit(socket: &TcpStream, pkg_name: &str, editor: &str) -> i32 {
             return -1;
         }
     }
-    if get_choice("Do you want to submit the changes") {
+    if get_choice("Do you want to submit the changes", false) {
         submit_packagebuild(socket, path.as_str());
     } else {
         info!("Aborted submit due to user choice.");
+    }
+    if get_choice("Do you want to delete the local packagebuild", true) {
+        match std::fs::remove_dir_all(pkg_name) {
+            Ok(_) => {}
+            Err(err) => {
+                error!("Failed deleting locale packagebuild dir: {}", err);
+                return -1;
+            }
+        }
     }
     0
 }

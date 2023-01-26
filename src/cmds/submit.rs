@@ -73,7 +73,10 @@ pub fn submit_packagebuild(socket: &TcpStream, filename: &str) -> i32 {
 
     let pkgb: Vec<String> = serde_json::from_str(resp.as_str()).unwrap_or_default();
     if pkgb.contains(&pkgbuild.get_name())
-        && !get_choice("Packagebuild exists on remote. Do you want to overwrite it")
+        && !get_choice(
+            "Packagebuild exists on remote. Do you want to overwrite it",
+            false,
+        )
     {
         error!("Aborted submit due to user choice");
         return -1;

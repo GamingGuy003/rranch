@@ -474,7 +474,7 @@ pub fn fetch_package(api_url: &str, pkg_name: &str) -> i32 {
                 return -1;
             }
         }
-        .progress_chars("■■"),
+        .progress_chars("#=-"),
     );
 
     match easy.progress_function(move |dl_total, dl_now, _, _| {

@@ -26,11 +26,30 @@ pub fn print_vec_cols(vec: Vec<String>, mut max: Option<i32>, offset: i32) {
     println!();
 }
 
-pub fn get_choice(text: &str) -> bool {
+pub fn get_choice(text: &str, default: bool) -> bool {
     let red = Style::new().red();
-    let red_b = Style::new().red().bold();
     let green = Style::new().green();
+    let red_b = Style::new().red().bold();
     let green_b = Style::new().green().bold();
+    let q = if default {
+        format!(
+            "{}? [{}{}/{}{}] ",
+            text,
+            green_b.apply_to("Y").underlined(),
+            green.apply_to("es").underlined(),
+            red_b.apply_to("N"),
+            red.apply_to("o"),
+        )
+    } else {
+        format!(
+            "{}? [{}{}/{}{}] ",
+            text,
+            green_b.apply_to("Y"),
+            green.apply_to("es"),
+            red_b.apply_to("N").underlined(),
+            red.apply_to("o").underlined(),
+        )
+    };
 
     let mut _failed = false;
     loop {
@@ -39,19 +58,16 @@ pub fn get_choice(text: &str) -> bool {
             println!("Invalid input, please try again");
             _failed = false;
         }
-        print!(
-            "{}? [{}{}/{}{}] ",
-            text,
-            green_b.apply_to("Y"),
-            green.apply_to("es"),
-            red_b.apply_to("N"),
-            red.apply_to("o"),
-        );
+        print!("{}", q);
         std::io::stdout().flush().unwrap_or(());
         std::io::stdin().read_line(&mut input).unwrap_or(0);
         let input = input.trim();
         if input.is_empty() || input.to_lowercase() == "no" || input.to_lowercase() == "n" {
-            return false;
+            if input.is_empty() {
+                return default;
+            } else {
+                return false;
+            }
         } else if input.to_lowercase() == "yes" || input.to_lowercase() == "y" {
             return true;
         } else {
