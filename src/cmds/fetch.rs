@@ -1,6 +1,8 @@
-use console::Style;
+use console::{Style, Term};
+use curl::easy::{Easy, WriteError};
+use indicatif::{ProgressBar, ProgressStyle};
 use log::{debug, error, info};
-use std::{io::copy, net::TcpStream};
+use std::{io::Write, net::TcpStream};
 
 use crate::{
     sockops::coms::write_and_read, structs::pkgbuild::PKGBuildJson, util::funcs::print_vec_cols,
@@ -443,41 +445,80 @@ pub fn fetch_packagebuild_for(socket: &TcpStream, pkg_name: &str) -> i32 {
 
 pub fn fetch_package(api_url: &str, pkg_name: &str) -> i32 {
     let url = format!("https://{}?get=package&pkgname={}", api_url, pkg_name);
-    debug!("Trying to download {}", url);
-    let mut response = match reqwest::blocking::get(url) {
-        Ok(response) => {
-            if response.content_length().unwrap_or(0) == 0 {
-                error!("Invalid packagename or link. Length was 0");
-                return -1;
-            }
-            info!(
-                "Downloading file with size {}",
-                response.content_length().unwrap_or(0)
-            );
-            response
-        }
-        Err(_) => {
-            error!(
-                "Failed to fetch file from {}. (Does the package exist?)",
-                api_url
-            );
-            return -1;
-        }
-    };
-
-    let mut out = match std::fs::File::create(format!("{}.tar.xz", pkg_name)) {
-        Ok(file) => file,
+    let mut easy = Easy::new();
+    match easy.url(&url) {
+        Ok(_) => {}
         Err(err) => {
-            error!("Failed creating output file {}.tar.xz: {}", pkg_name, err);
-            return -1;
-        }
-    };
-    match copy(&mut response, &mut out) {
-        Ok(_) => debug!("Successfully copied content to file."),
-        Err(err) => {
-            error!("Failed writing content to file: {}", err);
+            error!("Failed to get url: {}", err);
             return -1;
         }
     }
-    0
+
+    match easy.progress(true) {
+        Ok(_) => {}
+        Err(err) => {
+            error!("Failed to set  progress: {}", err);
+            return -1;
+        }
+    }
+
+    let pb = ProgressBar::new(0);
+    pb.set_style(
+        match ProgressStyle::default_bar().template(&format!(
+            "[{{bar:{monn}.green/red}}] {{bytes}}/{{total_bytes}} {{msg}}",
+            monn = Term::stdout().size().1 - 2 * (Term::stdout().size().1 / 10)
+        )) {
+            Ok(pstyle) => pstyle,
+            Err(err) => {
+                error!("Failed setting progress style: {}", err);
+                return -1;
+            }
+        }
+        .progress_chars("■■"),
+    );
+
+    match easy.progress_function(move |dl_total, dl_now, _, _| {
+        if dl_total != 0.0 {
+            pb.set_length(dl_total as u64);
+        }
+        pb.set_position(dl_now as u64);
+        true
+    }) {
+        Ok(_) => {}
+        Err(err) => {
+            error!("Failed setting progress function: {}", err);
+            return -1;
+        }
+    }
+    let mut file = match std::fs::File::create(format!("{}.tar.xz", pkg_name)) {
+        Ok(file) => file,
+        Err(err) => {
+            error!("Failed creating output file: {}", err);
+            return -1;
+        }
+    };
+    match easy.write_function(move |data| match file.write_all(data).map(|_| data.len()) {
+        Ok(size) => Ok(size),
+        Err(err) => {
+            error!("Failed to write content: {}", err);
+            Err(WriteError::Pause)
+        }
+    }) {
+        Ok(_) => {}
+        Err(err) => {
+            error!("Failed setting write method! {}", err);
+            return -1;
+        }
+    }
+    let transfer = easy.transfer();
+    match transfer.perform() {
+        Ok(_) => {
+            info!("Finished transfering file!");
+            0
+        }
+        Err(err) => {
+            error!("Failed transfer: {}", err);
+            -1
+        }
+    }
 }
