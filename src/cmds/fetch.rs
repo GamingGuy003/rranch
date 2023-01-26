@@ -462,7 +462,7 @@ pub fn fetch_package(api_url: &str, pkg_name: &str) -> i32 {
         }
     }
 
-    let pb = ProgressBar::new(0);
+    let pb = ProgressBar::new(1);
     pb.set_style(
         match ProgressStyle::default_bar().template(&format!(
             "[{{bar:{monn}.green/red}}] {{bytes}}/{{total_bytes}} {{msg}}",
