@@ -1,25 +1,8 @@
 use args::argparser::Arg;
-use cmds::{
-    fetch::{
-        fetch_client_status, fetch_dependencies_for, fetch_dependers_on,
-        fetch_difference_pkgb_pkgs, fetch_log_of, fetch_managed_packagebuilds,
-        fetch_managed_packages, fetch_package, fetch_packagebuild_for, fetch_sys_log,
-    },
-    job::{
-        request_build, request_cancel_all_jobs, request_cancel_queued_job,
-        request_clear_completed_jobs, request_rebuild_dependers, request_status,
-    },
-    other::{create_template, edit, latest_log, watch_jobs},
-    submit::{submit_packagebuild, submit_solution},
-};
 
-use log::{debug, error};
-use std::process::exit;
-use structs::config::Config;
-use util::funcs::cleanup;
-
-use crate::{args::argparser::ArgParser, cmds::dbs::run_dbs, sockops::connect::connect};
+use crate::args::argparser::ArgParser;
 mod args;
+mod client;
 mod cmds;
 mod sockops;
 mod structs;
