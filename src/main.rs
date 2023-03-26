@@ -1,3 +1,4 @@
+use args::argparser::Arg;
 use cmds::{
     fetch::{
         fetch_client_status, fetch_dependencies_for, fetch_dependers_on,
@@ -25,6 +26,12 @@ mod structs;
 mod util;
 
 fn main() -> std::io::Result<()> {
+    let mut ap = ArgParser::new(Vec::new(), None, Vec::new());
+    ap.define_arg(Arg::new("t", "typ", "typo", None));
+    ap.define_arg(Arg::new("m", "monn", "monnolo", Some("gaming".to_owned())));
+    ap.parse_args();
+    println!("{:#?}", ap.get_parsed());
+    /*
     let mut confpath = format!(
         "{}/.config/rranch.toml",
         dirs::home_dir()
@@ -139,5 +146,6 @@ fn main() -> std::io::Result<()> {
     }
 
     cleanup(Some(socket), Some(retc));
+    */
     Ok(())
 }
