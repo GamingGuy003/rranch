@@ -31,13 +31,24 @@ fn main() -> std::io::Result<()> {
     };
 
     match client.auth() {
-        Ok(_) => info!("Successfully authenticated"),
+        Ok(()) => info!("Successfully authenticated"),
         Err(err) => error!("Failed to authenticate: {err}"),
+    }
+
+    match client.set_type() {
+        Ok(()) => info!("Successfully set machine type"),
+        Err(err) => error!("Failed to set machine type: {err}"),
+    }
+
+    match client.set_name() {
+        Ok(()) => info!("Successfully set machine name"),
+        Err(err) => error!("Failed to set machine name: {err}"),
     }
 
     match client.close_connection() {
         Ok(()) => info!("Successfully shut down connection"),
         Err(err) => error!("Failed to shut down connection: {err}"),
     }
+
     Ok(())
 }

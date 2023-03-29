@@ -1,6 +1,7 @@
 use std::{
     io::{self, Read, Write},
     net::TcpStream,
+    result,
 };
 
 use log::{error, trace};
@@ -33,22 +34,52 @@ impl Client {
         })
     }
 
-    pub fn close_connection(&self) -> Result<(), io::Error> {
+    pub fn close_connection(&self) -> Result<(), std::io::Error> {
         self.socket.shutdown(std::net::Shutdown::Both)
     }
 
     pub fn auth(&mut self) -> Result<(), std::io::Error> {
-        if self.authkey.is_some() {
-            let resp = match self
-                .write_and_read(format!("AUTH {}", self.authkey.clone().unwrap_or_default()))
-            {
-                Ok(resp) => resp,
-                Err(err) => return Err(err),
-            };
-        } else {
+        if self.authkey.is_none() {
             return Ok(());
         }
-        Ok(())
+
+        let resp =
+            self.write_and_read(format!("AUTH {}", self.authkey.clone().unwrap_or_default()))?;
+
+        if resp == "AUTH_OK" {
+            return Ok(());
+        } else {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::PermissionDenied,
+                format!("Received: {resp}"),
+            ));
+        }
+    }
+
+    pub fn set_type(&mut self) -> Result<(), std::io::Error> {
+        let resp = self.write_and_read(format!("SET_MACHINE_TYPE {}", self.client_type))?;
+
+        if resp == "CMD_OK" {
+            return Ok(());
+        } else {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                format!("Received: {resp}"),
+            ));
+        }
+    }
+
+    pub fn set_name(&mut self) -> Result<(), std::io::Error> {
+        let resp = self.write_and_read(format!("SET_MACHINE_NAME {}", self.client_name))?;
+
+        if resp == "CMD_OK" {
+            return Ok(());
+        } else {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                format!("Received: {resp}"),
+            ));
+        }
     }
 
     fn read(&mut self) -> Result<String, std::io::Error> {
