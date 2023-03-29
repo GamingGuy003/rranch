@@ -444,6 +444,7 @@ pub fn fetch_packagebuild_for(socket: &TcpStream, pkg_name: &str) -> i32 {
 }
 
 pub fn fetch_package(api_url: &str, pkg_name: &str) -> i32 {
+    let bold = Style::new().bold();
     let url = format!("https://{}?get=package&pkgname={}", api_url, pkg_name);
     let mut easy = Easy::new();
     match easy.url(&url) {
@@ -475,6 +476,7 @@ pub fn fetch_package(api_url: &str, pkg_name: &str) -> i32 {
             }
         }
         .progress_chars("#=--"),
+        //.progress_chars("──"),
     );
 
     match easy.progress_function(move |dl_total, dl_now, _, _| {

@@ -3,29 +3,52 @@ use std::{
     net::TcpStream,
 };
 
-use log::trace;
+use log::{error, trace};
 
 pub struct Client {
     socket: TcpStream,
+    authkey: Option<String>,
+    client_name: String,
+    client_type: String,
 }
 
 impl Client {
     pub fn new(
         addr: &str,
         port: i32,
-        authkey: Option<&str>,
-        client_name: &str,
-        client_type: &str,
+        authkey: Option<String>,
+        client_name: String,
+        client_type: String,
     ) -> Result<Self, io::Error> {
         let socket = match TcpStream::connect(format!("{addr}:{port}")) {
             Ok(socket) => socket,
             Err(err) => return Err(err),
         };
-        Ok(Self { socket: socket })
+
+        Ok(Self {
+            socket,
+            authkey,
+            client_name,
+            client_type,
+        })
     }
 
-    pub fn close_connection(&self) {
-        self.socket.shutdown(std::net::Shutdown::Both);
+    pub fn close_connection(&self) -> Result<(), io::Error> {
+        self.socket.shutdown(std::net::Shutdown::Both)
+    }
+
+    pub fn auth(&mut self) -> Result<(), std::io::Error> {
+        if self.authkey.is_some() {
+            let resp = match self
+                .write_and_read(format!("AUTH {}", self.authkey.clone().unwrap_or_default()))
+            {
+                Ok(resp) => resp,
+                Err(err) => return Err(err),
+            };
+        } else {
+            return Ok(());
+        }
+        Ok(())
     }
 
     fn read(&mut self) -> Result<String, std::io::Error> {

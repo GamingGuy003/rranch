@@ -1,1 +1,0 @@
-mod r#struct;

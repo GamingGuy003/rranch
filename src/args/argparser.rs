@@ -1,7 +1,5 @@
 use std::fmt::Display;
 
-use log::debug;
-
 #[derive(Clone)]
 pub struct ArgParser {
     //vec of checked and valid args
@@ -60,7 +58,7 @@ impl ArgParser {
     ) -> Self {
         Self {
             parsed_args: parsed_args,
-            desc: desc.unwrap_or_default().to_owned(),
+            desc: desc.unwrap_or("No description set").to_owned(),
             defined_args: defined_args,
         }
     }
