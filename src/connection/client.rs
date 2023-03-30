@@ -4,9 +4,7 @@ use std::{
     process::exit,
 };
 
-use log::{debug, error, info, trace};
-
-use super::info;
+use log::{debug, error, trace};
 
 pub struct Client {
     socket: TcpStream,

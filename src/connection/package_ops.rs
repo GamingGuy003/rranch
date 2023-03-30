@@ -11,10 +11,10 @@ use super::client::Client;
 
 impl Client {
     // downloads pkgb and creates workdir
-    pub fn checkout(&mut self, pkgname: &str) -> Result<(), std::io::Error> {
-        debug!("Trying to checkout {pkgname}...");
+    pub fn checkout(&mut self, pkg_name: &str) -> Result<(), std::io::Error> {
+        debug!("Trying to checkout {pkg_name}...");
 
-        let resp = self.write_and_read(&format!("CHECKOUT_PACKAGE {}", pkgname))?;
+        let resp = self.write_and_read(&format!("CHECKOUT_PACKAGE {}", pkg_name))?;
 
         match resp.as_str() {
             "INV_PKG_NAME" => {

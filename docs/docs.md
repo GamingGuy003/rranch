@@ -65,7 +65,7 @@ pub fn set_name(&mut self) -> Result<(), std::io::Error>
 <code>CHECKOUT_PACKAGE</code>
 
 ```rust
-pub fn checkout(&mut self, pkgname: &str) -> Result<(), std::io::Error>
+pub fn checkout(&mut self, pkg_name: &str) -> Result<(), std::io::Error>
 ```
 
 - Value:
@@ -82,6 +82,10 @@ pub fn checkout(&mut self, pkgname: &str) -> Result<(), std::io::Error>
 
 <code>SUBMIT_PACKAGE</code>
 
+```rust
+pub fn submit(&mut self, path: &str) -> Result<(), std::io::Error>
+```
+
 - Value:
   
   - <code>{JSON:PKGBUILD}</code>
@@ -97,7 +101,7 @@ pub fn checkout(&mut self, pkgname: &str) -> Result<(), std::io::Error>
 <code>RELEASE_BUILD</code>
 
 ```rust
-pub fn build(&mut self, rb: bool, pkg: &str) -> Result<(), std::io::Error>
+pub fn build(&mut self, rb: bool, pkg_name: &str) -> Result<(), std::io::Error>
 ```
 
 - Value:
@@ -121,7 +125,7 @@ pub fn build(&mut self, rb: bool, pkg: &str) -> Result<(), std::io::Error>
 <code>CROSS_BUILD</code>
 
 ```rust
-pub fn build(&mut self, rb: bool, pkg: &str) -> Result<(), std::io::Error>
+pub fn build(&mut self, rb: bool, pkg_name: &str) -> Result<(), std::io::Error>
 ```
 
 - Value:
@@ -170,6 +174,10 @@ pub fn build(&mut self, rb: bool, pkg: &str) -> Result<(), std::io::Error>
 
 <code>GET_DEPENDERS</code>
 
+```rust
+pub fn get_dependers(&mut self, pkg_name: &str) -> Result<(), std::io::Error>
+```
+
 - Value:
   
   - <code>PKG_NAME</code>
@@ -185,7 +193,7 @@ pub fn build(&mut self, rb: bool, pkg: &str) -> Result<(), std::io::Error>
 <code>REBUILD_DEPENDERS</code>
 
 ```rust
-pub fn rebuild_dependers(&mut self, pkg: &str) -> Result<(), std::io::Error>
+pub fn rebuild_dependers(&mut self, pkg_name: &str) -> Result<(), std::io::Error>
 ```
 
 - Value:
@@ -256,6 +264,10 @@ pub fn rebuild_dependers(&mut self, pkg: &str) -> Result<(), std::io::Error>
 
 <code>MANAGED_PACKAGES</code>
 
+```rust
+pub fn get_packages(&mut self) -> Result<(), std::io::Error>
+```
+
 - Value:
 
 - Returns:
@@ -265,6 +277,10 @@ pub fn rebuild_dependers(&mut self, pkg: &str) -> Result<(), std::io::Error>
 ---
 
 <code>MANAGED_PKGBUILDS</code>
+
+```rust
+pub fn get_packagebuilds(&mut self) -> Result<(), std::io::Error>
+```
 
 - Value:
 
@@ -322,6 +338,10 @@ pub fn cancel_all_jobs(&mut self) -> Result<(), std::io::Error>
 
 <code>SUBMIT_SOLUTION_RB</code>
 
+```rust
+pub fn submit_sol(&mut self, rb: bool, path: &str) -> Result<(), std::io::Error>
+```
+
 - Value:
   
   - <code>{SOLUTION}</code>
@@ -339,6 +359,10 @@ pub fn cancel_all_jobs(&mut self) -> Result<(), std::io::Error>
 ---
 
 <code>SUBMIT_SOLUTION_CB</code>
+
+```rust
+pub fn submit_sol(&mut self, rb: bool, path: &str) -> Result<(), std::io::Error>
+```
 
 - Value:
   
@@ -399,6 +423,10 @@ pub fn cancel_all_jobs(&mut self) -> Result<(), std::io::Error>
 ---
 
 <code>GET_MANAGED_EXTRA_SOURCES</code>
+
+```rust
+pub fn get_extra_sources(&mut self) -> Result<(), std::io::Error>
+```
 
 - Value:
 
@@ -562,8 +590,13 @@ struct ExtraSource {
 
 ---
 
-<code>Jobs</code>
+<code>Job</code>
 
 ```rust
-
+struct Job {
+    build_pkg_name: String,
+    job_status: String,
+    job_id: String,
+    requesting_client: String,
+}
 ```
