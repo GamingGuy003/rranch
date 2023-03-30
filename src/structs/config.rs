@@ -34,7 +34,7 @@ impl Config {
             }
         };
 
-        let config = match toml::from_str(file.as_str()) {
+        match toml::from_str(file.as_str()) {
             Ok(config) => config,
             Err(err) => {
                 println!(
@@ -43,8 +43,7 @@ impl Config {
                 );
                 exit(-1)
             }
-        };
-        config
+        }
     }
 
     pub fn get_master(&self) -> Master {

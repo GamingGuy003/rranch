@@ -117,7 +117,7 @@ impl ArgParser {
                     self.parsed_args.push((found.long.clone(), None))
                 }
             } else {
-                warn!("Unrecognised argument {arg}")
+                warn!("Unrecognized argument {arg}")
             }
         }
     }

@@ -82,10 +82,6 @@ pub fn checkout(&mut self, pkgname: &str) -> Result<(), std::io::Error>
 
 <code>SUBMIT_PACKAGE</code>
 
-```rust
-pub fn submit(&mut self, path: &str) -> Result<(), std::io::Error>
-```
-
 - Value:
   
   - <code>{JSON:PKGBUILD}</code>
@@ -188,6 +184,10 @@ pub fn build(&mut self, rb: bool, pkg: &str) -> Result<(), std::io::Error>
 
 <code>REBUILD_DEPENDERS</code>
 
+```rust
+pub fn rebuild_dependers(&mut self, pkg: &str) -> Result<(), std::io::Error>
+```
+
 - Value:
   
   - <code>PKG_NAME</code>
@@ -210,7 +210,7 @@ pub fn build(&mut self, rb: bool, pkg: &str) -> Result<(), std::io::Error>
 
 - Returns:
   
-  - <code>{JSON:COMPLETED_JOBS}</code>
+  - <code>{JSON:[JOB]}</code>
 
 ---
 
@@ -220,7 +220,7 @@ pub fn build(&mut self, rb: bool, pkg: &str) -> Result<(), std::io::Error>
 
 - Returns:
   
-  - <code>{JSON:RUNNING_JOBS}</code>
+  - <code>{JSON:[JOB]}</code>
 
 ---
 
@@ -230,7 +230,7 @@ pub fn build(&mut self, rb: bool, pkg: &str) -> Result<(), std::io::Error>
 
 - Returns:
   
-  - <code>{JSON:QUEUED_JOBS}</code>
+  - <code>{JSON:[JOB]}</code>
 
 ---
 
@@ -324,7 +324,7 @@ pub fn cancel_all_jobs(&mut self) -> Result<(), std::io::Error>
 
 - Value:
   
-  - <code>{JSON:SOLUTION}</code>
+  - <code>{SOLUTION}</code>
 
 - Returns:
   
@@ -342,7 +342,7 @@ pub fn cancel_all_jobs(&mut self) -> Result<(), std::io::Error>
 
 - Value:
   
-  - <code>{JSON:SOLUTION}</code>
+  - <code>{SOLUTION}</code>
 
 - Returns:
   
@@ -404,7 +404,7 @@ pub fn cancel_all_jobs(&mut self) -> Result<(), std::io::Error>
 
 - Returns:
   
-  - <code>{JSON:MANAGED_EXTRA_SOURCES}</code>
+  - <code>{JSON:[EXTRA_SOURCE]}</code>
 
 ---
 
@@ -547,3 +547,23 @@ pub fn cancel_all_jobs(&mut self) -> Result<(), std::io::Error>
 - Returns:
 
 ---
+
+### JSON
+
+<code>Extra Source</code>
+
+```rust
+struct ExtraSource {
+    id: String,
+    filename: String,
+    description: String,
+}
+```
+
+---
+
+<code>Jobs</code>
+
+```rust
+
+```

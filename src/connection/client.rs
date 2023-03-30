@@ -4,7 +4,9 @@ use std::{
     process::exit,
 };
 
-use log::{debug, error, trace};
+use log::{debug, error, info, trace};
+
+use super::info;
 
 pub struct Client {
     socket: TcpStream,
@@ -41,6 +43,7 @@ impl Client {
 
     pub fn exit_clean(&self, code: i32) -> Result<(), std::io::Error> {
         self.close_connection()?;
+        debug!("Successfully shut down connection");
         exit(code)
     }
 
@@ -51,8 +54,10 @@ impl Client {
             return Ok(());
         }
 
-        let resp =
-            self.write_and_read(format!("AUTH {}", self.authkey.clone().unwrap_or_default()))?;
+        let resp = self.write_and_read(&format!(
+            "AUTH {}",
+            self.authkey.clone().unwrap_or_default()
+        ))?;
 
         match resp.as_str() {
             "AUTH_OK" => Ok(()),
@@ -70,7 +75,7 @@ impl Client {
     pub fn set_type(&mut self) -> Result<(), std::io::Error> {
         debug!("Trying to set machine type to {}...", self.client_type);
 
-        let resp = self.write_and_read(format!("SET_MACHINE_TYPE {}", self.client_type))?;
+        let resp = self.write_and_read(&format!("SET_MACHINE_TYPE {}", self.client_type))?;
 
         if resp == "CMD_OK" {
             return Ok(());
@@ -85,7 +90,7 @@ impl Client {
     pub fn set_name(&mut self) -> Result<(), std::io::Error> {
         debug!("Trying to set machine name to {}...", self.client_name);
 
-        let resp = self.write_and_read(format!("SET_MACHINE_NAME {}", self.client_name))?;
+        let resp = self.write_and_read(&format!("SET_MACHINE_NAME {}", self.client_name))?;
 
         if resp == "CMD_OK" {
             return Ok(());
@@ -101,24 +106,18 @@ impl Client {
         let len = self.get_len()?;
         trace!("Trying to read {} bytes from socket...", len);
         let mut read = vec![0; len as usize];
-        let ret = match self.socket.read_exact(&mut read) {
-            Ok(_) => String::from_utf8(read.into_iter().collect()).unwrap_or_default(),
-            Err(err) => return Err(err),
-        };
+        self.socket.read_exact(&mut read)?;
+        let ret = String::from_utf8(read.into_iter().collect()).unwrap_or_default();
         trace!("Received message was: {:?}", ret);
         Ok(ret)
     }
 
-    fn write(&mut self, content: String) -> Result<(), std::io::Error> {
+    fn write(&mut self, content: &str) -> Result<(), std::io::Error> {
         trace!("Trying to write message to socket: {content}");
 
-        match self
-            .socket
-            .write(format!("{} {}", content.as_bytes().len(), content).as_bytes())
-        {
-            Ok(_) => Ok(()),
-            Err(err) => Err(err),
-        }
+        self.socket
+            .write(format!("{} {}", content.as_bytes().len(), content).as_bytes())?;
+        Ok(())
     }
 
     fn get_len(&mut self) -> Result<i32, std::io::Error> {
@@ -142,7 +141,7 @@ impl Client {
         }
     }
 
-    pub fn write_and_read(&mut self, content: String) -> Result<String, std::io::Error> {
+    pub fn write_and_read(&mut self, content: &str) -> Result<String, std::io::Error> {
         self.write(content)?;
         self.read()
     }

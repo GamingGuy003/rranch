@@ -23,7 +23,7 @@ impl Client {
                 _ => {}
             }
 
-            match self.write_and_read(send.to_owned()) {
+            match self.write_and_read(send) {
                 Ok(msg) => println!("{}", msg),
                 Err(err) => {
                     error!("{}", err);

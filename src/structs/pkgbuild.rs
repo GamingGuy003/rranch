@@ -1,12 +1,12 @@
 use std::process::exit;
 
-use log::{debug, error, info, trace, warn};
+use log::{debug, error, trace, warn};
 use serde_derive::{Deserialize, Serialize};
 
 use crate::util::funcs::get_choice;
 
-#[derive(Deserialize, Serialize)]
-pub struct PKGBuildJson {
+#[derive(Deserialize, Serialize, Default)]
+pub struct PKGBuild {
     //mandatory fields
     name: String,
     version: String,
@@ -21,7 +21,7 @@ pub struct PKGBuildJson {
     build_script: Vec<String>,
 }
 
-impl PKGBuildJson {
+impl PKGBuild {
     pub fn to_pkgbuild(&self) -> Vec<String> {
         let mut bpb = Vec::new();
         bpb.push(format!("name={}", self.name));
@@ -80,100 +80,84 @@ impl PKGBuildJson {
         bpb
     }
 
-    pub fn from_pkgbuild(bpb: &str) -> Self {
+    pub fn from_pkgbuild(bpb: &str) -> Result<Self, std::io::Error> {
         trace!("Reading and parsing pkgbuild file...");
-        let file = match std::fs::read_to_string(bpb) {
-            Ok(file) => {
-                trace!("Successfully read file {}", bpb);
-                file
-            }
-            Err(err) => {
-                error!("Error reading pkgbuild file: {}", err);
-                exit(-1)
-            }
-        };
+        let file = std::fs::read_to_string(bpb)?;
 
         let lines = file.lines();
         let mut build = false;
         let mut i = 1;
-        let mut ret = Self {
-            name: "".to_owned(),
-            version: "".to_owned(),
-            real_version: "".to_owned(),
-            dependencies: Vec::new(),
-            build_dependencies: Vec::new(),
-            cross_dependencies: Vec::new(),
-            source: "".to_owned(),
-            extra_sources: Vec::new(),
-            description: "".to_owned(),
-            build_script: Vec::new(),
-        };
+        let mut ret = Self::default();
 
         for line in lines {
             if build {
                 if line.starts_with('}') {
                     build = false;
-                    continue;
                 }
                 ret.build_script.push(line.to_owned());
-            } else {
-                if line.is_empty() {
-                    continue;
+                continue;
+            }
+
+            if line.is_empty() {
+                continue;
+            }
+
+            let split: Vec<&str> = line.splitn(2, '=').collect();
+            if split.len() != 2 {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    format!("Invalid syntax at line {i}"),
+                ));
+            }
+
+            match split[0] {
+                "name" => ret.name = split[1].to_owned(),
+                "version" => ret.version = split[1].to_owned(),
+                "real_version" => ret.real_version = split[1].to_owned(),
+                "description" => ret.description = split[1].to_owned(),
+                "source" => ret.source = split[1].to_owned(),
+                "extra_sources" => {
+                    ret.extra_sources = split[1]
+                        .split('[')
+                        .collect::<Vec<&str>>()
+                        .into_iter()
+                        .map(|part| part.trim_end_matches(']'))
+                        .map(|part| part.to_string())
+                        .filter(|part| !part.is_empty())
+                        .collect()
                 }
-                let split: Vec<&str> = line.splitn(2, '=').collect();
-                if split.len() != 2 {
-                    error!("Invalid syntax at line {}", i);
-                    exit(-1)
+                "dependencies" => {
+                    ret.dependencies = split[1]
+                        .split('[')
+                        .collect::<Vec<&str>>()
+                        .into_iter()
+                        .map(|part| part.trim_end_matches(']'))
+                        .map(|part| part.to_string())
+                        .filter(|part| !part.is_empty())
+                        .collect()
                 }
-                match split[0] {
-                    "name" => ret.name = split[1].to_owned(),
-                    "version" => ret.version = split[1].to_owned(),
-                    "real_version" => ret.real_version = split[1].to_owned(),
-                    "description" => ret.description = split[1].to_owned(),
-                    "source" => ret.source = split[1].to_owned(),
-                    "extra_sources" => {
-                        ret.extra_sources = split[1]
-                            .split('[')
-                            .collect::<Vec<&str>>()
-                            .into_iter()
-                            .map(|part| part.trim_end_matches(']'))
-                            .map(|part| part.to_string())
-                            .filter(|part| !part.is_empty())
-                            .collect()
-                    }
-                    "dependencies" => {
-                        ret.dependencies = split[1]
-                            .split('[')
-                            .collect::<Vec<&str>>()
-                            .into_iter()
-                            .map(|part| part.trim_end_matches(']'))
-                            .map(|part| part.to_string())
-                            .filter(|part| !part.is_empty())
-                            .collect()
-                    }
-                    "builddeps" => {
-                        ret.build_dependencies = split[1]
-                            .split('[')
-                            .collect::<Vec<&str>>()
-                            .into_iter()
-                            .map(|part| part.trim_end_matches(']'))
-                            .map(|part| part.to_string())
-                            .filter(|part| !part.is_empty())
-                            .collect()
-                    }
-                    "crossdeps" => {
-                        ret.cross_dependencies = split[1]
-                            .split('[')
-                            .collect::<Vec<&str>>()
-                            .into_iter()
-                            .map(|part| part.trim_end_matches(']'))
-                            .map(|part| part.to_string())
-                            .filter(|part| !part.is_empty())
-                            .collect()
-                    }
-                    "build" => build = true,
-                    _ => warn!("Found invalid key at line {}", i),
+                "builddeps" => {
+                    ret.build_dependencies = split[1]
+                        .split('[')
+                        .collect::<Vec<&str>>()
+                        .into_iter()
+                        .map(|part| part.trim_end_matches(']'))
+                        .map(|part| part.to_string())
+                        .filter(|part| !part.is_empty())
+                        .collect()
                 }
+                "crossdeps" => {
+                    ret.cross_dependencies = split[1]
+                        .split('[')
+                        .collect::<Vec<&str>>()
+                        .into_iter()
+                        .map(|part| part.trim_end_matches(']'))
+                        .map(|part| part.to_string())
+                        .filter(|part| !part.is_empty())
+                        .collect()
+                }
+                "build" => build = true,
+                _ => warn!("Found invalid key at line {}", i),
             }
             i += 1;
         }
@@ -181,22 +165,14 @@ impl PKGBuildJson {
             "Sending to server:\n{}",
             serde_json::to_string_pretty(&ret).unwrap()
         );
-        ret
+        Ok(ret)
     }
 
     pub fn new_template() -> Self {
-        let mut ret = Self {
-            name: String::from("template"),
-            version: String::from("0"),
-            real_version: String::from("0"),
-            description: String::new(),
-            dependencies: Vec::new(),
-            build_dependencies: Vec::new(),
-            cross_dependencies: Vec::new(),
-            source: String::new(),
-            extra_sources: Vec::new(),
-            build_script: Vec::new(),
-        };
+        let mut ret = Self::default();
+        ret.name = "template".to_owned();
+        ret.version = "0".to_owned();
+        ret.real_version = "0".to_owned();
         ret.dependencies.push(String::new());
         ret.build_dependencies.push(String::new());
         ret.cross_dependencies.push(String::new());
@@ -225,7 +201,7 @@ impl PKGBuildJson {
                 return Ok(());
             }
         } else {
-            info!("Creating build workdir...");
+            debug!("Creating build workdir...");
         }
 
         std::fs::create_dir(path)?;

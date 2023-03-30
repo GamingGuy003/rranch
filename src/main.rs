@@ -1,35 +1,33 @@
 use args::argparser::Arg;
-use log::{error, info, trace};
+use log::{debug, error, info, trace};
 
 use crate::{args::argparser::ArgParser, connection::client::Client};
 mod args;
 mod connection;
+mod json;
 mod structs;
 mod util;
 
 fn main() -> std::io::Result<()> {
     pretty_env_logger::init_custom_env("rranch_log");
+
     let mut ap = ArgParser::new(Vec::new(), None, Vec::new());
+
     ap.define_arg(Arg::new("h", "help", "Prints this help dialog", None));
     ap.define_arg(Arg::new(
-        "db",
+        "dbs",
         "debugshell",
-        "Opens a debugshell on the remote server",
+        "Opens a remote debugshell",
         None,
-    ));
-    ap.define_arg(Arg::new(
-        "c",
-        "checkout",
-        "Checks packagebuild out from server",
-        Some("pkgname".to_owned()),
     ));
 
     ap.parse_args();
+
     let mut client = match Client::new(
-        "localhost",
+        "",
         27015,
-        Some("hirn".to_string()),
-        "schitcliönt".to_owned(),
+        Some("".to_string()),
+        "rranch-client".to_owned(),
         "CONTROLLER".to_owned(),
     ) {
         Ok(client) => client,
@@ -56,7 +54,6 @@ fn main() -> std::io::Result<()> {
     for arg in ap.get_parsed() {
         let result = match arg.0.as_str() {
             "--debugshell" => client.debug_shell(),
-            "--checkout" => client.checkout(&arg.1.unwrap_or_default()),
             other => {
                 trace!("{other}");
                 Ok(())
@@ -72,7 +69,7 @@ fn main() -> std::io::Result<()> {
     }
 
     match client.close_connection() {
-        Ok(()) => info!("Successfully shut down connection"),
+        Ok(()) => debug!("Successfully shut down connection"),
         Err(err) => error!("Failed to shut down connection: {err}"),
     }
 
