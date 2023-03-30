@@ -4,11 +4,8 @@ use log::{error, warn};
 
 #[derive(Clone)]
 pub struct ArgParser {
-    //vec of checked and valid args
     parsed_args: Vec<(String, Option<String>)>,
-    //argparser description
     desc: String,
-    //vec of predefined args
     defined_args: Vec<Arg>,
 }
 
