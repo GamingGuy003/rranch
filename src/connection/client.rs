@@ -1,10 +1,9 @@
 use std::{
     io::{self, Read, Write},
     net::TcpStream,
-    result,
 };
 
-use log::{error, trace};
+use log::trace;
 
 pub struct Client {
     socket: TcpStream,
@@ -131,4 +130,33 @@ impl Client {
         self.write(content)?;
         self.read()
     }
+
+    pub fn debug_shell(&self) {}
+    pub fn checkout(&self) {}
+    pub fn submit(&self) {}
+    pub fn release(&self) {}
+    pub fn cross(&self) {}
+    pub fn build_status(&self) {}
+    pub fn client_status(&self) {}
+    pub fn cancel_job(&self) {}
+    pub fn cancel_jobs(&self) {}
+    pub fn sys_log(&self) {}
+    pub fn build_log(&self) {}
+    pub fn clear_completed(&self) {}
+    pub fn get_packages(&self) {}
+    pub fn get_packagebuilds(&self) {}
+    pub fn get_dependers(&self) {}
+    pub fn get_dependencies(&self) {}
+    pub fn rebuild_dependers(&self) {}
+    pub fn get_diff(&self) {}
+    pub fn solution_release_build(&self) {}
+    pub fn solution_cross_build(&self) {}
+    pub fn solution(&self) {}
+    pub fn edit(&self) {}
+    pub fn export(&self) {}
+    pub fn import(&self) {}
+    pub fn client_info(&self) {}
+    pub fn submit_extra_source(&self) {}
+    pub fn get_extra_sources(&self) {}
+    pub fn remove_extra_source(&self) {}
 }
