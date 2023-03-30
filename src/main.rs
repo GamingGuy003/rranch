@@ -3,9 +3,7 @@ use log::{error, info};
 
 use crate::{args::argparser::ArgParser, connection::client::Client};
 mod args;
-mod cmds;
 mod connection;
-mod sockops;
 mod structs;
 mod util;
 
