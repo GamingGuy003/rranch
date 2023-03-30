@@ -1,5 +1,3 @@
-use std::process::exit;
-
 use log::{debug, error, trace, warn};
 use serde_derive::{Deserialize, Serialize};
 
