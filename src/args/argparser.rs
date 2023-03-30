@@ -36,14 +36,21 @@ impl Display for Arg {
             "{}",
             if self.param.is_some() {
                 format!(
-                    "{:6} {:20} = {:10}\t{}",
-                    self.short,
-                    self.long,
-                    format!("<{}>", self.param.clone().unwrap_or_default()),
+                    "{:25}\t{}",
+                    format!(
+                        "{} {} = {}",
+                        self.short,
+                        self.long,
+                        format!("<{}>", self.param.clone().unwrap_or_default())
+                    ),
                     self.desc
                 )
             } else {
-                format!("{:6} {:33}\t{}", self.short, self.long, self.desc)
+                format!(
+                    "{:25}\t{}",
+                    format!("{} {}", self.short, self.long),
+                    self.desc
+                )
             }
         )
     }

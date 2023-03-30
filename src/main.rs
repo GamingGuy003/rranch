@@ -10,11 +10,12 @@ mod structs;
 mod util;
 
 fn main() -> std::io::Result<()> {
-    pretty_env_logger::init();
+    pretty_env_logger::init_custom_env("rranch_log");
     let mut ap = ArgParser::new(Vec::new(), None, Vec::new());
     ap.define_arg(Arg::new("t", "typ", "typo", None));
     ap.define_arg(Arg::new("m", "monn", "monnolo", Some("gaming".to_owned())));
     ap.parse_args();
+    ap.help();
     println!("{:#?}", ap.get_parsed());
     let mut client = match Client::new(
         "localhost",
