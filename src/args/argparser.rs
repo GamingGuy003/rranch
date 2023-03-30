@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+use log::{error, warn};
+
 #[derive(Clone)]
 pub struct ArgParser {
     //vec of checked and valid args
@@ -36,9 +38,9 @@ impl Display for Arg {
             "{}",
             if self.param.is_some() {
                 format!(
-                    "{:25}\t{}",
+                    "{:30}\t{}",
                     format!(
-                        "{} {} = {}",
+                        "{}\t{} = {}",
                         self.short,
                         self.long,
                         format!("<{}>", self.param.clone().unwrap_or_default())
@@ -47,8 +49,8 @@ impl Display for Arg {
                 )
             } else {
                 format!(
-                    "{:25}\t{}",
-                    format!("{} {}", self.short, self.long),
+                    "{:30}\t{}",
+                    format!("{}\t{}", self.short, self.long),
                     self.desc
                 )
             }
@@ -109,13 +111,16 @@ impl ArgParser {
                         .push((found.long, args.get(index + 1).cloned()));
                     skip = true;
                 } else if found.param.is_some() && args.get(index + 1).is_none() {
-                    println!("Missing value for argument {index} ({arg})");
+                    error!("Missing value for argument {index} ({arg})");
                     return;
                 } else {
+                    if found.long.clone() == "--help" {
+                        self.help();
+                    }
                     self.parsed_args.push((found.long.clone(), None))
                 }
             } else {
-                println!("Unrecognised argument {arg}")
+                warn!("Unrecognised argument {arg}")
             }
         }
     }
@@ -128,7 +133,7 @@ impl ArgParser {
     // prints help for arguments
     pub fn help(&self) {
         println!(
-            "{}\n\nLoglevel rranch_log=[info, debug, trace]\n\nOptions:",
+            "{}\n\nLogLevel rranch_log=[info, debug, trace]\n\nOptions:",
             self.desc
         );
         for h in self.defined_args.clone() {

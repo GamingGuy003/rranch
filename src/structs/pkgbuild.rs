@@ -208,51 +208,35 @@ impl PKGBuildJson {
         ret
     }
 
-    pub fn create_workdir(&self) -> i32 {
+    pub fn create_workdir(&self) -> Result<(), std::io::Error> {
         trace!("Creating workdir for {}", self.name);
         let path = self.name.as_str();
+
         if std::fs::metadata(path).is_ok() {
             if get_choice(
                 "Build dir already exists. Do you want to overwrite it",
                 false,
             ) {
                 warn!("Overwriting existing builddir...");
-                match std::fs::remove_dir_all(path) {
-                    Ok(_) => debug!("Removed old dir"),
-                    Err(err) => {
-                        error!("Error removing directory: {}", err);
-                        return -1;
-                    }
-                }
+                std::fs::remove_dir_all(path)?;
+                debug!("Removed old dir");
             } else {
                 error!("Abortet due to user choice");
-                return -1;
+                return Ok(());
             }
         } else {
             info!("Creating build workdir...");
         }
 
-        match std::fs::create_dir(path) {
-            Ok(_) => debug!("Successfully created directory {}", path),
-            Err(err) => {
-                error!("Error creating directory: {}", err);
-                return -1;
-            }
-        }
+        std::fs::create_dir(path)?;
+        debug!("Successfully created directory {}", path);
 
-        match std::fs::write(
+        std::fs::write(
             format!("{}/package.bpb", path),
             self.to_pkgbuild().join("\n"),
-        ) {
-            Ok(_) => {
-                debug!("Successfully wrote pkgbuild file");
-                0
-            }
-            Err(err) => {
-                error!("Error creating pkgbuild file: {}", err);
-                -1
-            }
-        }
+        )?;
+        debug!("Successfully wrote pkgbuild file");
+        Ok(())
     }
 
     pub fn get_dependencies(&self) -> Vec<String> {
