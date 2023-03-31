@@ -21,6 +21,13 @@ fn main() -> std::io::Result<()> {
         None,
     ));
 
+    ap.define_arg(Arg::new(
+        "les",
+        "list-extra-sources",
+        "Lists the extra sources managed by the server",
+        None,
+    ));
+
     ap.parse_args();
 
     let mut client = match Client::new(
@@ -54,6 +61,7 @@ fn main() -> std::io::Result<()> {
     for arg in ap.get_parsed() {
         let result = match arg.0.as_str() {
             "--debugshell" => client.debug_shell(),
+            "--list-extra-sources" => client.get_extra_sources(),
             other => {
                 trace!("{other}");
                 Ok(())

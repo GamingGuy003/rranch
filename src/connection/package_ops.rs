@@ -2,7 +2,7 @@ use console::Style;
 use log::{debug, error, info, warn};
 
 use crate::{
-    json::structs::ExtraSource,
+    json::extra_sources::ExtraSource,
     structs::pkgbuild::PKGBuild,
     util::funcs::{get_choice, print_vec_cols},
 };
@@ -337,10 +337,18 @@ impl Client {
     pub fn get_extra_sources(&mut self) -> Result<(), std::io::Error> {
         debug!("Trying to list extra sources...");
 
+        let bold = Style::new().bold();
+        let italic = Style::new().italic();
+
         let resp = self.write_and_read("GET_MANAGED_EXTRA_SOURCES")?;
         let ess = serde_json::from_str::<Vec<ExtraSource>>(&resp)?;
+        println!("{}", bold.apply_to("Managed Extra Sources:"));
+        println!(
+            "{}",
+            italic.apply_to(format!("{:<40} {:<30} {}", "Id", "Filename", "Description"))
+        );
         ess.iter().for_each(|es| {
-            println!("{:#?}", es);
+            println!("{}", es);
         });
         Ok(())
     }
