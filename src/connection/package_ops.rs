@@ -352,4 +352,30 @@ impl Client {
         });
         Ok(())
     }
+
+    pub fn delete_pkgbuild(&mut self, pkg_name: &str) -> Result<(), std::io::Error> {
+        debug!("Trying to delete pkgbuild for {pkg_name}...");
+
+        let resp = self.write_and_read(&format!("DELETE_PKGBUILD {}", pkg_name))?;
+
+        match resp.as_str() {
+            "CMD_OK" => Ok(()),
+            "INV_CMD" => {
+                error!("Command was invalid");
+                self.exit_clean(-1)
+            }
+            "INV_PKG_NAME" => {
+                error!("Package {pkg_name} does not exist");
+                self.exit_clean(-1)
+            }
+            "REQUIRED_PKG" => {
+                error!("Can't delte required package");
+                self.exit_clean(-1)
+            }
+            other => {
+                error!("Received unexpected response: {other}");
+                self.exit_clean(-1)
+            }
+        }
+    }
 }

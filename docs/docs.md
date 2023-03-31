@@ -406,6 +406,10 @@ pub fn submit_sol(&mut self, rb: bool, path: &str) -> Result<(), std::io::Error>
 
 <code>DELETE_PKGBUILD</code>
 
+```rust
+
+```
+
 - Value:
   
   - <code>PKG_NAME</code>
@@ -438,19 +442,27 @@ pub fn get_extra_sources(&mut self) -> Result<(), std::io::Error>
 
 <code>REMOVE_EXTRA_SOURCE</code>
 
+```rust
+pub fn remove_extra_source(&mut self, es_id: &str) -> Result<(), std::io::Error>
+```
+
 - Value:
   
-  - <code>ES_NAME</code>
+  - <code>ES_ID</code>
 
 - Returns:
   
-  - <code>INV_ES_NAME</code>
+  - <code>INV_ES_ID</code>
   
   - <code>CMD_OK</code>
 
 ---
 
 <code>TRANSFER_EXTRA_SOURCE</code>
+
+```rust
+pub fn submit_extra_source(&mut self, path: &str) -> Result<(), std::io::Error>
+```
 
 * Value:
   
@@ -465,6 +477,10 @@ pub fn get_extra_sources(&mut self) -> Result<(), std::io::Error>
 ---
 
 <code>COMPLETE_TRANSFER</code>
+
+```rust
+self.write_and_read("COMPLETE_TRANSFER")?
+```
 
 * Value:
 
