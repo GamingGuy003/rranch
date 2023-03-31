@@ -1,8 +1,13 @@
-use std::process::Command;
+use std::{path::Path, process::Command};
 
+use console::Term;
+use indicatif::ProgressBar;
 use log::{debug, error, info};
 
-use crate::util::funcs::get_choice;
+use crate::{
+    json::extra_sources::{ExtraSource, ExtraSourceSubmit},
+    util::funcs::{get_choice, get_input, get_pkgbs},
+};
 
 use super::client::Client;
 
@@ -135,23 +140,152 @@ impl Client {
             }
         }
 
-        if get_choice("Do you want to submit the changes", false) {
+        if get_choice("Do you want to submit the changes", false)? {
             self.submit(path.as_str())?;
         } else {
             info!("Aborted submit due to user choice.");
         }
 
-        if get_choice("Do you want to delete the local packagebuild", true) {
+        if get_choice("Do you want to delete the local packagebuild", true)? {
             std::fs::remove_dir_all(pkg_name)?;
         }
         Ok(())
     }
     // exports all pkgbs from server
-    pub fn export_all(&mut self) {}
-    // imports and submtis all pkgs from folder to server
-    pub fn import_folder(&mut self, path: &str) {}
+    pub fn export_all(&mut self) -> Result<(), std::io::Error> {
+        debug!("Trying to export all pkgbs...");
+
+        let mut pkgbs =
+            serde_json::from_str::<Vec<String>>(&self.write_and_read("MANAGED_PKGBUILDS")?)?;
+        pkgbs.sort();
+        if !get_choice(
+            &format!("Do you want to fetch {} pkgbuilds", pkgbs.len()),
+            false,
+        )? {
+            debug!("Aborted due to user choice");
+            return Ok(());
+        }
+        let progress = ProgressBar::new(pkgbs.len() as u64);
+        let term = Term::stdout();
+        for pkgb in pkgbs {
+            term.clear_screen()?;
+            progress.inc(1);
+            self.checkout(&pkgb)?;
+        }
+        progress.finish();
+        term.clear_screen()?;
+        Ok(())
+    }
+
+    // imports and submits all pkgs from folder to server
+    pub fn import_folder(&mut self, path: &str) -> Result<(), std::io::Error> {
+        debug!("Trying to import all pkgbs from {path}...");
+
+        let pkgbs = get_pkgbs(path)?;
+        if !get_choice(
+            &format!("Do you want to submit {} pkgbuilds", pkgbs.len()),
+            false,
+        )? {
+            debug!("Aborted due to user choice");
+            return Ok(());
+        }
+        let progress = ProgressBar::new(pkgbs.len() as u64);
+        let term = Term::stdout();
+        for pkgb in pkgbs {
+            term.clear_screen()?;
+            progress.inc(1);
+            self.submit(&pkgb)?;
+        }
+        term.clear_screen()?;
+        progress.finish();
+        Ok(())
+    }
+
     // submtis extra source
-    pub fn submit_extra_source(&mut self, path: &str) {}
+    pub fn submit_extra_source(&mut self, path: &str) -> Result<(), std::io::Error> {
+        debug!("Trying to submit extrasource...");
+
+        let path = Path::new(path);
+
+        if !path.is_file() {
+            error!("Path does not lead to a file");
+            return self.exit_clean(-1);
+        }
+        print!(
+            "Description for {}: ",
+            path.as_os_str().to_str().unwrap_or_default()
+        );
+        let description = get_input()?;
+        let file = std::fs::read(path)?;
+        let json = serde_json::to_string(&ExtraSourceSubmit::new(
+            &description,
+            path.file_name()
+                .unwrap_or_default()
+                .to_str()
+                .unwrap_or_default(),
+            &file.len().to_string(),
+        ))?;
+
+        let resp = self.write_and_read(&format!("TRANSFER_EXTRA_SOURCE {}", json))?;
+
+        match resp.as_str() {
+            "CMD_OK" => {}
+            "BYTE_COUNT_ERR" => {
+                error!("Byte count invalid");
+                return self.exit_clean(-1);
+            }
+            other => {
+                error!("Received unexpected response: {other}");
+                return self.exit_clean(-1);
+            }
+        }
+
+        self.write_raw(file)?;
+
+        let resp = self.write_and_read("COMPLETE_TRANSFER")?;
+
+        match resp.as_str() {
+            "UPLOAD_ACK" => Ok(()),
+            "ERR_COULD_NOT_INSERT" => {
+                error!("Failed to insert on remote");
+                self.exit_clean(-1)
+            }
+            other => {
+                error!("Receivede unexpected response: {other}");
+                self.exit_clean(-1)
+            }
+        }
+    }
     // removes extra source
-    pub fn remove_extra_source(&mut self, es_name: &str) {}
+    pub fn remove_extra_source(&mut self, es_id: &str) -> Result<(), std::io::Error> {
+        debug!("Trying to remove {es_id}...");
+
+        let resp = self.write_and_read(&format!("REMOVE_EXTRA_SOURCE {}", es_id))?;
+
+        match resp.as_str() {
+            "CMD_OK" => Ok(()),
+            "INV_ES_ID" => {
+                error!("Extra source id was invalid");
+                self.exit_clean(-1)
+            }
+            other => {
+                error!("Receivede unexpected response: {other}");
+                self.exit_clean(-1)
+            }
+        }
+    }
+
+    // removes all extra sources
+    pub fn remove_all_extra_sources(&mut self) -> Result<(), std::io::Error> {
+        debug!("Trying to delete all extra sources");
+
+        let ess = serde_json::from_str::<Vec<ExtraSource>>(
+            &self.write_and_read("GET_MANAGED_EXTRA_SOURCES")?,
+        )?;
+
+        for es in ess {
+            self.remove_extra_source(&es.id)?;
+        }
+        Ok(())
+    }
 }

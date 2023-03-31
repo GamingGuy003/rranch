@@ -28,10 +28,32 @@ fn main() -> std::io::Result<()> {
         None,
     ));
 
+    ap.define_arg(Arg::new("ex", "export", "Exports all pkgbuilds", None));
+    ap.define_arg(Arg::new(
+        "im",
+        "import",
+        "Imports all pkgbuilds from directory",
+        Some("path".to_string()),
+    ));
+
+    ap.define_arg(Arg::new(
+        "ses",
+        "submit-extra-source",
+        "Submits an extra source file",
+        Some("file".to_owned()),
+    ));
+
+    ap.define_arg(Arg::new(
+        "res",
+        "remove-extra-source",
+        "Removes specified extra source",
+        Some("id".to_owned()),
+    ));
+
     ap.parse_args();
 
     let mut client = match Client::new(
-        "",
+        "localhost",
         27015,
         Some("".to_string()),
         "rranch-client".to_owned(),
@@ -62,6 +84,10 @@ fn main() -> std::io::Result<()> {
         let result = match arg.0.as_str() {
             "--debugshell" => client.debug_shell(),
             "--list-extra-sources" => client.get_extra_sources(),
+            "--export" => client.export_all(),
+            "--import" => client.import_folder(&arg.1.unwrap_or_default()),
+            "--submit-extra-source" => client.submit_extra_source(&arg.1.unwrap_or_default()),
+            "--remove-extra-source" => client.remove_extra_source(&arg.1.unwrap_or_default()),
             other => {
                 trace!("{other}");
                 Ok(())

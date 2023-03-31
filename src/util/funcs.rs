@@ -26,7 +26,7 @@ pub fn print_vec_cols(vec: Vec<String>, mut max: Option<i32>, offset: i32) {
     println!();
 }
 
-pub fn get_choice(text: &str, default: bool) -> bool {
+pub fn get_choice(text: &str, default: bool) -> Result<bool, std::io::Error> {
     let red = Style::new().red();
     let green = Style::new().green();
     let red_b = Style::new().red().bold();
@@ -51,40 +51,49 @@ pub fn get_choice(text: &str, default: bool) -> bool {
         )
     };
 
-    let mut _failed = false;
     loop {
-        let mut input = String::new();
-        if _failed {
-            println!("Invalid input, please try again");
-            _failed = false;
-        }
+        let input;
+
         print!("{}", q);
-        std::io::stdout().flush().unwrap_or(());
-        std::io::stdin().read_line(&mut input).unwrap_or(0);
-        let input = input.trim();
+        input = get_input()?;
+
         if input.is_empty() || input.to_lowercase() == "no" || input.to_lowercase() == "n" {
             if input.is_empty() {
-                return default;
+                return Ok(default);
             } else {
-                return false;
+                return Ok(false);
             }
         } else if input.to_lowercase() == "yes" || input.to_lowercase() == "y" {
-            return true;
-        } else {
-            _failed = true;
+            return Ok(true);
         }
+
+        println!("Invalid input, please try again");
     }
 }
 
-pub fn cleanup(socket: Option<TcpStream>, code: Option<i32>) {
-    match socket {
-        Some(sock) => {
-            sock.shutdown(std::net::Shutdown::Both)
-                .unwrap_or(trace!("Failed to close socket"));
+pub fn get_input() -> Result<String, std::io::Error> {
+    std::io::stdout().flush()?;
+
+    let mut input = String::new();
+    std::io::stdin().read_line(&mut input)?;
+
+    Ok(input.trim().to_owned())
+}
+
+pub fn get_pkgbs(path: &str) -> Result<Vec<String>, std::io::Error> {
+    let mut pkgbs = Vec::new();
+    let paths = std::fs::read_dir(path)?;
+
+    for path in paths {
+        if let Ok(entry) = path {
+            if let Some(file_name) = entry.file_name().to_str() {
+                if entry.file_type()?.is_file() && file_name.ends_with(".bpb") {
+                    pkgbs.push(entry.path().display().to_string());
+                } else if entry.file_type()?.is_dir() {
+                    pkgbs.append(&mut get_pkgbs(&entry.path().display().to_string())?);
+                }
+            }
         }
-        None => trace!("No socket to close"),
     }
-    if code.is_some() {
-        exit(code.unwrap_or(-1))
-    }
+    Ok(pkgbs)
 }

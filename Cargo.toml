@@ -6,7 +6,7 @@ edition = "2021"
 
 [dependencies]
 console = "0.15.5"
-curl = "0.4.44"
+#curl = "0.4.44"
 dirs = "5.0.0"
 indicatif = "0.17.3"
 log = "0.4.17"

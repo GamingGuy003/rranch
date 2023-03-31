@@ -118,6 +118,13 @@ impl Client {
         Ok(())
     }
 
+    pub fn write_raw(&mut self, bytes: Vec<u8>) -> Result<(), std::io::Error> {
+        trace!("Trying to write {} raw bytes to socket...", bytes.len());
+
+        self.socket.write(&bytes)?;
+        Ok(())
+    }
+
     fn get_len(&mut self) -> Result<i32, std::io::Error> {
         trace!("Trying to fetch message length...");
         let mut buffer = Vec::new();

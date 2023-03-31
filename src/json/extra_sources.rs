@@ -21,3 +21,20 @@ impl Display for ExtraSource {
         )
     }
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ExtraSourceSubmit {
+    pub description: String,
+    pub filename: String,
+    pub filelen: String,
+}
+
+impl ExtraSourceSubmit {
+    pub fn new(description: &str, filename: &str, filelen: &str) -> Self {
+        Self {
+            description: description.to_owned(),
+            filename: filename.to_owned(),
+            filelen: filelen.to_owned(),
+        }
+    }
+}

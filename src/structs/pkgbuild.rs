@@ -190,7 +190,7 @@ impl PKGBuild {
             if get_choice(
                 "Build dir already exists. Do you want to overwrite it",
                 false,
-            ) {
+            )? {
                 warn!("Overwriting existing builddir...");
                 std::fs::remove_dir_all(path)?;
                 debug!("Removed old dir");

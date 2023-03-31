@@ -49,7 +49,7 @@ impl Client {
             && !get_choice(
                 "Packagebuild exists on remote. Do you want to overwrite it",
                 false,
-            )
+            )?
         {
             warn!("Aborted submit due to user choice");
             return self.exit_clean(0);
