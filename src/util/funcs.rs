@@ -3,6 +3,8 @@ use std::{io::Write, net::TcpStream, process::exit};
 use console::{Style, Term};
 use log::trace;
 
+use crate::json::job::Job;
+
 pub fn print_vec_cols(vec: Vec<String>, mut max: Option<i32>, offset: i32) {
     if max.is_none() {
         max = Some(
@@ -96,4 +98,16 @@ pub fn get_pkgbs(path: &str) -> Result<Vec<String>, std::io::Error> {
         }
     }
     Ok(pkgbs)
+}
+
+pub fn print_job_table(jobs: Vec<Job>) {
+    let italic = Style::new().italic();
+    println!(
+        "{}",
+        italic.apply_to(format!(
+            "{:<20} {:<15} {:<40} {:10}",
+            "Name", "Status", "Id", "Client"
+        ))
+    );
+    jobs.iter().for_each(|job| println!("{job}"))
 }

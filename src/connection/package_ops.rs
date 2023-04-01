@@ -353,6 +353,7 @@ impl Client {
         Ok(())
     }
 
+    // deletes a specified packagebuild
     pub fn delete_pkgbuild(&mut self, pkg_name: &str) -> Result<(), std::io::Error> {
         debug!("Trying to delete pkgbuild for {pkg_name}...");
 

@@ -50,10 +50,35 @@ fn main() -> std::io::Result<()> {
         Some("id".to_owned()),
     ));
 
+    ap.define_arg(Arg::new(
+        "bs",
+        "build-status",
+        "Shows the status of all jobs",
+        None,
+    ));
+    ap.define_arg(Arg::new(
+        "cs",
+        "client-status",
+        "Shows connected clients",
+        None,
+    ));
+    ap.define_arg(Arg::new(
+        "ci",
+        "client-info",
+        "Fetches info to specified client",
+        Some("name".to_owned()),
+    ));
+    ap.define_arg(Arg::new(
+        "bl",
+        "build-log",
+        "Shows build log of a specified job",
+        Some("job_id".to_owned()),
+    ));
+
     ap.parse_args();
 
     let mut client = match Client::new(
-        "localhost",
+        "",
         27015,
         Some("".to_string()),
         "rranch-client".to_owned(),
@@ -88,6 +113,10 @@ fn main() -> std::io::Result<()> {
             "--import" => client.import_folder(&arg.1.unwrap_or_default()),
             "--submit-extra-source" => client.submit_extra_source(&arg.1.unwrap_or_default()),
             "--remove-extra-source" => client.remove_extra_source(&arg.1.unwrap_or_default()),
+            "--build-status" => client.build_status(),
+            "--client-status" => client.client_status(),
+            "--client-info" => client.client_info(&arg.1.unwrap_or_default()),
+            "--build-log" => client.build_log(&arg.1.unwrap_or_default()),
             other => {
                 trace!("{other}");
                 Ok(())
