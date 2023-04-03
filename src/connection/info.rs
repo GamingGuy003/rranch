@@ -1,10 +1,7 @@
 use console::Style;
 use log::{debug, error};
 
-use crate::{
-    json::job::{self, Job},
-    util::funcs::print_job_table,
-};
+use crate::{json::job::Job, util::funcs::print_job_table};
 
 use super::client::Client;
 
@@ -14,7 +11,6 @@ impl Client {
         debug!("Trying to fetch job status");
 
         let bold = Style::new().bold();
-        let italic = Style::new().italic();
 
         let completed =
             serde_json::from_str::<Vec<Job>>(&self.write_and_read("COMPLETED_JOBS_STATUS")?)?;
@@ -77,7 +73,14 @@ impl Client {
     }
 
     // gets sys log
-    pub fn sys_log(&mut self) {}
+    pub fn sys_log(&mut self) -> Result<(), std::io::Error> {
+        debug!("Trying to show syslog...");
+
+        let events = serde_json::from_str::<Vec<String>>(&self.write_and_read("VIEW_SYS_EVENTS")?)?;
+
+        events.iter().for_each(|event| println!("{event}"));
+        Ok(())
+    }
     // gets build log
     pub fn build_log(&mut self, job_id: &str) -> Result<(), std::io::Error> {
         debug!("Trying to show build log for {job_id}...");

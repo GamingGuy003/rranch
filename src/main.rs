@@ -69,6 +69,12 @@ fn main() -> std::io::Result<()> {
         Some("name".to_owned()),
     ));
     ap.define_arg(Arg::new(
+        "se",
+        "show-events",
+        "Shows the system events",
+        None,
+    ));
+    ap.define_arg(Arg::new(
         "bl",
         "build-log",
         "Shows build log of a specified job",
@@ -78,7 +84,7 @@ fn main() -> std::io::Result<()> {
     ap.parse_args();
 
     let mut client = match Client::new(
-        "",
+        "localhost",
         27015,
         Some("".to_string()),
         "rranch-client".to_owned(),
@@ -116,6 +122,7 @@ fn main() -> std::io::Result<()> {
             "--build-status" => client.build_status(),
             "--client-status" => client.client_status(),
             "--client-info" => client.client_info(&arg.1.unwrap_or_default()),
+            "--show-events" => client.sys_log(),
             "--build-log" => client.build_log(&arg.1.unwrap_or_default()),
             other => {
                 trace!("{other}");
