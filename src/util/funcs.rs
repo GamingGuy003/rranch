@@ -1,7 +1,6 @@
-use std::{io::Write, net::TcpStream, process::exit};
+use std::io::Write;
 
 use console::{Style, Term};
-use log::trace;
 
 use crate::json::job::Job;
 

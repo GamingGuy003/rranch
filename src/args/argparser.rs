@@ -35,7 +35,7 @@ impl Display for Arg {
             "{}",
             if self.param.is_some() {
                 format!(
-                    "{:30}\t{}",
+                    "{:40}\t{}",
                     format!(
                         "{}\t{} = {}",
                         self.short,
@@ -46,7 +46,7 @@ impl Display for Arg {
                 )
             } else {
                 format!(
-                    "{:30}\t{}",
+                    "{:40}\t{}",
                     format!("{}\t{}", self.short, self.long),
                     self.desc
                 )

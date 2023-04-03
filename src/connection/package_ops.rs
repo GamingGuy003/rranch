@@ -2,7 +2,7 @@ use console::Style;
 use log::{debug, error, info, warn};
 
 use crate::{
-    json::extra_sources::ExtraSource,
+    json::{dependers::Dependers, extra_sources::ExtraSource},
     structs::pkgbuild::PKGBuild,
     util::funcs::{get_choice, print_vec_cols},
 };
@@ -196,20 +196,85 @@ impl Client {
     pub fn get_dependers(&mut self, pkg_name: &str) -> Result<(), std::io::Error> {
         debug!("Trying to list dependers for {pkg_name}...");
 
-        let bold = Style::new().bold();
+        let bold = Style::new().bold(); //title
+        let red = Style::new().red(); // unbuilt dependencies without packagebuild
+        let yellow = Style::new().yellow(); //unbuilt dependencies with packagebuild
+        let green = Style::new().green(); // built dependencies with packagebuild
 
         let resp = self.write_and_read(&format!("GET_DEPENDERS {}", pkg_name))?;
 
-        let dependers = match resp.as_str() {
+        let deps = match resp.as_str() {
             "INV_PKG_NAME" => {
                 error!("Invalid package name!");
                 return self.exit_clean(-1);
             }
-            json => serde_json::from_str::<Vec<String>>(json)?,
+            json => serde_json::from_str::<Dependers>(json)?,
         };
 
-        println!("{}", bold.apply_to(format!("Dependers on {}:", pkg_name)));
-        print_vec_cols(dependers, None, 0);
+        let maxrdeps = deps
+            .releasebuild
+            .iter()
+            .max_by_key(|dep| dep.len())
+            .unwrap_or(&String::new())
+            .len();
+        let maxcdeps = deps
+            .crossbuild
+            .iter()
+            .max_by_key(|dep| dep.len())
+            .unwrap_or(&String::new())
+            .len();
+
+        let pkgs: Vec<String> =
+            serde_json::from_str(self.write_and_read("MANAGED_PACKAGES")?.as_str())?;
+        let pkgbs =
+            serde_json::from_str::<Vec<String>>(&self.write_and_read("MANAGED_PKGBUILDS")?)?;
+
+        let mut diffrdeps: Vec<String> = Vec::new();
+        let mut diffcdeps: Vec<String> = Vec::new();
+
+        deps.releasebuild.iter().for_each(|dep| {
+            if pkgbs.contains(&dep) {
+                if pkgs.contains(&dep) {
+                    diffrdeps.push(format!("{}", green.apply_to(dep))); // packagebuild and binary
+                } else {
+                    diffrdeps.push(format!("{}", yellow.apply_to(dep))); // packagebuild no binary
+                }
+            } else {
+                diffrdeps.push(format!("{}", red.apply_to(dep))); // no packagebuild no binary
+            }
+        });
+
+        deps.crossbuild.iter().for_each(|dep| {
+            if pkgbs.contains(&dep) {
+                if pkgs.contains(&dep) {
+                    diffcdeps.push(format!("{}", green.apply_to(dep))); // packagebuild and binary
+                } else {
+                    diffcdeps.push(format!("{}", yellow.apply_to(dep))); // packagebuild no binary
+                }
+            } else {
+                diffcdeps.push(format!("{}", red.apply_to(dep))); // no packagebuild no binary
+            }
+        });
+
+        println!(
+            "{}",
+            bold.apply_to(format!("Releasebuild dependers of {}:", pkg_name))
+        );
+        if diffrdeps.is_empty() {
+            println!("No releasebuild dependers.");
+        } else {
+            print_vec_cols(diffrdeps, Some(maxrdeps as i32), 8);
+        }
+
+        println!(
+            "{}",
+            bold.apply_to(format!("Crossbuild dependers of {}:", pkg_name))
+        );
+        if diffcdeps.is_empty() {
+            println!("No crossbuild dependers.");
+        } else {
+            print_vec_cols(diffcdeps, Some(maxrdeps as i32), 8);
+        }
         Ok(())
     }
 
@@ -277,7 +342,7 @@ impl Client {
             }
         });
 
-        for dep in bdeps.clone() {
+        bdeps.iter().for_each(|dep| {
             if pkgbs.contains(&dep) {
                 if pkgs.contains(&dep) {
                     diffbdeps.push(format!("{}", green.apply_to(dep))); // packagebuild and binary
@@ -287,9 +352,9 @@ impl Client {
             } else {
                 diffbdeps.push(format!("{}", red.apply_to(dep))); // no packagebuild and no binary
             }
-        }
+        });
 
-        for dep in cdeps.clone() {
+        cdeps.iter().for_each(|dep| {
             if pkgbs.contains(&dep) {
                 if pkgs.contains(&dep) {
                     diffcdeps.push(format!("{}", green.apply_to(dep))); //packagebuild and binary
@@ -299,7 +364,7 @@ impl Client {
             } else {
                 diffcdeps.push(format!("{}", red.apply_to(dep))); //no packagebuild no binary
             }
-        }
+        });
 
         println!(
             "{}",
@@ -378,5 +443,13 @@ impl Client {
                 self.exit_clean(-1)
             }
         }
+    }
+
+    pub fn template(&self) -> Result<(), std::io::Error> {
+        debug!("Trying to create new template pkgbuild...");
+
+        let pkgb = PKGBuild::new_template();
+        pkgb.create_workdir()?;
+        Ok(())
     }
 }

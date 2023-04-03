@@ -201,7 +201,7 @@ impl Client {
         Ok(())
     }
 
-    // submtis extra source
+    // submits extra source
     pub fn submit_extra_source(&mut self, path: &str) -> Result<(), std::io::Error> {
         debug!("Trying to submit extrasource...");
 
