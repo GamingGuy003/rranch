@@ -198,7 +198,7 @@ fn main() -> std::io::Result<()> {
     ap.parse_args();
 
     let mut client = match Client::new(
-        "localhost",
+        "",
         27015,
         Some("".to_string()),
         "rranch-client".to_owned(),
