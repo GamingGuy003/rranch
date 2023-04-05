@@ -7,6 +7,7 @@ pub struct Client {
 }
 
 impl Client {
+    
     pub fn new(addr: &str, port: u16) -> Result<Self, std::io::Error> {
         Ok(Self {
             socket: TcpStream::connect(format!("{}:{}", addr, port))?,
