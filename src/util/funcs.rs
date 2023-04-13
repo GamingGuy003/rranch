@@ -32,9 +32,8 @@ pub fn get_yn(text: &str, default: bool) -> Result<bool, std::io::Error> {
     };
 
     loop {
-        let input;
         print!("{question}");
-        input = get_input()?;
+        let input = get_input()?;
 
         if input.is_empty() {
             return Ok(default);
@@ -43,7 +42,7 @@ pub fn get_yn(text: &str, default: bool) -> Result<bool, std::io::Error> {
         if input.to_lowercase() == "no" || input.to_lowercase() == "n" {
             return Ok(false);
         } else if input.to_lowercase() == "yes" || input.to_lowercase() == "y" {
-            return Ok(false);
+            return Ok(true);
         }
 
         println!("Invalid input, please try again");

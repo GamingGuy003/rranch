@@ -65,7 +65,19 @@ impl Client {
         let resp =
             serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&req)?)?)?;
 
-        println!("{resp:#?}");
-        Ok(())
+        match resp.statuscode {
+            StatusCode::Ok => {
+                serde_json::from_value::<Vec<String>>(resp.payload)?
+                    .iter()
+                    .for_each(|line| println!("{line}"));
+                Ok(())
+            }
+            StatusCode::InternalServerError | StatusCode::RequestFailure => {
+                Err(std::io::Error::new(
+                    std::io::ErrorKind::PermissionDenied,
+                    serde_json::to_string(&resp.payload)?,
+                ))
+            }
+        }
     }
 }

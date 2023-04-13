@@ -37,10 +37,10 @@ impl Display for Arg {
                 format!(
                     "{:40}\t{}",
                     format!(
-                        "{}\t{} = {}",
+                        "{}\t{} = <{}>",
                         self.short,
                         self.long,
-                        format!("<{}>", self.param.clone().unwrap_or_default())
+                        self.param.clone().unwrap_or_default()
                     ),
                     self.desc
                 )
@@ -63,9 +63,9 @@ impl ArgParser {
         defined_args: Vec<Arg>,
     ) -> Self {
         Self {
-            parsed_args: parsed_args,
+            parsed_args,
             desc: desc.unwrap_or("No description set").to_owned(),
-            defined_args: defined_args,
+            defined_args,
         }
     }
 
@@ -102,7 +102,7 @@ impl ArgParser {
                 continue;
             }
 
-            if let Some(found) = self.get_arg_by_name(&arg) {
+            if let Some(found) = self.get_arg_by_name(arg) {
                 if found.param.is_some() && args.get(index + 1).is_some() {
                     self.parsed_args
                         .push((found.long, args.get(index + 1).cloned()));
@@ -124,7 +124,7 @@ impl ArgParser {
 
     // returns the parsed argument and value pairs
     pub fn get_parsed(&self) -> Vec<(String, Option<String>)> {
-        return self.parsed_args.clone();
+        self.parsed_args.clone()
     }
 
     // prints help for arguments

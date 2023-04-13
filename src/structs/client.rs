@@ -7,7 +7,6 @@ pub struct Client {
 }
 
 impl Client {
-    
     pub fn new(addr: &str, port: u16) -> Result<Self, std::io::Error> {
         Ok(Self {
             socket: TcpStream::connect(format!("{}:{}", addr, port))?,
@@ -28,7 +27,7 @@ impl Client {
 
     pub fn write_raw(&mut self, bytes: Vec<u8>) -> Result<(), std::io::Error> {
         trace!("Trying to write {} raw bytes to socket...", bytes.len());
-        self.socket.write(&bytes)?;
+        self.socket.write_all(&bytes)?;
         Ok(())
     }
 
