@@ -1,7 +1,7 @@
 use serde_derive::Serialize;
 use serde_json::Value;
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct Request {
     pub command: String,
     pub payload: Option<Value>,

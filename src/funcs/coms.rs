@@ -59,6 +59,16 @@ impl Client {
         }
     }
 
+    pub fn submit(&mut self, path: &str) -> Result<(), std::io::Error> {
+        let pkgbuild = PackageBuild::from_str(&std::fs::read_to_string(path)?)?;
+
+        let req = Request::new("SHIT", Some(serde_json::to_value(pkgbuild)?));
+
+        println!("{req:#?}");
+
+        Ok(())
+    }
+
     pub fn get_job_log(&mut self, job_id: &str) -> Result<(), std::io::Error> {
         let req = Request::new("GETJOBLOG", Some(serde_json::to_value(job_id)?));
 

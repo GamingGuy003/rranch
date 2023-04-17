@@ -8,7 +8,9 @@ mod util;
 
 fn main() -> std::io::Result<()> {
     pretty_env_logger::init_custom_env("rranch_log");
-    let mut client = Client::new("localhost", 27015)?;
+    let mut client = Client::new("api", 27015)?;
     client.auth("hirn", "CONTROLLER", "default", 0)?;
+    client.checkout("crosstools")?;
+    client.submit("./crosstools/package.bpb")?;
     Ok(())
 }
