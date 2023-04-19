@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use console::Style;
+use console::{Style, Term};
 
 pub fn get_input() -> Result<String, std::io::Error> {
     let mut input = String::new();
@@ -47,4 +47,27 @@ pub fn get_yn(text: &str, default: bool) -> Result<bool, std::io::Error> {
 
         println!("Invalid input, please try again");
     }
+}
+
+pub fn print_vec_cols(vec: Vec<String>, mut max: Option<i32>, offset: i32) {
+    if max.is_none() {
+        max = Some(
+            (vec.iter()
+                .max_by_key(|s| s.chars().count())
+                .unwrap_or(&"".to_owned())
+                .chars()
+                .count()
+                + 5) as i32,
+        );
+    }
+
+    let elem_width = max.unwrap_or(30) + offset;
+    let colcount = (Term::stdout().size().1 / elem_width as u16) as usize;
+    for (idx, val) in vec.into_iter().enumerate() {
+        if idx % colcount == 0 && idx != 0 {
+            println!();
+        }
+        print!("{:<1$}", val, elem_width as usize);
+    }
+    println!();
 }
