@@ -36,7 +36,7 @@ impl Display for AuthResponse {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Description: {}\nServer message:{}",
+            "Description: {} Server message: {}",
             self.auth_status, self.logon_message
         )
     }
