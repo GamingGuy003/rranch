@@ -2,7 +2,8 @@ build:
 	cargo build --release
 
 install:
-	sudo cp target/release/rranch /usr/bin/
+	mkdir -p $(DESTDIR)/usr/bin
+	cp target/release/rranch $(DESTDIR)/usr/bin/
 
 clean:
 	cargo clean
