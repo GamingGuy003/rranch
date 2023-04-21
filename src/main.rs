@@ -46,9 +46,9 @@ fn main() -> std::io::Result<()> {
         Arg::new("ci", "client-info", "Shows client info", Some("name")),
         Arg::new("mpkg", "managed-pkgs", "Shows pkg status", None),
         Arg::new("mpkgb", "managed-pkgbs", "Shows pkgb status", None),
-        Arg::new("d", "diff", "pkgs / pkgbs build", None),
+        Arg::new("d", "diff", "pkgs / pkgbs diff", None),
         Arg::new("cc", "clear-completed", "Clear completed jobs", None),
-        Arg::new("cq", "cancel-queue", "Cancels queued job", Some("id")),
+        Arg::new("cq", "cancel-queued", "Cancels queued job", Some("id")),
         Arg::new("caq", "cancel-all-queued", "Cancels all queud jobs", None),
         Arg::new(
             "ssr",
@@ -77,8 +77,8 @@ fn main() -> std::io::Result<()> {
             "Submits extrasource",
             Some("path"),
         ),
-        Arg::new("ex", "export", "Exports all", None),
-        Arg::new("im", "import", "Imports all", Some("path")),
+        Arg::new("ex", "export", "Exports all pkgbs", None),
+        Arg::new("im", "import", "Imports all pkgbs", Some("path")),
         Arg::new("cf", "configure", "configures client", None),
     ]);
 

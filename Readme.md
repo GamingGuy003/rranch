@@ -2,86 +2,95 @@
 
 This project is an improved rewrite of the [AcaciaLinux branch client](https://github.com/AcaciaLinux/branch) in rust because why not and for a few QOL improvements. The code is a mess so good luck every trying to maintain it. All features might work as expected though I do not know.
 
-
-
 ## Commands
 
-* **-h / --help:** Shows a handy help text for every possible cli option.
+* **-h / --help** Displays help
 
-* **-cf / --config [path]:** Tries loading the specified config file.
+* **-c / --checkout [name]** Fetches pkgbuild
 
-* **-ds / --debugshell:** Runs a debugshell on the remote server.
+* **-s / --submit [path]** Submits pkgbuild
 
-* **-c / --checkout [name]:** Checks out the specified packagebuild from the server.
+* **-rb / --releasebuild [name]** Releasebuilds pkg
 
-* **-d / --download [name]:** Downloads a package from the master server.
+* **-cb / --crossbuild [name]** Crossbuilds pkg
 
-* **-e / --edit [name]:** Checks out packagebuild, opens it in a editor and submits the changed packagebuild.
+* **-jl / --job-log [job_id]** Log for job
 
-* **-t / --template:** Creates a template packagbuild.
+* **-sl / --sys-log** Fetches syslog
 
-* **-s / --submit [filename]:** Submits the specified packagebuild file to the server.
+* **-depds / --dependers [name]** Dependers
 
-* **-rb / --releasebuild [name]:** Requests a releasebuild for the sepcified package.
+* **-deps / --dependencies [name]** Dependencies
 
-* **-cb / --crossbuild [name]:** Requests a crossbuild for the sepcified package.
+* **-rd / --rebuilddependers [name]** Rebuild dependers
 
-* **-vl / --viewlog [job_id]:** Requests build log of the specified completed job.
+* **-js / --job-status** Shows jobs
 
-* **-vll / --viewlastlog:** Requests the log of the last job that completed.
+* **-wj / --watch-jobs [interval]** Periodic jobstatus
 
-* **-st / --status:** Requests a list of running / completed / queued jobs.
+* **-ll / --latest-log** Latest job log
 
-* **-w / --watch [interval]:** Watches the joblist in the given interval in seconds.
+* **-cs / --client-status** Shows active clients
 
-* **-cs / --clientstatus:** Requests a list of clients connected to the server.
+* **-ci / --client-info [name]** Shows client info
 
-* **-cj / --clearjobs:** Clears the completed jobs from the server.
+* **-mpkg / --managed-pkgs** Shows pkg status
 
-* **-caj / --cancelalljobs:** Cancels all currently queued jobs.
+* **-mpkgbs / --managed pkgbs** Shows pkgb status
 
-* **-cn / --canceljob [job_id]:** Cancels specified currently queued job.
+* **-d / --diff** pkgs / pkgbs diff
 
-* **-mp / --managedpkgs:** Requests list of managed packages.
+* **-cc / --cancel-completed** Clear completed jobs
 
-* **-mk / --managedpkgbuilds:** Requests list of managed packagebuilds.
+* **-cq / cancel-queued [job_id]** Cancels queued job
 
-* **-dp / --differencepkgs:** Requests difference between packagebuilds and packages.
+* **-caq / --cancel-all-queued** Cancels all queued jobs
 
-* **-sys / --viewsyslog:** Requests buildbot system logs from server.
+* **-ssr / --submit-solution-release [path]** Submits release solution
 
-* **-vd / --viewdependers [name]:** Requests all dependers for specified package..
+* **-ssc / --submit-solution-cross [path]** Submits cross solution
 
-* **-vdp / --viewdependencies [name]:** Shows if dependencies of a package have a pkgbuild / pkg.
+* **-e / --edit [name]** Opens pkgb with editor
 
-* **-rd / --rebuilddependers [name]:** Rebuilds dependers of specified package.
+* **-rm / --remove-pkg** Removes pkg
 
-* **-rbs / --releasebuildsol [sol_file]:** Submits a branch release solution to the server.
+* **-es / --extrasources** SHows extrasources
 
-* **-cbs / --crossbuildsol [sol_file]:** Submits a branch cross solution to the server.
+* **-res / --remove-extrasource [es_id]** Removes extrasource
+
+* **-ses / --submit-extrasource [path]** Submits extrasource
+
+* **-ex / --export** Exports all pkgbs
+
+* **-im / --import [path]** Imports all pkgbs
+
+* **-cf / --configure** Configures client
 
 ## Install
 
-On Unix Systems you can cd into the local repo and run <code>make && sudo make install</code> to build a release binary and install it to /usr/bin. On other Systems you might have to do the two steps manually.
+On Unix Systems you can cd into the local repo and run <code>make all</code> or <code>make redeploy</code> to build a release binary and install it to /usr/bin. On other Systems you might have to do the two steps manually.
 
 ## Config
 
-The default config (~/.config/rranch.toml) should look similar to this:
+The default config (~/.config/rranch.toml) which rranch generates on first startup should look similar to this:
 
 ```toml
-#master config
 [master]
+# api server
 addr = "localhost"
 port = 27015
-authkey = "key"
+# api authkey
+authkey = "default"
 
-#client config
 [client]
-name = "client-name"
-#an optional value you can omit if you just want to connect as controller
+# clientname
+name = "a-rranch-client"
+# clienttype
 type = "CONTROLLER"
-#info / debug / trace / none
-loglevel = "trace"
-#the editor to use for the edit command
+# loglevel (INFO | DEBUG | TRACE | NONE)
+loglevel = "INFO"
+# editor for -cf | -e
 editor = "vim"
+# protocol version (should not be changed)
+protver = 0
 ```
