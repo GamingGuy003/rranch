@@ -24,7 +24,6 @@ impl PackageBuild {
         lines.push(format!("name={}", self.name));
         lines.push(format!("version={}", self.version));
         lines.push(format!("description={}", self.description));
-        lines.push(format!("version={}", self.version));
         lines.push(format!("real_version={}", self.real_version));
         lines.push(format!("source={}", self.source));
 
