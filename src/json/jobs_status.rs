@@ -28,14 +28,11 @@ impl Display for Job {
 
         write!(
             f,
-            "{}",
-            format!(
-                "{:<15} {:<40} {:<20} {}",
-                self.job_name,
-                self.job_id,
-                self.requesting_client,
-                style.apply_to(self.job_status.clone()),
-            )
+            "{:<15} {:<40} {:<20} {}",
+            self.job_name,
+            self.job_id,
+            self.requesting_client,
+            style.apply_to(self.job_status.clone())
         )
     }
 }
@@ -59,36 +56,33 @@ impl Display for JobsStatus {
         let queued = self
             .queuedjobs
             .iter()
-            .map(|job| return job.to_string())
+            .map(|job| job.to_string())
             .collect::<Vec<String>>()
             .join("\n");
         let running = self
             .runningjobs
             .iter()
-            .map(|job| return job.to_string())
+            .map(|job| job.to_string())
             .collect::<Vec<String>>()
             .join("\n");
         let completed = self
             .completedjobs
             .iter()
-            .map(|job| return job.to_string())
+            .map(|job| job.to_string())
             .collect::<Vec<String>>()
             .join("\n");
         write!(
             f,
-            "{}",
-            format!(
-                "{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
-                bold.apply_to("Queud Jobs"),
-                self.header(),
-                queued,
-                bold.apply_to("Running Jobs"),
-                self.header(),
-                running,
-                bold.apply_to("Completed Jobs"),
-                self.header(),
-                completed
-            )
+            "{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
+            bold.apply_to("Queud Jobs"),
+            self.header(),
+            queued,
+            bold.apply_to("Running Jobs"),
+            self.header(),
+            running,
+            bold.apply_to("Completed Jobs"),
+            self.header(),
+            completed
         )
     }
 }

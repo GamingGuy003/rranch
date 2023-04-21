@@ -36,40 +36,35 @@ impl Display for Client {
         if self.hostname.is_none() {
             write!(
                 f,
-                "{}",
-                format!(
-                    "{:<30}{}",
-                    "Connection timestamp:", self.connection_timestamp
-                )
+                "{:<30}{}",
+                "Connection timestamp:", self.connection_timestamp
             )
         } else {
             write!(
                 f,
-                "{}",
-                format!("{:<30}{}\n{:<30}{}\n{:<30}{}x{} {}\n{:<30}{}\n{:<30}{}\n{:<30}{}\n{:<30}{}\n{:<30}{}\n{:<30}{}\n{:<30}{}",
-                    "Hostname:",
-                    self.hostname.clone().unwrap_or(not_set.clone()),
-                    "Connection timestamp:",
-                    self.connection_timestamp,
-                    "CPU:",
-                    self.cpu_count.unwrap_or(0),
-                    self.cpu_name.clone().unwrap_or(not_set.clone()),
-                    self.architecture.clone().unwrap_or(not_set.clone()),
-                    "Memory:",
-                    self.memory.clone().unwrap_or(not_set.clone()),
-                    "Host OS:",
-                    self.host_distribution.clone().unwrap_or(not_set.clone()),
-                    "Host Kernel:",
-                    self.host_kernel.clone().unwrap_or(not_set.clone()),
-                    "Host Python Version:",
-                    self.host_python.clone().unwrap_or(not_set.clone()),
-                    "Host libc:",
-                    self.host_libc.clone().unwrap_or(not_set.clone()),
-                    "Performance Rating:",
-                    self.performance_rating.unwrap_or(0.0),
-                    "Timeout Recovery Count:",
-                    self.timeout_recovery_count.unwrap_or(0)
-                )
+                "{:<30}{}\n{:<30}{}\n{:<30}{}x{} {}\n{:<30}{}\n{:<30}{}\n{:<30}{}\n{:<30}{}\n{:<30}{}\n{:<30}{}\n{:<30}{}",
+                "Hostname:",
+                self.hostname.clone().unwrap_or(not_set.clone()),
+                "Connection timestamp:",
+                self.connection_timestamp,
+                "CPU:",
+                self.cpu_count.unwrap_or(0),
+                self.cpu_name.clone().unwrap_or(not_set.clone()),
+                self.architecture.clone().unwrap_or(not_set.clone()),
+                "Memory:",
+                self.memory.clone().unwrap_or(not_set.clone()),
+                "Host OS:",
+                self.host_distribution.clone().unwrap_or(not_set.clone()),
+                "Host Kernel:",
+                self.host_kernel.clone().unwrap_or(not_set.clone()),
+                "Host Python Version:",
+                self.host_python.clone().unwrap_or(not_set.clone()),
+                "Host libc:",
+                self.host_libc.clone().unwrap_or(not_set),
+                "Performance Rating:",
+                self.performance_rating.unwrap_or(0.0),
+                "Timeout Recovery Count:",
+                self.timeout_recovery_count.unwrap_or(0)
             )
         }
     }

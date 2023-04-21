@@ -54,10 +54,9 @@ pub fn print_vec_cols(vec: Vec<String>, mut max: Option<i32>, offset: i32) {
         max = Some(
             (vec.iter()
                 .max_by_key(|s| s.chars().count())
-                .unwrap_or(&"".to_owned())
+                .unwrap_or(&String::default())
                 .chars()
-                .count()
-                + 5) as i32,
+                .count()) as i32,
         );
     }
 
@@ -67,7 +66,23 @@ pub fn print_vec_cols(vec: Vec<String>, mut max: Option<i32>, offset: i32) {
         if idx % colcount == 0 && idx != 0 {
             println!();
         }
-        print!("{:<1$}", val, elem_width as usize);
+        print!("{:<1$}", val, elem_width as usize + 3);
     }
     println!();
+}
+
+pub fn get_pkgbs(path: &str) -> Result<Vec<String>, std::io::Error> {
+    let mut pkgbs = Vec::new();
+    let paths = std::fs::read_dir(path)?;
+
+    for path in paths.flatten() {
+        if let Some(file_name) = path.file_name().to_str() {
+            if path.file_type()?.is_file() && file_name.ends_with(".bpb") {
+                pkgbs.push(path.path().display().to_string());
+            } else if path.file_type()?.is_dir() {
+                pkgbs.append(&mut get_pkgbs(&path.path().display().to_string())?);
+            }
+        }
+    }
+    Ok(pkgbs)
 }

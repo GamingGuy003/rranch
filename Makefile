@@ -2,4 +2,11 @@ build:
 	cargo build --release
 
 install:
-	cp target/release/rranch /usr/bin/
+	sudo cp target/release/rranch /usr/bin/
+
+clean:
+	cargo clean
+
+redeploy: | build install
+
+all: | clean build install

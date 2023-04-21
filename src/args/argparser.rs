@@ -18,12 +18,12 @@ pub struct Arg {
 }
 
 impl Arg {
-    pub fn new(short: &str, long: &str, desc: &str, param: Option<String>) -> Self {
+    pub fn new(short: &str, long: &str, desc: &str, param: Option<&str>) -> Self {
         Self {
             short: format!("-{}", short),
             long: format!("--{}", long),
             desc: desc.to_string(),
-            param,
+            param: param.map(str::to_string),
         }
     }
 }
@@ -60,8 +60,9 @@ impl ArgParser {
     pub fn new(
         parsed_args: Vec<(String, Option<String>)>,
         desc: Option<&str>,
-        defined_args: Vec<Arg>,
+        mut defined_args: Vec<Arg>,
     ) -> Self {
+        defined_args.push(Arg::new("h", "help", "Displays help", None));
         Self {
             parsed_args,
             desc: desc.unwrap_or("No description set").to_owned(),
@@ -72,6 +73,11 @@ impl ArgParser {
     // defines an argument
     pub fn define_arg(&mut self, arg: Arg) {
         self.defined_args.push(arg);
+    }
+
+    // defines an array of arguments
+    pub fn define_args(&mut self, args: Vec<Arg>) {
+        args.iter().for_each(|arg| self.define_arg(arg.to_owned()));
     }
 
     // returns some argument if long or short name match given or none

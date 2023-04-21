@@ -59,4 +59,8 @@ impl Client {
             )),
         }
     }
+
+    pub fn shutdown(&mut self) -> Result<(), std::io::Error> {
+        self.socket.shutdown(std::net::Shutdown::Both)
+    }
 }

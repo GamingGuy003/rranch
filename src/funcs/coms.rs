@@ -7,16 +7,14 @@ use crate::{
         auth::{AuthRequest, AuthResponse},
         build::Build,
         clients::Clients,
-        dependers::Dependers,
-        extra_source_r::ExtraSourceReceive,
-        extra_source_s::ExtraSourceSubmit,
+        extra_source::{ExtraSourceReceive, ExtraSourceSubmit},
         jobs_status::JobsStatus,
         pkgbuild::PackageBuild,
         request::Request,
         response::{Response, StatusCode},
         solution::Solution,
     },
-    structs::client::Client,
+    structs::{client::Client, diff::Diff},
     util::funcs::{get_input, print_vec_cols},
 };
 
@@ -26,7 +24,7 @@ impl Client {
         machine_idenifier: &str,
         machine_type: &str,
         machine_authkey: &str,
-        version: i32,
+        version: u16,
     ) -> Result<AuthResponse, std::io::Error> {
         let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(
             &Request::new(
@@ -52,21 +50,7 @@ impl Client {
     }
 
     pub fn checkout(&mut self, pkgname: &str) -> Result<(), std::io::Error> {
-        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(
-            &Request::new("CHECKOUT", Some(serde_json::to_value(pkgname)?)),
-        )?)?)?;
-
-        match resp.statuscode {
-            StatusCode::Ok => {
-                serde_json::from_value::<PackageBuild>(resp.payload)?.create_workdir()
-            }
-            StatusCode::InternalServerError | StatusCode::RequestFailure => {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::PermissionDenied,
-                    serde_json::to_string(&resp.payload)?,
-                ))
-            }
-        }
+        self.get_pkgb(pkgname)?.create_workdir()
     }
 
     pub fn submit(&mut self, path: &str) -> Result<(), std::io::Error> {
@@ -90,7 +74,7 @@ impl Client {
         }
     }
 
-    pub fn get_job_log(&mut self, job_id: &str) -> Result<(), std::io::Error> {
+    pub fn show_job_log(&mut self, job_id: &str) -> Result<(), std::io::Error> {
         let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(
             &Request::new("GETJOBLOG", Some(serde_json::to_value(job_id)?)),
         )?)?)?;
@@ -130,7 +114,7 @@ impl Client {
         }
     }
 
-    pub fn get_sys_log(&mut self) -> Result<(), std::io::Error> {
+    pub fn show_sys_log(&mut self) -> Result<(), std::io::Error> {
         let resp = serde_json::from_str::<Response>(
             &self.write_read(&serde_json::to_string(&Request::new("GETSYSLOG", None))?)?,
         )?;
@@ -151,29 +135,82 @@ impl Client {
         }
     }
 
-    pub fn get_dependers(&mut self, pkgname: &str) -> Result<(), std::io::Error> {
+    pub fn show_dependers(&mut self, pkgname: &str) -> Result<(), std::io::Error> {
         let bold = Style::new().bold();
 
-        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(
-            &Request::new("GETDEPENDERS", Some(serde_json::to_value(pkgname)?)),
-        )?)?)?;
+        let dependers = self.get_dependers(pkgname)?;
+        let diff = self.get_diff()?;
 
-        match resp.statuscode {
-            StatusCode::Ok => {
-                let dependers = serde_json::from_value::<Dependers>(resp.payload)?;
-                println!("{}", bold.apply_to("Releasebuild"));
-                print_vec_cols(dependers.releasebuild, None, 0);
-                println!("{}", bold.apply_to("Crossbuild"));
-                print_vec_cols(dependers.crossbuild, None, 0);
-                Ok(())
-            }
-            StatusCode::InternalServerError | StatusCode::RequestFailure => {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::PermissionDenied,
-                    serde_json::to_string(&resp.payload)?,
-                ))
-            }
-        }
+        let build = diff
+            .iter()
+            .filter(|predicate| dependers.0.contains(&predicate.name))
+            .map(|elem| elem.to_owned())
+            .collect::<Vec<Diff>>();
+
+        let cross = diff
+            .iter()
+            .filter(|predicate| dependers.1.contains(&predicate.name))
+            .map(|elem| elem.to_owned())
+            .collect::<Vec<Diff>>();
+
+        println!("{}", bold.apply_to("Releasebuild"));
+        print_vec_cols(
+            build
+                .iter()
+                .map(|diffelem| format!("{diffelem}"))
+                .collect::<Vec<String>>(),
+            None,
+            11,
+        );
+        println!("{}", bold.apply_to("Crossbuild"));
+        print_vec_cols(
+            cross
+                .iter()
+                .map(|diffelem| format!("{diffelem}"))
+                .collect::<Vec<String>>(),
+            None,
+            11,
+        );
+        Ok(())
+    }
+
+    pub fn show_dependencies(&mut self, pkgname: &str) -> Result<(), std::io::Error> {
+        let bold = Style::new().bold();
+        let dependencies = self.get_dependecies(pkgname)?;
+
+        let diff = self.get_diff()?;
+
+        let build = diff
+            .iter()
+            .filter(|predicate| dependencies.0.contains(&predicate.name))
+            .map(|elem| elem.to_owned())
+            .collect::<Vec<Diff>>();
+
+        let cross = diff
+            .iter()
+            .filter(|predicate| dependencies.1.contains(&predicate.name))
+            .map(|elem| elem.to_owned())
+            .collect::<Vec<Diff>>();
+
+        println!("{}", bold.apply_to("Releasebuild"));
+        print_vec_cols(
+            build
+                .iter()
+                .map(|diffelem| format!("{diffelem}"))
+                .collect::<Vec<String>>(),
+            None,
+            11,
+        );
+        println!("{}", bold.apply_to("Crossbuild"));
+        print_vec_cols(
+            cross
+                .iter()
+                .map(|diffelem| format!("{diffelem}"))
+                .collect::<Vec<String>>(),
+            None,
+            11,
+        );
+        Ok(())
     }
 
     pub fn rebuild_dependers(&mut self, pkgname: &str) -> Result<(), std::io::Error> {
@@ -192,7 +229,7 @@ impl Client {
         }
     }
 
-    pub fn get_jobs_status(&mut self, clear_screen: bool) -> Result<(), std::io::Error> {
+    pub fn show_jobs_status(&mut self, clear_screen: bool) -> Result<(), std::io::Error> {
         let resp = serde_json::from_str::<Response>(
             &self.write_read(&serde_json::to_string(&Request::new("GETJOBSTATUS", None))?)?,
         )?;
@@ -214,7 +251,7 @@ impl Client {
         }
     }
 
-    pub fn get_clients(&mut self) -> Result<(), std::io::Error> {
+    pub fn show_clients(&mut self) -> Result<(), std::io::Error> {
         let bold = Style::new().bold();
 
         let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(
@@ -222,13 +259,16 @@ impl Client {
         )?)?)?;
 
         match resp.statuscode {
-            StatusCode::Ok => Ok({
-                let clients = serde_json::from_value::<Clients>(resp.payload)?;
-                println!("{}", bold.apply_to("Controllers"));
-                print_vec_cols(clients.controllers, None, 0);
-                println!("{}", bold.apply_to("Buildbots"));
-                print_vec_cols(clients.buildbots, None, 0);
-            }),
+            StatusCode::Ok => {
+                {
+                    let clients = serde_json::from_value::<Clients>(resp.payload)?;
+                    println!("{}", bold.apply_to("Controllers"));
+                    print_vec_cols(clients.controllers, None, 0);
+                    println!("{}", bold.apply_to("Buildbots"));
+                    print_vec_cols(clients.buildbots, None, 0);
+                };
+                Ok(())
+            }
             StatusCode::InternalServerError | StatusCode::RequestFailure => {
                 Err(std::io::Error::new(
                     std::io::ErrorKind::Other,
@@ -238,50 +278,24 @@ impl Client {
         }
     }
 
-    pub fn get_managed_pkgs(&mut self) -> Result<(), std::io::Error> {
+    pub fn show_managed_pkgs(&mut self) -> Result<(), std::io::Error> {
         let bold = Style::new().bold();
 
-        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(
-            &Request::new("GETMANAGEDPKGS", None),
-        )?)?)?;
-
-        match resp.statuscode {
-            StatusCode::Ok => Ok({
-                println!("{}", bold.apply_to("Managed Packages"));
-                let mut pkgs = serde_json::from_value::<Vec<String>>(resp.payload)?;
-                pkgs.sort();
-                print_vec_cols(pkgs, None, 0)
-            }),
-            StatusCode::InternalServerError | StatusCode::RequestFailure => {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    serde_json::to_string(&resp.payload)?,
-                ))
-            }
-        }
+        let mut pkgs = self.get_managed_pkgs()?;
+        pkgs.sort();
+        println!("{}", bold.apply_to("Managed Packages"));
+        print_vec_cols(pkgs, None, 0);
+        Ok(())
     }
 
-    pub fn get_managed_pkgbs(&mut self) -> Result<(), std::io::Error> {
+    pub fn show_managed_pkgbs(&mut self) -> Result<(), std::io::Error> {
         let bold = Style::new().bold();
 
-        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(
-            &Request::new("GETMANAGEDPKGBUILDS", None),
-        )?)?)?;
-
-        match resp.statuscode {
-            StatusCode::Ok => Ok({
-                println!("{}", bold.apply_to("Managed Packagebuilds"));
-                let mut pkgbs = serde_json::from_value::<Vec<String>>(resp.payload)?;
-                pkgbs.sort();
-                print_vec_cols(pkgbs, None, 0)
-            }),
-            StatusCode::InternalServerError | StatusCode::RequestFailure => {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    serde_json::to_string(&resp.payload)?,
-                ))
-            }
-        }
+        let mut pkgbs = self.get_managed_pkgbs()?;
+        pkgbs.sort();
+        println!("{}", bold.apply_to("Managed Packagebuilds"));
+        print_vec_cols(pkgbs, None, 0);
+        Ok(())
     }
 
     pub fn clear_completed(&mut self) -> Result<(), std::io::Error> {
@@ -352,7 +366,7 @@ impl Client {
         }
     }
 
-    pub fn get_client_info(&mut self, clientname: &str) -> Result<(), std::io::Error> {
+    pub fn show_client_info(&mut self, clientname: &str) -> Result<(), std::io::Error> {
         let bold = Style::new().bold();
 
         let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(
@@ -390,7 +404,7 @@ impl Client {
         }
     }
 
-    pub fn get_extra_sources(&mut self) -> Result<(), std::io::Error> {
+    pub fn show_extra_sources(&mut self) -> Result<(), std::io::Error> {
         let bold = Style::new().bold();
         let italic = Style::new().italic();
 
@@ -399,7 +413,7 @@ impl Client {
         )?)?)?;
 
         match resp.statuscode {
-            StatusCode::Ok => Ok({
+            StatusCode::Ok => {
                 println!("{}", bold.apply_to("Managed Extra Sources"));
                 println!(
                     "{}",
@@ -408,7 +422,8 @@ impl Client {
                 serde_json::from_value::<Vec<ExtraSourceReceive>>(resp.payload)?
                     .iter()
                     .for_each(|extra_source| println!("{extra_source}"));
-            }),
+                Ok(())
+            }
             StatusCode::InternalServerError | StatusCode::RequestFailure => {
                 Err(std::io::Error::new(
                     std::io::ErrorKind::Other,
@@ -439,7 +454,7 @@ impl Client {
         let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(
             &Request::new(
                 "TRANSFEREXTRASOURCE",
-                Some(serde_json::to_value(&ExtraSourceSubmit::new(
+                Some(serde_json::to_value(ExtraSourceSubmit::new(
                     path,
                     get_input()?.as_str(),
                 )?)?),
@@ -483,5 +498,20 @@ impl Client {
                 ))
             }
         }
+    }
+
+    pub fn show_diff(&mut self) -> Result<(), std::io::Error> {
+        let diff = self.get_diff()?;
+        let bold = Style::new().bold();
+
+        println!("{}", bold.apply_to("Diff pkgs / pkgbs"));
+        print_vec_cols(
+            diff.iter()
+                .map(|diffelem| format!("{diffelem}"))
+                .collect::<Vec<String>>(),
+            None,
+            11,
+        );
+        Ok(())
     }
 }

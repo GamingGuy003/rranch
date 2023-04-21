@@ -1,6 +1,4 @@
-use std::fmt::format;
-
-use log::{error, trace, warn};
+use log::{trace, warn};
 use serde_derive::{Deserialize, Serialize};
 
 use crate::util::funcs::get_yn;
