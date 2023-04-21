@@ -153,6 +153,7 @@ fn main() -> std::io::Result<()> {
             "--export" => client.export(),
             "--import" => client.import(parsed.1.unwrap_or_default().as_str()),
             "--configure" => configure(&confpath, &config.get_client().get_editor()),
+            "--help" => Ok(()),
             arg => Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 format!("Unimplemented argument {}", arg),
