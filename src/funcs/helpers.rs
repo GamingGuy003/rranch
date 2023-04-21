@@ -245,11 +245,11 @@ impl Client {
         easy.progress(true)?;
 
         let pb = ProgressBar::new(1);
+
         pb.set_style(
-            match ProgressStyle::default_bar().template(&format!(
-                "[{{bar:{size}.green/red}}] {{bytes}}/{{total_bytes}} {{msg}}",
-                size = Term::stdout().size().1 - 2 * (Term::stdout().size().1 / 10)
-            )) {
+            match ProgressStyle::with_template(
+                "{percent:>3}% [{bar:.green/white}] {bytes:>7}/{total_bytes:7} ({bytes_per_sec})",
+            ) {
                 Ok(pstyle) => pstyle,
                 Err(err) => {
                     return Err(std::io::Error::new(

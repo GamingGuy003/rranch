@@ -88,7 +88,7 @@ pub fn get_pkgbs(path: &str) -> Result<Vec<String>, std::io::Error> {
 }
 
 pub fn configure(path: &str, editor: &str) -> Result<(), std::io::Error> {
-    let child = Command::new(editor).arg(path.clone()).spawn();
+    let child = Command::new(editor).arg(path).spawn();
 
     match child {
         Ok(mut child) => {
