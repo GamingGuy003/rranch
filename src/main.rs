@@ -80,6 +80,7 @@ fn main() -> std::io::Result<()> {
         Arg::new("ex", "export", "Exports all pkgbs", None),
         Arg::new("im", "import", "Imports all pkgbs", Some("path")),
         Arg::new("cf", "configure", "configures client", None),
+        Arg::new("fp", "fetch-pkg", "Downloads pkg", Some("name")),
     ]);
 
     argparser.define_args(args);
@@ -154,6 +155,10 @@ fn main() -> std::io::Result<()> {
             "--import" => client.import(parsed.1.unwrap_or_default().as_str()),
             "--configure" => configure(&confpath, &config.get_client().get_editor()),
             "--help" => Ok(()),
+            "--fetch-pkg" => client.get_pkg(
+                &config.get_master().get_addr(),
+                parsed.1.unwrap_or_default().as_str(),
+            ),
             arg => Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 format!("Unimplemented argument {}", arg),

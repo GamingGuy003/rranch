@@ -1,8 +1,9 @@
-use std::{process::Command, time::Duration};
+use std::{io::Write, process::Command, time::Duration};
 
 use console::Term;
-use indicatif::ProgressBar;
-use log::info;
+use curl::easy::{Easy, WriteError};
+use indicatif::{ProgressBar, ProgressStyle};
+use log::{error, info};
 
 use crate::{
     json::{
@@ -234,5 +235,50 @@ impl Client {
         term.clear_screen()?;
         progress.finish();
         Ok(())
+    }
+
+    pub fn get_pkg(&mut self, url: &str, pkgname: &str) -> Result<(), std::io::Error> {
+        let url = format!("https://{}?get=package&pkgname={}", url, pkgname);
+        let mut easy = Easy::new();
+
+        easy.url(&url)?;
+        easy.progress(true)?;
+
+        let pb = ProgressBar::new(1);
+        pb.set_style(
+            match ProgressStyle::default_bar().template(&format!(
+                "[{{bar:{size}.green/red}}] {{bytes}}/{{total_bytes}} {{msg}}",
+                size = Term::stdout().size().1 - 2 * (Term::stdout().size().1 / 10)
+            )) {
+                Ok(pstyle) => pstyle,
+                Err(err) => {
+                    return Err(std::io::Error::new(
+                        std::io::ErrorKind::Other,
+                        format!("Failed setting progress style: {err}"),
+                    ));
+                }
+            }
+            .progress_chars("#=--"),
+        );
+
+        easy.progress_function(move |dl_total, dl_now, _, _| {
+            if dl_total != 0.0 {
+                pb.set_length(dl_total as u64);
+            }
+            pb.set_position(dl_now as u64);
+            true
+        })?;
+
+        let mut file = std::fs::File::create(format!("{}.tar.xz", pkgname))?;
+        easy.write_function(move |data| match file.write_all(data).map(|_| data.len()) {
+            Ok(size) => Ok(size),
+            Err(err) => {
+                error!("Failed to write content: {}", err);
+                Err(WriteError::Pause)
+            }
+        })?;
+
+        let transfer = easy.transfer();
+        Ok(transfer.perform()?)
     }
 }

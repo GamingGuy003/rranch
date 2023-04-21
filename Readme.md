@@ -66,6 +66,8 @@ This project is an improved rewrite of the [AcaciaLinux branch client](https://g
 
 * **-cf / --configure** Configures client
 
+* **-fp / --fetch-pkg [name]** Fetches pkg
+
 ## Install
 
 On Unix Systems you can cd into the local repo and run <code>make all</code> or <code>make redeploy</code> to build a release binary and install it to /usr/bin. On other Systems you might have to do the two steps manually.
