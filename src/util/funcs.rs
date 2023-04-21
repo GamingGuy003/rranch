@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::{io::Write, process::Command};
 
 use console::{Style, Term};
 
@@ -85,4 +85,26 @@ pub fn get_pkgbs(path: &str) -> Result<Vec<String>, std::io::Error> {
         }
     }
     Ok(pkgbs)
+}
+
+pub fn configure(path: &str, editor: &str) -> Result<(), std::io::Error> {
+    let child = Command::new(editor).arg(path.clone()).spawn();
+
+    match child {
+        Ok(mut child) => {
+            if !child.wait()?.success() {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    "Editor closed with error",
+                ));
+            }
+        }
+        Err(err) => {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("Problem with editor: {err}"),
+            ))
+        }
+    }
+    Ok(())
 }

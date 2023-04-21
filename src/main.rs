@@ -4,6 +4,8 @@ use args::argparser::{Arg, ArgParser};
 use log::{debug, error, trace};
 use structs::{client::Client, config::Config};
 
+use crate::util::funcs::configure;
+
 mod args;
 mod funcs;
 mod json;
@@ -11,13 +13,14 @@ mod structs;
 mod util;
 
 fn main() -> std::io::Result<()> {
-    let config = Config::new_from_cfg(&format!(
+    let confpath = format!(
         "{}/.config/rranch.toml",
         dirs::home_dir()
             .unwrap_or_default()
             .to_str()
             .unwrap_or_default()
-    ))?;
+    );
+    let config = Config::new_from_cfg(&confpath)?;
     std::env::set_var("rranch_log", config.get_client().get_loglevel());
     pretty_env_logger::init_custom_env("rranch_log");
     let mut argparser = ArgParser::new(
@@ -76,6 +79,7 @@ fn main() -> std::io::Result<()> {
         ),
         Arg::new("ex", "export", "Exports all", None),
         Arg::new("im", "import", "Imports all", Some("path")),
+        Arg::new("cf", "configure", "configures client", None),
     ]);
 
     argparser.define_args(args);
@@ -148,6 +152,7 @@ fn main() -> std::io::Result<()> {
             }
             "--export" => client.export(),
             "--import" => client.import(parsed.1.unwrap_or_default().as_str()),
+            "--configure" => configure(&confpath, &config.get_client().get_editor()),
             arg => Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 format!("Unimplemented argument {}", arg),
