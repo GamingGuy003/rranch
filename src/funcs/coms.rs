@@ -281,20 +281,36 @@ impl Client {
     pub fn show_managed_pkgs(&mut self) -> Result<(), std::io::Error> {
         let bold = Style::new().bold();
 
-        let mut pkgs = self.get_managed_pkgs()?;
-        pkgs.sort();
-        println!("{}", bold.apply_to("Managed Packages"));
-        print_vec_cols(pkgs, None, 0);
+        let pkgs = self.get_managed_pkgs()?;
+
+        println!("{}", bold.apply_to("Managed pkgs"));
+        print_vec_cols(
+            self.get_diff()?
+                .iter()
+                .filter(|predicate| pkgs.contains(&predicate.name))
+                .map(|diff| format!("{diff}"))
+                .collect::<Vec<String>>(),
+            None,
+            11,
+        );
         Ok(())
     }
 
     pub fn show_managed_pkgbs(&mut self) -> Result<(), std::io::Error> {
         let bold = Style::new().bold();
 
-        let mut pkgbs = self.get_managed_pkgbs()?;
-        pkgbs.sort();
-        println!("{}", bold.apply_to("Managed Packagebuilds"));
-        print_vec_cols(pkgbs, None, 0);
+        let pkgbs = self.get_managed_pkgbs()?;
+
+        println!("{}", bold.apply_to("Managed pkgbs"));
+        print_vec_cols(
+            self.get_diff()?
+                .iter()
+                .filter(|predicate| pkgbs.contains(&predicate.name))
+                .map(|diff| format!("{diff}"))
+                .collect::<Vec<String>>(),
+            None,
+            11,
+        );
         Ok(())
     }
 
