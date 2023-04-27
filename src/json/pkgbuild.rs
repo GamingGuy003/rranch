@@ -66,10 +66,7 @@ impl PackageBuild {
         let path = self.name.as_str();
 
         if std::fs::metadata(path).is_ok() {
-            if get_yn(
-                "Package build exists locally, do you want to overwrite it?",
-                false,
-            )? {
+            if get_yn("Package build exists locally, do you want to overwrite it?", false)? {
                 std::fs::remove_dir_all(path)?;
             } else {
                 trace!("Did not write packagebuild");

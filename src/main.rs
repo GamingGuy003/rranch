@@ -29,6 +29,7 @@ fn main() -> std::io::Result<()> {
     let args = Vec::from([
         Arg::new("c", "checkout", "Fetches pkgbuild", Some("name")),
         Arg::new("s", "submit", "Submits pkgbuild", Some("path")),
+        Arg::new("n", "new", "Creates new pkgb", Some("name")),
         Arg::new("rb", "releasebuild", "Releasebuilds pkg", Some("name")),
         Arg::new("cb", "crossbuild", "Crossbuilds pkg", Some("name")),
         Arg::new("jl", "job-log", "Joblog for job", Some("job_id")),
@@ -51,6 +52,7 @@ fn main() -> std::io::Result<()> {
         Arg::new("ssr", "submit-solution-release", "Submits release solution", Some("path")),
         Arg::new("ssc", "submit-solution-cross", "Submits cross solution", Some("path")),
         Arg::new("e", "edit", "Opens pkgb with editor", Some("name")),
+        Arg::new("el", "edit-local", "Edits local pkgb", Some("path")),
         Arg::new("rm", "remove-pkg", "Removes pkg", Some("name")),
         Arg::new("es", "extrasources", "Shows extrasources", None),
         Arg::new("res", "remove-extrasource", "Removes extrasource", Some("id")),
@@ -90,6 +92,7 @@ fn main() -> std::io::Result<()> {
         let result = match parsed.0.clone().as_str() {
             "--checkout" => client.checkout(parsed.1.unwrap_or_default().as_str()),
             "--submit" => client.submit(parsed.1.unwrap_or_default().as_str()),
+            "--new" => client.new_pkgbuild(parsed.1.unwrap_or_default().as_str()),
             "--releasebuild" => client.build(parsed.1.unwrap_or_default().as_str(), true),
             "--crossbuild" => client.build(parsed.1.unwrap_or_default().as_str(), false),
             "--job-log" => client.watch_job_log(parsed.1.unwrap_or_default().as_str(), 1),
@@ -112,6 +115,7 @@ fn main() -> std::io::Result<()> {
             "--submit-solution-release" => client.submit_solution(parsed.1.unwrap_or_default().as_str(), true),
             "--submit-solution-cross" => client.submit_solution(parsed.1.unwrap_or_default().as_str(), false),
             "--edit" => client.edit(parsed.1.unwrap_or_default().as_str(), &config.get_client().get_editor()),
+            "--edit-local" => client.edit_local(parsed.1.unwrap_or_default().as_str(), &config.get_client().get_editor()),
             "--remove-pkg" => client.remove_pkg(parsed.1.unwrap_or_default().as_str()),
             "--extra-sources" => client.show_extra_sources(),
             "--remove-extrasource" => client.remove_extra_source(parsed.1.unwrap_or_default().as_str()),

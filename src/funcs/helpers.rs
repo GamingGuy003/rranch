@@ -164,6 +164,14 @@ impl Client {
     pub fn edit(&mut self, pkgname: &str, editor: &str) -> Result<(), std::io::Error> {
         self.checkout(pkgname)?;
         let path = format!("{}/package.bpb", pkgname);
+        self.edit_local(&path, editor)?;
+        if get_yn("Do you want to delete the local packagebuild", true)? {
+            std::fs::remove_dir_all(pkgname)?;
+        }
+        Ok(())
+    }
+
+    pub fn edit_local(&mut self, path: &str, editor: &str) -> Result<(), std::io::Error> {
         let child = Command::new(editor).arg(path.clone()).spawn();
 
         match child {
@@ -181,14 +189,11 @@ impl Client {
         }
 
         if get_yn("Do you want to submit the changes?", false)? {
-            self.submit(path.as_str())?;
+            self.submit(path)?;
         } else {
             info!("Aborted submit due to user choice.");
         }
 
-        if get_yn("Do you want to delete the local packagebuild", true)? {
-            std::fs::remove_dir_all(pkgname)?;
-        }
         Ok(())
     }
 
@@ -317,5 +322,11 @@ impl Client {
                 serde_json::to_string(&resp.payload)?,
             )),
         }
+    }
+
+    pub fn new_pkgbuild(&mut self, pkgname: &str) -> Result<(), std::io::Error> {
+        let mut pkgb = PackageBuild::default();
+        pkgb.name = pkgname.to_owned();
+        pkgb.create_workdir()
     }
 }
