@@ -296,15 +296,9 @@ impl Client {
         let mut offset = 0;
         loop {
             let log = self.get_job_log(job_id, offset)?;
-            offset = offset + log.len();
+            offset += log.len();
             log.iter().for_each(|line| println!("{line}"));
-            if self
-                .get_jobs()?
-                .completedjobs
-                .iter()
-                .find(|elem| elem.job_id == String::from(job_id))
-                .is_some()
-            {
+            if self.get_jobs()?.completedjobs.iter().any(|elem| elem.job_id == *job_id) {
                 break;
             }
             std::thread::sleep(Duration::from_secs(interval));
