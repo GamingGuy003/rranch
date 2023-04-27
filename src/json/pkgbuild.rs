@@ -18,6 +18,25 @@ pub struct PackageBuild {
 }
 
 impl PackageBuild {
+    pub fn new() -> Self {
+        Self {
+            name: Default::default(),
+            description: Default::default(),
+            version: Default::default(),
+            real_version: String::from("0"),
+            source: Default::default(),
+            dependencies: Default::default(),
+            build_dependencies: Default::default(),
+            cross_dependencies: Default::default(),
+            extra_sources: Default::default(),
+            build_script: vec![
+                String::from("\tcd $PKG_NAME"),
+                String::from("\t"),
+                String::from("\tmake -j$(nproc)"),
+                String::from("\tmake DESTDIR=$PKG_INSTALL_DIR install"),
+            ],
+        }
+    }
     pub fn to_vec(&self) -> Result<Vec<String>, std::io::Error> {
         let mut lines = Vec::new();
 
