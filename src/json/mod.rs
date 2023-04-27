@@ -4,6 +4,7 @@ pub mod client;
 pub mod clients;
 pub mod dependers;
 pub mod extra_source;
+pub mod job_request;
 pub mod jobs_status;
 pub mod pkgbuild;
 pub mod request;

@@ -8,7 +8,6 @@ use crate::{
         build::Build,
         clients::Clients,
         extra_source::{ExtraSourceReceive, ExtraSourceSubmit},
-        jobs_status::JobsStatus,
         pkgbuild::PackageBuild,
         request::Request,
         response::{Response, StatusCode},
@@ -26,26 +25,22 @@ impl Client {
         machine_authkey: &str,
         version: u16,
     ) -> Result<AuthResponse, std::io::Error> {
-        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(
-            &Request::new(
-                "AUTH",
-                Some(serde_json::to_value(AuthRequest::new(
-                    machine_idenifier,
-                    machine_type,
-                    machine_authkey,
-                    version,
-                ))?),
-            ),
-        )?)?)?;
+        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&Request::new(
+            "AUTH",
+            Some(serde_json::to_value(AuthRequest::new(
+                machine_idenifier,
+                machine_type,
+                machine_authkey,
+                version,
+            ))?),
+        ))?)?)?;
 
         match resp.statuscode {
             StatusCode::Ok => Ok(serde_json::from_value::<AuthResponse>(resp.payload)?),
-            StatusCode::InternalServerError | StatusCode::RequestFailure => {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::PermissionDenied,
-                    serde_json::to_string(&resp.payload)?,
-                ))
-            }
+            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(
+                std::io::ErrorKind::PermissionDenied,
+                serde_json::to_string(&resp.payload)?,
+            )),
         }
     }
 
@@ -54,70 +49,40 @@ impl Client {
     }
 
     pub fn submit(&mut self, path: &str) -> Result<(), std::io::Error> {
-        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(
-            &Request::new(
-                "SUBMIT",
-                Some(serde_json::to_value(PackageBuild::from_str(
-                    &std::fs::read_to_string(path)?,
-                )?)?),
-            ),
-        )?)?)?;
+        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&Request::new(
+            "SUBMIT",
+            Some(serde_json::to_value(PackageBuild::from_str(&std::fs::read_to_string(
+                path,
+            )?)?)?),
+        ))?)?)?;
 
         match resp.statuscode {
             StatusCode::Ok => Ok(println!("{}", serde_json::to_string(&resp.payload)?)),
-            StatusCode::InternalServerError | StatusCode::RequestFailure => {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::InvalidData,
-                    serde_json::to_string(&resp.payload)?,
-                ))
-            }
-        }
-    }
-
-    pub fn show_job_log(&mut self, job_id: &str) -> Result<(), std::io::Error> {
-        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(
-            &Request::new("GETJOBLOG", Some(serde_json::to_value(job_id)?)),
-        )?)?)?;
-
-        match resp.statuscode {
-            StatusCode::Ok => {
-                serde_json::from_value::<Vec<String>>(resp.payload)?
-                    .iter()
-                    .for_each(|line| println!("{line}"));
-                Ok(())
-            }
-            StatusCode::InternalServerError | StatusCode::RequestFailure => {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::PermissionDenied,
-                    serde_json::to_string(&resp.payload)?,
-                ))
-            }
+            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                serde_json::to_string(&resp.payload)?,
+            )),
         }
     }
 
     pub fn build(&mut self, pkgname: &str, release: bool) -> Result<(), std::io::Error> {
-        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(
-            &Request::new(
-                "BUILD",
-                Some(serde_json::to_value(Build::new(pkgname, release))?),
-            ),
-        )?)?)?;
+        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&Request::new(
+            "BUILD",
+            Some(serde_json::to_value(Build::new(pkgname, release))?),
+        ))?)?)?;
 
         match resp.statuscode {
             StatusCode::Ok => Ok(println!("{}", serde_json::to_string(&resp.payload)?)),
-            StatusCode::InternalServerError | StatusCode::RequestFailure => {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    serde_json::to_string(&resp.payload)?,
-                ))
-            }
+            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                serde_json::to_string(&resp.payload)?,
+            )),
         }
     }
 
     pub fn show_sys_log(&mut self) -> Result<(), std::io::Error> {
-        let resp = serde_json::from_str::<Response>(
-            &self.write_read(&serde_json::to_string(&Request::new("GETSYSLOG", None))?)?,
-        )?;
+        let resp =
+            serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&Request::new("GETSYSLOG", None))?)?)?;
 
         match resp.statuscode {
             StatusCode::Ok => {
@@ -126,12 +91,10 @@ impl Client {
                     .for_each(|line| println!("{line}"));
                 Ok(())
             }
-            StatusCode::InternalServerError | StatusCode::RequestFailure => {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::PermissionDenied,
-                    serde_json::to_string(&resp.payload)?,
-                ))
-            }
+            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(
+                std::io::ErrorKind::PermissionDenied,
+                serde_json::to_string(&resp.payload)?,
+            )),
         }
     }
 
@@ -155,19 +118,13 @@ impl Client {
 
         println!("{}", bold.apply_to("Releasebuild"));
         print_vec_cols(
-            build
-                .iter()
-                .map(|diffelem| format!("{diffelem}"))
-                .collect::<Vec<String>>(),
+            build.iter().map(|diffelem| format!("{diffelem}")).collect::<Vec<String>>(),
             None,
             11,
         );
         println!("{}", bold.apply_to("Crossbuild"));
         print_vec_cols(
-            cross
-                .iter()
-                .map(|diffelem| format!("{diffelem}"))
-                .collect::<Vec<String>>(),
+            cross.iter().map(|diffelem| format!("{diffelem}")).collect::<Vec<String>>(),
             None,
             11,
         );
@@ -194,19 +151,13 @@ impl Client {
 
         println!("{}", bold.apply_to("Releasebuild"));
         print_vec_cols(
-            build
-                .iter()
-                .map(|diffelem| format!("{diffelem}"))
-                .collect::<Vec<String>>(),
+            build.iter().map(|diffelem| format!("{diffelem}")).collect::<Vec<String>>(),
             None,
             11,
         );
         println!("{}", bold.apply_to("Crossbuild"));
         print_vec_cols(
-            cross
-                .iter()
-                .map(|diffelem| format!("{diffelem}"))
-                .collect::<Vec<String>>(),
+            cross.iter().map(|diffelem| format!("{diffelem}")).collect::<Vec<String>>(),
             None,
             11,
         );
@@ -214,49 +165,35 @@ impl Client {
     }
 
     pub fn rebuild_dependers(&mut self, pkgname: &str) -> Result<(), std::io::Error> {
-        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(
-            &Request::new("REBUILDDEPENDERS", Some(serde_json::to_value(pkgname)?)),
-        )?)?)?;
+        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&Request::new(
+            "REBUILDDEPENDERS",
+            Some(serde_json::to_value(pkgname)?),
+        ))?)?)?;
 
         match resp.statuscode {
             StatusCode::Ok => Ok(println!("{}", serde_json::to_string(&resp.payload)?)),
-            StatusCode::InternalServerError | StatusCode::RequestFailure => {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    serde_json::to_string(&resp.payload)?,
-                ))
-            }
+            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                serde_json::to_string(&resp.payload)?,
+            )),
         }
     }
 
     pub fn show_jobs_status(&mut self, clear_screen: bool) -> Result<(), std::io::Error> {
-        let resp = serde_json::from_str::<Response>(
-            &self.write_read(&serde_json::to_string(&Request::new("GETJOBSTATUS", None))?)?,
-        )?;
-
         if clear_screen {
             console::Term::clear_screen(&console::Term::stdout())?;
         }
-        match resp.statuscode {
-            StatusCode::Ok => Ok(println!(
-                "{}",
-                serde_json::from_value::<JobsStatus>(resp.payload)?
-            )),
-            StatusCode::InternalServerError | StatusCode::RequestFailure => {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    serde_json::to_string(&resp.payload)?,
-                ))
-            }
-        }
+
+        println!("{}", self.get_jobs()?);
+        Ok(())
     }
 
     pub fn show_clients(&mut self) -> Result<(), std::io::Error> {
         let bold = Style::new().bold();
 
-        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(
-            &Request::new("GETCONNECTEDCLIENTS", None),
-        )?)?)?;
+        let resp = serde_json::from_str::<Response>(
+            &self.write_read(&serde_json::to_string(&Request::new("GETCONNECTEDCLIENTS", None))?)?,
+        )?;
 
         match resp.statuscode {
             StatusCode::Ok => {
@@ -269,12 +206,10 @@ impl Client {
                 };
                 Ok(())
             }
-            StatusCode::InternalServerError | StatusCode::RequestFailure => {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    serde_json::to_string(&resp.payload)?,
-                ))
-            }
+            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                serde_json::to_string(&resp.payload)?,
+            )),
         }
     }
 
@@ -315,41 +250,32 @@ impl Client {
     }
 
     pub fn clear_completed(&mut self) -> Result<(), std::io::Error> {
-        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(
-            &Request::new("CLEARCOMPLETEDJOBS", None),
-        )?)?)?;
+        let resp = serde_json::from_str::<Response>(
+            &self.write_read(&serde_json::to_string(&Request::new("CLEARCOMPLETEDJOBS", None))?)?,
+        )?;
 
         match resp.statuscode {
             StatusCode::Ok => Ok(println!("{}", serde_json::to_string(&resp.payload)?)),
-            StatusCode::InternalServerError | StatusCode::RequestFailure => {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    serde_json::to_string(&resp.payload)?,
-                ))
-            }
+            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                serde_json::to_string(&resp.payload)?,
+            )),
         }
     }
 
     pub fn cancel_queued(&mut self, job_id: Option<&str>) -> Result<(), std::io::Error> {
-        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(
-            &if job_id.is_some() {
-                Request::new(
-                    "CANCELQUEUEDJOB",
-                    Some(serde_json::to_value(job_id.unwrap_or_default())?),
-                )
-            } else {
-                Request::new("CANCELQUEUEDJOBS", None)
-            },
-        )?)?)?;
+        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&if job_id.is_some() {
+            Request::new("CANCELQUEUEDJOB", Some(serde_json::to_value(job_id.unwrap_or_default())?))
+        } else {
+            Request::new("CANCELQUEUEDJOBS", None)
+        })?)?)?;
 
         match resp.statuscode {
             StatusCode::Ok => Ok(println!("{}", serde_json::to_string(&resp.payload)?)),
-            StatusCode::InternalServerError | StatusCode::RequestFailure => {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    serde_json::to_string(&resp.payload)?,
-                ))
-            }
+            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                serde_json::to_string(&resp.payload)?,
+            )),
         }
     }
 
@@ -360,11 +286,7 @@ impl Client {
                 Some(serde_json::to_value(Solution::new(
                     std::fs::read_to_string(path)?
                         .lines()
-                        .map(|line| {
-                            line.split(';')
-                                .map(|token| token.trim().to_owned())
-                                .collect::<Vec<String>>()
-                        })
+                        .map(|line| line.split(';').map(|token| token.trim().to_owned()).collect::<Vec<String>>())
                         .collect::<Vec<Vec<String>>>(),
                     release,
                 ))?),
@@ -373,21 +295,20 @@ impl Client {
 
         match resp.statuscode {
             StatusCode::Ok => Ok(println!("{}", serde_json::to_string(&resp.payload)?)),
-            StatusCode::InternalServerError | StatusCode::RequestFailure => {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    serde_json::to_string(&resp.payload)?,
-                ))
-            }
+            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                serde_json::to_string(&resp.payload)?,
+            )),
         }
     }
 
     pub fn show_client_info(&mut self, clientname: &str) -> Result<(), std::io::Error> {
         let bold = Style::new().bold();
 
-        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(
-            &Request::new("GETCLIENTINFO", Some(serde_json::to_value(clientname)?)),
-        )?)?)?;
+        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&Request::new(
+            "GETCLIENTINFO",
+            Some(serde_json::to_value(clientname)?),
+        ))?)?)?;
 
         match resp.statuscode {
             StatusCode::Ok => Ok(println!(
@@ -395,28 +316,25 @@ impl Client {
                 bold.apply_to(clientname),
                 serde_json::from_value::<crate::json::client::Client>(resp.payload)?
             )),
-            StatusCode::InternalServerError | StatusCode::RequestFailure => {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    serde_json::to_string(&resp.payload)?,
-                ))
-            }
+            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                serde_json::to_string(&resp.payload)?,
+            )),
         }
     }
 
     pub fn remove_pkg(&mut self, pkgname: &str) -> Result<(), std::io::Error> {
-        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(
-            &Request::new("DELETEPKG", Some(serde_json::to_value(pkgname)?)),
-        )?)?)?;
+        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&Request::new(
+            "DELETEPKG",
+            Some(serde_json::to_value(pkgname)?),
+        ))?)?)?;
 
         match resp.statuscode {
             StatusCode::Ok => Ok(println!("{}", serde_json::to_string(&resp.payload)?)),
-            StatusCode::InternalServerError | StatusCode::RequestFailure => {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    serde_json::to_string(&resp.payload)?,
-                ))
-            }
+            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                serde_json::to_string(&resp.payload)?,
+            )),
         }
     }
 
@@ -424,9 +342,9 @@ impl Client {
         let bold = Style::new().bold();
         let italic = Style::new().italic();
 
-        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(
-            &Request::new("GETMANAGEDEXTRASOURCES", None),
-        )?)?)?;
+        let resp = serde_json::from_str::<Response>(
+            &self.write_read(&serde_json::to_string(&Request::new("GETMANAGEDEXTRASOURCES", None))?)?,
+        )?;
 
         match resp.statuscode {
             StatusCode::Ok => {
@@ -440,42 +358,34 @@ impl Client {
                     .for_each(|extra_source| println!("{extra_source}"));
                 Ok(())
             }
-            StatusCode::InternalServerError | StatusCode::RequestFailure => {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    serde_json::to_string(&resp.payload)?,
-                ))
-            }
+            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                serde_json::to_string(&resp.payload)?,
+            )),
         }
     }
 
     pub fn remove_extra_source(&mut self, es_id: &str) -> Result<(), std::io::Error> {
-        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(
-            &Request::new("REMOVEEXTRASOURCE", Some(serde_json::to_value(es_id)?)),
-        )?)?)?;
+        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&Request::new(
+            "REMOVEEXTRASOURCE",
+            Some(serde_json::to_value(es_id)?),
+        ))?)?)?;
 
         match resp.statuscode {
             StatusCode::Ok => Ok(println!("{}", serde_json::to_string(&resp.payload)?)),
-            StatusCode::InternalServerError | StatusCode::RequestFailure => {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    serde_json::to_string(&resp.payload)?,
-                ))
-            }
+            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                serde_json::to_string(&resp.payload)?,
+            )),
         }
     }
 
     pub fn submit_extra_source(&mut self, path: &str) -> Result<(), std::io::Error> {
         print!("Description for {path}: ");
-        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(
-            &Request::new(
-                "TRANSFEREXTRASOURCE",
-                Some(serde_json::to_value(ExtraSourceSubmit::new(
-                    path,
-                    get_input()?.as_str(),
-                )?)?),
-            ),
-        )?)?)?;
+        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&Request::new(
+            "TRANSFEREXTRASOURCE",
+            Some(serde_json::to_value(ExtraSourceSubmit::new(path, get_input()?.as_str())?)?),
+        ))?)?)?;
 
         match resp.statuscode {
             StatusCode::Ok => {}
@@ -501,18 +411,16 @@ impl Client {
             }
         }
 
-        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(
-            &Request::new("COMPLETETRANSFER", None),
-        )?)?)?;
+        let resp = serde_json::from_str::<Response>(
+            &self.write_read(&serde_json::to_string(&Request::new("COMPLETETRANSFER", None))?)?,
+        )?;
 
         match resp.statuscode {
             StatusCode::Ok => Ok(println!("{}", serde_json::to_string(&resp.payload)?)),
-            StatusCode::InternalServerError | StatusCode::RequestFailure => {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    serde_json::to_string(&resp.payload)?,
-                ))
-            }
+            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                serde_json::to_string(&resp.payload)?,
+            )),
         }
     }
 
@@ -522,9 +430,7 @@ impl Client {
 
         println!("{}", bold.apply_to("Diff pkgs / pkgbs"));
         print_vec_cols(
-            diff.iter()
-                .map(|diffelem| format!("{diffelem}"))
-                .collect::<Vec<String>>(),
+            diff.iter().map(|diffelem| format!("{diffelem}")).collect::<Vec<String>>(),
             None,
             11,
         );
