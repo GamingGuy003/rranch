@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use console::Style;
+use log::{debug, info};
 
 use crate::{
     json::{
@@ -85,12 +86,9 @@ impl Client {
             serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&Request::new("GETSYSLOG", None))?)?)?;
 
         match resp.statuscode {
-            StatusCode::Ok => {
-                serde_json::from_value::<Vec<String>>(resp.payload)?
-                    .iter()
-                    .for_each(|line| println!("{line}"));
-                Ok(())
-            }
+            StatusCode::Ok => Ok(serde_json::from_value::<Vec<String>>(resp.payload)?
+                .iter()
+                .for_each(|line| println!("{line}"))),
             StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(
                 std::io::ErrorKind::PermissionDenied,
                 serde_json::to_string(&resp.payload)?,
@@ -219,6 +217,7 @@ impl Client {
         let pkgs = self.get_managed_pkgs()?;
 
         println!("{}", bold.apply_to("Managed pkgs"));
+
         print_vec_cols(
             self.get_diff()?
                 .iter()
@@ -237,6 +236,7 @@ impl Client {
         let pkgbs = self.get_managed_pkgbs()?;
 
         println!("{}", bold.apply_to("Managed pkgbs"));
+
         print_vec_cols(
             self.get_diff()?
                 .iter()
@@ -353,10 +353,9 @@ impl Client {
                     "{}",
                     italic.apply_to(format!("{:<40} {:<35} {}", "ID", "File", "Description"))
                 );
-                serde_json::from_value::<Vec<ExtraSourceReceive>>(resp.payload)?
+                Ok(serde_json::from_value::<Vec<ExtraSourceReceive>>(resp.payload)?
                     .iter()
-                    .for_each(|extra_source| println!("{extra_source}"));
-                Ok(())
+                    .for_each(|extra_source| println!("{extra_source}")))
             }
             StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
@@ -388,7 +387,7 @@ impl Client {
         ))?)?)?;
 
         match resp.statuscode {
-            StatusCode::Ok => {}
+            StatusCode::Ok => debug!("{}", serde_json::to_string(&resp.payload)?),
             StatusCode::InternalServerError | StatusCode::RequestFailure => {
                 return Err(std::io::Error::new(
                     std::io::ErrorKind::Other,
@@ -402,7 +401,7 @@ impl Client {
         let resp = serde_json::from_str::<Response>(&self.read()?)?;
 
         match resp.statuscode {
-            StatusCode::Ok => {}
+            StatusCode::Ok => info!("{}", serde_json::to_string(&resp.payload)?),
             StatusCode::InternalServerError | StatusCode::RequestFailure => {
                 return Err(std::io::Error::new(
                     std::io::ErrorKind::Other,

@@ -243,7 +243,7 @@ impl Client {
         let pb = ProgressBar::new(1);
 
         pb.set_style(
-            match ProgressStyle::with_template("{percent:>3}% [{bar:.green/white}] {bytes:>7}/{total_bytes:7} ({bytes_per_sec})")
+            match ProgressStyle::with_template("{percent:>3}% [{bar:.green/white}] {bytes:>7}/{total_bytes:>7} ({bytes_per_sec})")
             {
                 Ok(pstyle) => pstyle,
                 Err(err) => {

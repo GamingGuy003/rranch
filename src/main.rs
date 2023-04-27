@@ -17,7 +17,7 @@ fn main() -> std::io::Result<()> {
         "{}/.config/rranch.toml",
         dirs::home_dir().unwrap_or_default().to_str().unwrap_or_default()
     );
-    let config = Config::new_from_cfg(&confpath)?;
+    let config = Config::new_from_cfg(&confpath, 1)?;
     std::env::set_var("rranch_log", config.get_client().get_loglevel());
     pretty_env_logger::init_custom_env("rranch_log");
     let mut argparser = ArgParser::new(
@@ -78,7 +78,7 @@ fn main() -> std::io::Result<()> {
         &config.get_master().get_authkey(),
         config.get_client().get_protver(),
     ) {
-        Ok(client) => trace!("{client}"),
+        Ok(response) => debug!("{}", response.logon_message),
         Err(err) => {
             error!("Failed to authenticate: {err}");
             exit(-1)

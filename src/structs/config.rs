@@ -46,6 +46,7 @@ pub struct Client {
     pub r#type: Option<String>,
     pub loglevel: Option<String>,
     pub editor: Option<String>,
+    #[serde(skip_serializing)]
     pub protver: Option<u16>,
 }
 
@@ -78,7 +79,7 @@ impl Default for Client {
             r#type: Some("CONTROLLER".to_owned()),
             loglevel: Some("INFO".to_owned()),
             editor: Some("vim".to_owned()),
-            protver: Some(0),
+            protver: None,
         }
     }
 }
@@ -92,7 +93,7 @@ impl Config {
         self.client.clone().unwrap_or_default()
     }
 
-    pub fn new_from_cfg(filename: &str) -> Result<Self, std::io::Error> {
+    pub fn new_from_cfg(filename: &str, protver: u16) -> Result<Self, std::io::Error> {
         let path = Path::new(filename);
         if !path.exists() {
             println!("Creating default config at {filename}. For more information visit https://github.com/GamingGuy003/rranch");
@@ -104,10 +105,7 @@ impl Config {
         let config: Config = match toml::from_str(file.as_str()) {
             Ok(config) => config,
             Err(err) => {
-                error!(
-                    "Failed to parse toml from config file {}: {}",
-                    filename, err
-                );
+                error!("Failed to parse toml from config file {}: {}", filename, err);
                 exit(-1)
             }
         };
@@ -116,7 +114,7 @@ impl Config {
         let r#type = config.get_client().get_type();
         let loglevel = config.get_client().get_loglevel();
         let editor = config.get_client().get_editor();
-        let protver = config.get_client().get_protver();
+        let protver = protver;
         let addr = config.get_master().get_addr();
         let port = config.get_master().get_port();
         let authkey = config.get_master().get_authkey();
