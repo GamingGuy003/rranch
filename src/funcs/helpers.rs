@@ -239,7 +239,7 @@ impl Client {
     }
 
     pub fn get_pkg(&mut self, url: &str, pkgname: &str) -> Result<(), std::io::Error> {
-        let url = format!("https://{}?get=package&pkgname={}", url, pkgname);
+        let url = format!("{}?get=package&pkgname={}", url, pkgname);
         let mut easy = Easy::new();
 
         easy.url(&url)?;

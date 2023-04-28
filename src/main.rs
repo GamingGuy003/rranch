@@ -124,8 +124,7 @@ fn main() -> std::io::Result<()> {
             "--import" => client.import(parsed.1.unwrap_or_default().as_str()),
             "--configure" => configure(&confpath, &config.get_client().get_editor()),
             "--help" => Ok(()),
-            #[cfg(not(minimal))]
-            "--fetch-pkg" => client.get_pkg(&config.get_master().get_addr(), parsed.1.unwrap_or_default().as_str()),
+            "--fetch-pkg" => client.get_pkg(&config.get_master().get_fetch_url(), parsed.1.unwrap_or_default().as_str()),
             arg => Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 format!("Unimplemented argument {}", arg),

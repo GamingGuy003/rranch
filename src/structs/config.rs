@@ -14,6 +14,7 @@ pub struct Master {
     pub addr: Option<String>,
     pub port: Option<i32>,
     pub authkey: Option<String>,
+    pub fetch_url: Option<String>,
 }
 
 impl Master {
@@ -28,6 +29,10 @@ impl Master {
     pub fn get_authkey(&self) -> String {
         self.authkey.clone().unwrap_or_default()
     }
+
+    pub fn get_fetch_url(&self) -> String {
+        self.fetch_url.clone().unwrap_or_default()
+    }
 }
 
 impl Default for Master {
@@ -36,6 +41,7 @@ impl Default for Master {
             addr: Some("localhost".to_owned()),
             port: Some(27015),
             authkey: Some("".to_owned()),
+            fetch_url: Some("https://localhost".to_owned()),
         }
     }
 }
@@ -118,12 +124,14 @@ impl Config {
         let addr = config.get_master().get_addr();
         let port = config.get_master().get_port();
         let authkey = config.get_master().get_authkey();
+        let fetch_url = config.get_master().get_fetch_url();
 
         Ok(Self {
             master: Some(Master {
                 addr: Some(addr),
                 port: Some(port),
                 authkey: Some(authkey),
+                fetch_url: Some(fetch_url),
             }),
             client: Some(Client {
                 name: Some(name),
