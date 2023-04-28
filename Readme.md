@@ -1,6 +1,6 @@
 ## Rranch (Rusty Branch)
 
-This project is an improved rewrite of the [AcaciaLinux branch client](https://github.com/AcaciaLinux/branch) in rust because why not and for a few QOL improvements. The code is a mess so good luck every trying to maintain it. All features might work as expected though I do not know.
+This project is an improved rewrite of the [AcaciaLinux branch client](https://github.com/AcaciaLinux/branch) in rust because why not and for a few QOL improvements.
 
 ## Commands
 
@@ -74,7 +74,7 @@ On Unix Systems you can cd into the local repo and run <code>make all</code> or 
 
 ## Config
 
-The default config (~/.config/rranch.toml) which rranch generates on first startup should look similar to this:
+The default config (~/.config/rranch.toml) will be generated on first program start. It should look something like this:
 
 ```toml
 [master]
