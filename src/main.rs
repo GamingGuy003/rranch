@@ -92,7 +92,7 @@ fn main() -> std::io::Result<()> {
         let result = match parsed.0.clone().as_str() {
             "--checkout" => client.checkout(parsed.1.unwrap_or_default().as_str()),
             "--submit" => client.submit(parsed.1.unwrap_or_default().as_str()),
-            "--new" => client.new_pkgbuild(parsed.1.unwrap_or_default().as_str()),
+            "--new" => client.new_pkgbuild(parsed.1.unwrap_or_default().as_str(), &config.get_client().get_editor()),
             "--releasebuild" => client.build(parsed.1.unwrap_or_default().as_str(), true),
             "--crossbuild" => client.build(parsed.1.unwrap_or_default().as_str(), false),
             "--job-log" => client.watch_job_log(parsed.1.unwrap_or_default().as_str(), 1),

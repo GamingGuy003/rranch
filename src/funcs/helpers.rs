@@ -325,9 +325,10 @@ impl Client {
         }
     }
 
-    pub fn new_pkgbuild(&mut self, pkgname: &str) -> Result<(), std::io::Error> {
+    pub fn new_pkgbuild(&mut self, pkgname: &str, editor: &str) -> Result<(), std::io::Error> {
         let mut pkgb = PackageBuild::new();
         pkgb.name = pkgname.to_owned();
-        pkgb.create_workdir()
+        pkgb.create_workdir()?;
+        self.edit_local(format!("{pkgname}/package.bpb").as_str(), editor)
     }
 }
