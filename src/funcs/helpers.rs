@@ -3,7 +3,7 @@ use std::{io::Write, process::Command, time::Duration};
 use console::{Style, Term};
 use curl::easy::{Easy, WriteError};
 use indicatif::{ProgressBar, ProgressStyle};
-use log::{error, info};
+use log::{error, info, trace};
 
 use crate::{
     json::{
@@ -239,6 +239,7 @@ impl Client {
     }
 
     pub fn get_pkg(&mut self, url: &str, pkgname: &str) -> Result<(), std::io::Error> {
+        trace!("Trying to fetch from: {url}");
         let url = format!("{}?get=package&pkgname={}", url, pkgname);
         let mut easy = Easy::new();
 
