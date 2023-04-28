@@ -83,6 +83,8 @@ addr = "localhost"
 port = 27015
 # api authkey
 authkey = "default"
+# url to fetch packages from
+fetch_url = "https://..."
 
 [client]
 # clientname
@@ -93,8 +95,6 @@ type = "CONTROLLER"
 loglevel = "INFO"
 # editor for -cf | -e
 editor = "vim"
-# url to fetch packages from
-fetch_url = "https://..."
 # protocol version (should not be changed)
 protver = 0
 ```
