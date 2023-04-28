@@ -1,8 +1,9 @@
 use std::process::exit;
 
+use crate::structs::config::config_main::Config;
 use args::argparser::{Arg, ArgParser};
 use log::{debug, error, trace};
-use structs::{client::Client, config::Config};
+use structs::client::Client;
 
 use crate::util::funcs::configure;
 
@@ -13,18 +14,11 @@ mod structs;
 mod util;
 
 fn main() -> std::io::Result<()> {
-    let confpath = format!(
-        "{}/.config/rranch.toml",
-        dirs::home_dir().unwrap_or_default().to_str().unwrap_or_default()
-    );
+    let confpath = format!("{}/.config/rranch.toml", dirs::home_dir().unwrap_or_default().to_str().unwrap_or_default());
     let config = Config::new_from_cfg(&confpath, 1)?;
     std::env::set_var("rranch_log", config.get_client().get_loglevel());
     pretty_env_logger::init_custom_env("rranch_log");
-    let mut argparser = ArgParser::new(
-        Vec::new(),
-        Some("The branch client rewritten in Rust with Protocol version 2 (json)"),
-        Vec::new(),
-    );
+    let mut argparser = ArgParser::new(Vec::new(), Some("The branch client rewritten in Rust with Protocol version 2 (json)"), Vec::new());
 
     let args = Vec::from([
         Arg::new("c", "checkout", "Fetches pkgbuild", Some("name")),
@@ -92,7 +86,7 @@ fn main() -> std::io::Result<()> {
         let result = match parsed.0.clone().as_str() {
             "--checkout" => client.checkout(parsed.1.unwrap_or_default().as_str()),
             "--submit" => client.submit(parsed.1.unwrap_or_default().as_str()),
-            "--new" => client.new_pkgbuild(parsed.1.unwrap_or_default().as_str(), &config.get_client().get_editor()),
+            "--new" => client.new_pkgbuild(parsed.1.unwrap_or_default().as_str(), &config.get_client().get_editor(), config.get_templates().get_templates()),
             "--releasebuild" => client.build(parsed.1.unwrap_or_default().as_str(), true),
             "--crossbuild" => client.build(parsed.1.unwrap_or_default().as_str(), false),
             "--job-log" => client.watch_job_log(parsed.1.unwrap_or_default().as_str(), 1),
@@ -125,10 +119,7 @@ fn main() -> std::io::Result<()> {
             "--configure" => configure(&confpath, &config.get_client().get_editor()),
             "--help" => Ok(()),
             "--fetch-pkg" => client.get_pkg(&config.get_master().get_fetch_url(), parsed.1.unwrap_or_default().as_str()),
-            arg => Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidInput,
-                format!("Unimplemented argument {}", arg),
-            )),
+            arg => Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, format!("Unimplemented argument {}", arg))),
         };
         match result {
             Ok(_) => trace!("Handled {}", parsed.0),

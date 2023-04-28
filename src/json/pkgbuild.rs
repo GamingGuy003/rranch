@@ -29,12 +29,7 @@ impl PackageBuild {
             build_dependencies: Default::default(),
             cross_dependencies: Default::default(),
             extra_sources: Default::default(),
-            build_script: vec![
-                String::from("\tcd $PKG_NAME-$PKG_VERSION"),
-                String::from("\t"),
-                String::from("\tmake -j$(nproc)"),
-                String::from("\tmake DESTDIR=$PKG_INSTALL_DIR install"),
-            ],
+            build_script: Default::default(),
         }
     }
     pub fn to_vec(&self) -> Result<Vec<String>, std::io::Error> {

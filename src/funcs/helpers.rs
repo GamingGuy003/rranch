@@ -1,4 +1,4 @@
-use std::{io::Write, process::Command, time::Duration};
+use std::{collections::HashMap, io::Write, process::Command, time::Duration};
 
 use console::{Style, Term};
 use curl::easy::{Easy, WriteError};
@@ -15,7 +15,7 @@ use crate::{
         response::{Response, StatusCode},
     },
     structs::{client::Client, diff::Diff},
-    util::funcs::{get_pkgbs, get_yn},
+    util::funcs::{get_input, get_pkgbs, get_yn},
 };
 
 impl Client {
@@ -25,19 +25,8 @@ impl Client {
         let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&req)?)?)?;
 
         match resp.statuscode {
-            StatusCode::Ok => self.watch_job_log(
-                serde_json::from_value::<JobsStatus>(resp.payload)?
-                    .completedjobs
-                    .last()
-                    .unwrap_or(&Job::default())
-                    .job_id
-                    .as_str(),
-                1,
-            ),
-            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                serde_json::to_string(&resp.payload)?,
-            )),
+            StatusCode::Ok => self.watch_job_log(serde_json::from_value::<JobsStatus>(resp.payload)?.completedjobs.last().unwrap_or(&Job::default()).job_id.as_str(), 1),
+            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(std::io::ErrorKind::Other, serde_json::to_string(&resp.payload)?)),
         }
     }
 
@@ -47,19 +36,8 @@ impl Client {
         let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&req)?)?)?;
 
         match resp.statuscode {
-            StatusCode::Ok => self.watch_job_log(
-                serde_json::from_value::<JobsStatus>(resp.payload)?
-                    .runningjobs
-                    .last()
-                    .unwrap_or(&Job::default())
-                    .job_id
-                    .as_str(),
-                1,
-            ),
-            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                serde_json::to_string(&resp.payload)?,
-            )),
+            StatusCode::Ok => self.watch_job_log(serde_json::from_value::<JobsStatus>(resp.payload)?.runningjobs.last().unwrap_or(&Job::default()).job_id.as_str(), 1),
+            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(std::io::ErrorKind::Other, serde_json::to_string(&resp.payload)?)),
         }
     }
 
@@ -77,20 +55,14 @@ impl Client {
     }
 
     pub fn get_dependers(&mut self, pkgname: &str) -> Result<(Vec<String>, Vec<String>), std::io::Error> {
-        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&Request::new(
-            "GETDEPENDERS",
-            Some(serde_json::to_value(pkgname)?),
-        ))?)?)?;
+        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&Request::new("GETDEPENDERS", Some(serde_json::to_value(pkgname)?)))?)?)?;
 
         match resp.statuscode {
             StatusCode::Ok => Ok((
                 serde_json::from_value::<Dependers>(resp.payload.clone())?.releasebuild,
                 serde_json::from_value::<Dependers>(resp.payload)?.crossbuild,
             )),
-            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(
-                std::io::ErrorKind::PermissionDenied,
-                serde_json::to_string(&resp.payload)?,
-            )),
+            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(std::io::ErrorKind::PermissionDenied, serde_json::to_string(&resp.payload)?)),
         }
     }
 
@@ -120,44 +92,29 @@ impl Client {
     }
 
     pub fn get_managed_pkgs(&mut self) -> Result<Vec<String>, std::io::Error> {
-        let resp =
-            serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&Request::new("GETMANAGEDPKGS", None))?)?)?;
+        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&Request::new("GETMANAGEDPKGS", None))?)?)?;
 
         match resp.statuscode {
             StatusCode::Ok => Ok(serde_json::from_value::<Vec<String>>(resp.payload)?),
-            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                serde_json::to_string(&resp.payload)?,
-            )),
+            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(std::io::ErrorKind::Other, serde_json::to_string(&resp.payload)?)),
         }
     }
 
     pub fn get_managed_pkgbs(&mut self) -> Result<Vec<String>, std::io::Error> {
-        let resp = serde_json::from_str::<Response>(
-            &self.write_read(&serde_json::to_string(&Request::new("GETMANAGEDPKGBUILDS", None))?)?,
-        )?;
+        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&Request::new("GETMANAGEDPKGBUILDS", None))?)?)?;
 
         match resp.statuscode {
             StatusCode::Ok => Ok(serde_json::from_value::<Vec<String>>(resp.payload)?),
-            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                serde_json::to_string(&resp.payload)?,
-            )),
+            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(std::io::ErrorKind::Other, serde_json::to_string(&resp.payload)?)),
         }
     }
 
     pub fn get_pkgb(&mut self, pkgname: &str) -> Result<PackageBuild, std::io::Error> {
-        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&Request::new(
-            "CHECKOUT",
-            Some(serde_json::to_value(pkgname)?),
-        ))?)?)?;
+        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&Request::new("CHECKOUT", Some(serde_json::to_value(pkgname)?)))?)?)?;
 
         match resp.statuscode {
             StatusCode::Ok => Ok(serde_json::from_value::<PackageBuild>(resp.payload)?),
-            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(
-                std::io::ErrorKind::PermissionDenied,
-                serde_json::to_string(&resp.payload)?,
-            )),
+            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(std::io::ErrorKind::PermissionDenied, serde_json::to_string(&resp.payload)?)),
         }
     }
 
@@ -181,10 +138,7 @@ impl Client {
                 }
             }
             Err(_) => {
-                return Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!("Editor {editor} not found"),
-                ));
+                return Err(std::io::Error::new(std::io::ErrorKind::Other, format!("Editor {editor} not found")));
             }
         }
 
@@ -249,14 +203,10 @@ impl Client {
         let pb = ProgressBar::new(1);
 
         pb.set_style(
-            match ProgressStyle::with_template("{percent:>3}% [{bar:.green/white}] {bytes:>7}/{total_bytes:>7} ({bytes_per_sec})")
-            {
+            match ProgressStyle::with_template("{percent:>3}% [{bar:.green/white}] {bytes:>7}/{total_bytes:>7} ({bytes_per_sec})") {
                 Ok(pstyle) => pstyle,
                 Err(err) => {
-                    return Err(std::io::Error::new(
-                        std::io::ErrorKind::Other,
-                        format!("Failed setting progress style: {err}"),
-                    ));
+                    return Err(std::io::Error::new(std::io::ErrorKind::Other, format!("Failed setting progress style: {err}")));
                 }
             }
             .progress_chars("#=--"),
@@ -284,17 +234,11 @@ impl Client {
     }
 
     pub fn get_job_log(&mut self, job_id: &str, offset: usize) -> Result<Vec<String>, std::io::Error> {
-        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&Request::new(
-            "GETJOBLOG",
-            Some(serde_json::to_value(JobRequest::new(job_id, offset))?),
-        ))?)?)?;
+        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&Request::new("GETJOBLOG", Some(serde_json::to_value(JobRequest::new(job_id, offset))?)))?)?)?;
 
         match resp.statuscode {
             StatusCode::Ok => Ok(serde_json::from_value::<Vec<String>>(resp.payload)?),
-            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(
-                std::io::ErrorKind::PermissionDenied,
-                serde_json::to_string(&resp.payload)?,
-            )),
+            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(std::io::ErrorKind::PermissionDenied, serde_json::to_string(&resp.payload)?)),
         }
     }
 
@@ -313,21 +257,32 @@ impl Client {
     }
 
     pub fn get_jobs(&mut self) -> Result<JobsStatus, std::io::Error> {
-        let resp =
-            serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&Request::new("GETJOBSTATUS", None))?)?)?;
+        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&Request::new("GETJOBSTATUS", None))?)?)?;
 
         match resp.statuscode {
             StatusCode::Ok => Ok(serde_json::from_value::<JobsStatus>(resp.payload)?),
-            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                serde_json::to_string(&resp.payload)?,
-            )),
+            StatusCode::InternalServerError | StatusCode::RequestFailure => Err(std::io::Error::new(std::io::ErrorKind::Other, serde_json::to_string(&resp.payload)?)),
         }
     }
 
-    pub fn new_pkgbuild(&mut self, pkgname: &str, editor: &str) -> Result<(), std::io::Error> {
+    pub fn new_pkgbuild(&mut self, pkgname: &str, editor: &str, templates: HashMap<String, Vec<String>>) -> Result<(), std::io::Error> {
         let mut pkgb = PackageBuild::new();
         pkgb.name = pkgname.to_owned();
+        loop {
+            println!("Which template do you want to use?");
+            for (key, value) in templates.clone() {
+                println!("{key}: {:#?}", value)
+            }
+            print!("Choice: ");
+            let choice = get_input()?;
+            match templates.get(&choice) {
+                Some(value) => {
+                    pkgb.build_script = value.to_vec();
+                    break;
+                }
+                None => println!("Invalid input, try again"),
+            }
+        }
         pkgb.create_workdir()?;
         self.edit_local(format!("{pkgname}/package.bpb").as_str(), editor)
     }
