@@ -1,9 +1,8 @@
 use std::process::exit;
 
-use crate::structs::config::config_main::Config;
 use args::argparser::{Arg, ArgParser};
 use log::{debug, error, trace};
-use structs::client::Client;
+use structs::{client::Client, config::config_main::Config};
 
 use crate::util::funcs::configure;
 
@@ -112,6 +111,7 @@ fn main() -> std::io::Result<()> {
             "--edit-local" => client.edit_local(parsed.1.unwrap_or_default().as_str(), &config.get_client().get_editor()),
             "--remove-pkg" => client.remove_pkg(parsed.1.unwrap_or_default().as_str()),
             "--extra-sources" => client.show_extra_sources(),
+            "--extrasources" => client.show_extra_sources(),
             "--remove-extrasource" => client.remove_extra_source(parsed.1.unwrap_or_default().as_str()),
             "--submit-extrasource" => client.submit_extra_source(parsed.1.unwrap_or_default().as_str()),
             "--export" => client.export(),
