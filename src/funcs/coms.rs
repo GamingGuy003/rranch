@@ -15,7 +15,7 @@ use crate::{
         solution::Solution,
     },
     structs::{client::Client, diff::Diff},
-    util::funcs::{get_input, print_vec_cols},
+    util::funcs::{get_input, print_cols},
 };
 
 impl Client {
@@ -103,9 +103,9 @@ impl Client {
             .collect::<Vec<Diff>>();
 
         println!("{}", bold.apply_to("Releasebuild"));
-        print_vec_cols(release.iter().map(|diffelem| format!("{diffelem}")).collect::<Vec<String>>(), None, 11);
+        print_cols(release.iter().map(|diffelem| format!("{diffelem}")).collect::<Vec<String>>(), None, 8, 3);
         println!("{}", bold.apply_to("Crossbuild"));
-        print_vec_cols(cross.iter().map(|diffelem| format!("{diffelem}")).collect::<Vec<String>>(), None, 11);
+        print_cols(cross.iter().map(|diffelem| format!("{diffelem}")).collect::<Vec<String>>(), None, 8, 3);
         Ok(())
     }
 
@@ -147,9 +147,9 @@ impl Client {
             .collect::<Vec<Diff>>();
 
         println!("{}", bold.apply_to("Releasebuild"));
-        print_vec_cols(release.iter().map(|diffelem| format!("{diffelem}")).collect::<Vec<String>>(), None, 11);
+        print_cols(release.iter().map(|diffelem| format!("{diffelem}")).collect::<Vec<String>>(), None, 8, 3);
         println!("{}", bold.apply_to("Crossbuild"));
-        print_vec_cols(cross.iter().map(|diffelem| format!("{diffelem}")).collect::<Vec<String>>(), None, 11);
+        print_cols(cross.iter().map(|diffelem| format!("{diffelem}")).collect::<Vec<String>>(), None, 8, 3);
         Ok(())
     }
 
@@ -181,9 +181,9 @@ impl Client {
                 {
                     let clients = serde_json::from_value::<Clients>(resp.payload)?;
                     println!("{}", bold.apply_to("Controllers"));
-                    print_vec_cols(clients.controllers, None, 0);
+                    print_cols(clients.controllers, None, 0, 3);
                     println!("{}", bold.apply_to("Buildbots"));
-                    print_vec_cols(clients.buildbots, None, 0);
+                    print_cols(clients.buildbots, None, 0, 3);
                 };
                 Ok(())
             }
@@ -198,14 +198,15 @@ impl Client {
 
         println!("{}", bold.apply_to("Managed pkgs"));
 
-        print_vec_cols(
+        print_cols(
             self.get_diff()?
                 .iter()
                 .filter(|predicate| pkgs.contains(&predicate.name))
                 .map(|diff| format!("{diff}"))
                 .collect::<Vec<String>>(),
             None,
-            11,
+            8,
+            3,
         );
         Ok(())
     }
@@ -217,14 +218,15 @@ impl Client {
 
         println!("{}", bold.apply_to("Managed pkgbs"));
 
-        print_vec_cols(
+        print_cols(
             self.get_diff()?
                 .iter()
                 .filter(|predicate| pkgbs.contains(&predicate.name))
                 .map(|diff| format!("{diff}"))
                 .collect::<Vec<String>>(),
             None,
-            11,
+            8,
+            3,
         );
         Ok(())
     }
@@ -352,7 +354,7 @@ impl Client {
         let bold = Style::new().bold();
 
         println!("{}", bold.apply_to("Diff pkgs / pkgbs"));
-        print_vec_cols(diff.iter().map(|diffelem| format!("{diffelem}")).collect::<Vec<String>>(), None, 11);
+        print_cols(diff.iter().map(|diffelem| format!("{diffelem}")).collect::<Vec<String>>(), None, 8, 3);
         Ok(())
     }
 }

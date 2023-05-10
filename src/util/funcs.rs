@@ -14,13 +14,7 @@ pub fn get_yn(text: &str, default: bool) -> Result<bool, std::io::Error> {
     let green = Style::new().green();
 
     let question = if default {
-        format!(
-            "{} [{}{}/{}] ",
-            text,
-            green.apply_to("Y").bold().underlined(),
-            green.apply_to("es").underlined(),
-            red.apply_to("No")
-        )
+        format!("{} [{}{}/{}] ", text, green.apply_to("Y").bold().underlined(), green.apply_to("es").underlined(), red.apply_to("No"))
     } else {
         format!(
             "{} [{}/{}{}] ",
@@ -49,26 +43,21 @@ pub fn get_yn(text: &str, default: bool) -> Result<bool, std::io::Error> {
     }
 }
 
-pub fn print_vec_cols(vec: Vec<String>, mut max: Option<i32>, offset: i32) {
-    if max.is_none() {
-        max = Some(
-            (vec.iter()
-                .max_by_key(|s| s.chars().count())
-                .unwrap_or(&String::default())
-                .chars()
-                .count()) as i32,
-        );
-    }
+pub fn print_cols(vec: Vec<String>, max: Option<usize>, offset: usize, spacing: usize) {
+    let max_len = (if max.is_none() {
+        vec.iter().max_by_key(|val| val.len()).cloned().unwrap_or_default().len()
+    } else {
+        max.unwrap_or_default()
+    }) + spacing;
 
-    let elem_width = max.unwrap_or(30) + offset;
-    let colcount = (Term::stdout().size().1 / elem_width as u16) as usize;
-    for (idx, val) in vec.into_iter().enumerate() {
+    let colcount = Term::stdout().size().1 as usize / max_len;
+    vec.iter().enumerate().for_each(|(idx, val)| {
         if idx % colcount == 0 && idx != 0 {
             println!();
         }
-        print!("{:<1$}", val, elem_width as usize + 3);
-    }
-    println!();
+        print!("{:<1$}", val, max_len + offset);
+    });
+    println!()
 }
 
 pub fn get_pkgbs(path: &str) -> Result<Vec<String>, std::io::Error> {
@@ -93,18 +82,10 @@ pub fn configure(path: &str, editor: &str) -> Result<(), std::io::Error> {
     match child {
         Ok(mut child) => {
             if !child.wait()?.success() {
-                return Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    "Editor closed with error",
-                ));
+                return Err(std::io::Error::new(std::io::ErrorKind::Other, "Editor closed with error"));
             }
         }
-        Err(err) => {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("Problem with editor: {err}"),
-            ))
-        }
+        Err(err) => return Err(std::io::Error::new(std::io::ErrorKind::Other, format!("Problem with editor: {err}"))),
     }
     Ok(())
 }

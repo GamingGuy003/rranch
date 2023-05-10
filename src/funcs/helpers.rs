@@ -15,7 +15,7 @@ use crate::{
         response::{Response, StatusCode},
     },
     structs::{client::Client, diff::Diff},
-    util::funcs::{get_input, get_pkgbs, get_yn},
+    util::funcs::{get_input, get_pkgbs, get_yn, print_cols},
 };
 
 impl Client {
@@ -129,7 +129,7 @@ impl Client {
     }
 
     pub fn edit_local(&mut self, path: &str, editor: &str) -> Result<(), std::io::Error> {
-        let child = Command::new(editor).arg(path.clone()).spawn();
+        let child = Command::new(editor).arg(path).spawn();
 
         match child {
             Ok(mut child) => {
@@ -285,5 +285,29 @@ impl Client {
         }
         pkgb.create_workdir()?;
         self.edit_local(format!("{pkgname}/package.bpb").as_str(), editor)
+    }
+
+    pub fn get_pkg_with_name(&mut self, pkgname: &str) -> Result<(), std::io::Error> {
+        let bold = Style::new().bold();
+        let style = Style::new().italic().bold().green();
+        let pkgbs = self.get_managed_pkgbs()?;
+        let pkgs = self.get_managed_pkgs()?;
+        let mut combined = pkgbs;
+        combined.sort();
+        pkgs.iter().for_each(|pkg| {
+            if !combined.contains(pkg) {
+                combined.push(pkg.clone())
+            }
+        });
+        let mut found = combined
+            .iter()
+            .filter(|elem| elem.to_lowercase().contains(&pkgname.to_lowercase()))
+            .map(|elem| elem.to_owned())
+            .collect::<Vec<String>>();
+        let max = Some(found.iter().max_by_key(|val| val.len()).cloned().unwrap_or_default().len());
+        found = found.iter().map(|val| val.replace(pkgname, format!("{}", style.apply_to(pkgname)).as_str())).collect::<Vec<String>>();
+        println!("{}", bold.apply_to(format!("Found packages matching '{}':", pkgname)));
+        print_cols(found, max, 16, 3);
+        Ok(())
     }
 }
