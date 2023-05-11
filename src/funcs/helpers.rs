@@ -310,4 +310,21 @@ impl Client {
         print_cols(found, max, 16, 3);
         Ok(())
     }
+
+    pub fn get_info(&mut self, pkgname: &str) -> Result<(), std::io::Error> {
+        let bold = Style::new().bold();
+        let italic = Style::new().italic();
+        let desc = self.get_pkgb(pkgname)?;
+        println!("{}", bold.apply_to(format!("Package {}", pkgname)));
+        println!("{:<23} {}", italic.apply_to("Name:"), desc.name);
+        println!("{:<23} {} ({})", italic.apply_to("Version:"), desc.version, desc.real_version);
+        println!("{:<23} {}", italic.apply_to("Description:"), desc.description);
+        println!("{:<23} {}", italic.apply_to("ExtraSources:"), desc.extra_sources.join(", "));
+        print!("{:23} ", italic.apply_to("BuildDeps:"));
+        print_cols(desc.build_dependencies, None, 0, 3);
+        print!("{:23} ", italic.apply_to("RunDeps:"));
+        print_cols(desc.dependencies, None, 0, 3);
+
+        Ok(())
+    }
 }

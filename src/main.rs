@@ -55,6 +55,7 @@ fn main() -> std::io::Result<()> {
         Arg::new("cf", "configure", "configures client", None),
         Arg::new("fp", "fetch-pkg", "Downloads pkg", Some("name")),
         Arg::new("f", "find", "Tries to find pkg with name", Some("name")),
+        Arg::new("i", "info", "Fetches pkg info", Some("name")),
     ]);
 
     argparser.define_args(args);
@@ -121,6 +122,7 @@ fn main() -> std::io::Result<()> {
             "--help" => Ok(()),
             "--fetch-pkg" => client.get_pkg(&config.get_master().get_fetch_url(), parsed.1.unwrap_or_default().as_str()),
             "--find" => client.get_pkg_with_name(parsed.1.unwrap_or_default().as_str()),
+            "--info" => client.get_info(parsed.1.unwrap_or_default().as_str()),
             arg => Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, format!("Unimplemented argument {}", arg))),
         };
         match result {
