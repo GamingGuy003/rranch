@@ -14,7 +14,7 @@ use crate::{
         response::{Response, StatusCode},
         solution::Solution,
     },
-    structs::{client::Client, diff::Diff},
+    structs::{client::Client, deps::Deps, diff::Diff},
     util::funcs::{get_input, print_cols},
 };
 
@@ -355,6 +355,18 @@ impl Client {
 
         println!("{}", bold.apply_to("Diff pkgs / pkgbs"));
         print_cols(diff.iter().map(|diffelem| format!("{diffelem}")).collect::<Vec<String>>(), None, 8, 3);
+        Ok(())
+    }
+
+    pub fn rebuild_dependencies(&mut self, pkgname: &str, deps: Deps) -> Result<(), std::io::Error> {
+        let deps = match deps {
+            Deps::Deps => self.get_pkgb(pkgname)?.dependencies,
+            Deps::Build => self.get_pkgb(pkgname)?.build_dependencies,
+            Deps::Cross => self.get_pkgb(pkgname)?.cross_dependencies,
+        };
+        for dep in deps {
+            self.build(dep.as_str(), true)?;
+        }
         Ok(())
     }
 }

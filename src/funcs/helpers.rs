@@ -320,10 +320,9 @@ impl Client {
         println!("{:<23} {} ({})", italic.apply_to("Version:"), desc.version, desc.real_version);
         println!("{:<23} {}", italic.apply_to("Description:"), desc.description);
         println!("{:<23} {}", italic.apply_to("ExtraSources:"), desc.extra_sources.join(", "));
-        print!("{:23} ", italic.apply_to("BuildDeps:"));
-        print_cols(desc.build_dependencies, None, 0, 3);
-        print!("{:23} ", italic.apply_to("RunDeps:"));
-        print_cols(desc.dependencies, None, 0, 3);
+        println!("{:23} {}", italic.apply_to("RunDeps:"), desc.dependencies.join(", "));
+        println!("{:23} {}", italic.apply_to("BuildDeps:"), desc.build_dependencies.join(", "));
+        println!("{:23} {}", italic.apply_to("CrossDeps:"), desc.cross_dependencies.join(", "));
 
         Ok(())
     }
