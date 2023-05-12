@@ -32,7 +32,7 @@ impl Default for Templates {
                 String::from("\tcd $PKG_NAME-$PKG_VERSION"),
                 String::from("\t"),
                 String::from("\tmkdir build"),
-                String::from("cd build"),
+                String::from("\tcd build"),
                 String::from("\tDESTDIR=$PKG_INSTALL_DIR ninja install"),
             ],
         );
