@@ -163,11 +163,11 @@ impl Client {
     }
 
     pub fn show_jobs_status(&mut self, clear_screen: bool) -> Result<(), std::io::Error> {
+        let jobs = self.get_jobs()?;
         if clear_screen {
             console::Term::clear_screen(&console::Term::stdout())?;
         }
-
-        println!("{}", self.get_jobs()?);
+        println!("{jobs}");
         Ok(())
     }
 
