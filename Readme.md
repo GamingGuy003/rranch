@@ -101,5 +101,5 @@ protver = 0
 # templates for packages can be configured. by default, make and ninja will be set up, but feel free to add your own
 [templates]
 make = ["\tcd $PKG_NAME-$PKG_VERSION", "\t", "\tmake -j$(nproc)", "\tmake DESTDIR=$PKG_INSTALL_DIR install"]
-ninja = ["\tcd $PKG_NAME-$PKG_VERSION", "\t", "\tmkdir build", "cd build", "\tDESTDIR=$PKG_INSTALL_DIR ninja install"]
+ninja = ["\tcd $PKG_NAME-$PKG_VERSION", "\t", "\tmkdir build", "\tcd build", "\tDESTDIR=$PKG_INSTALL_DIR ninja install"]
 ```
