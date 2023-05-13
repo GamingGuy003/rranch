@@ -3,6 +3,8 @@ use std::fmt::Display;
 use console::Style;
 use serde_derive::Deserialize;
 
+use crate::util::funcs::truncate_to;
+
 #[derive(Deserialize, Default)]
 pub struct JobsStatus {
     pub queuedjobs: Vec<Job>,
@@ -28,10 +30,10 @@ impl Display for Job {
 
         write!(
             f,
-            "{:<15} {:<40} {:<20} {}",
-            self.job_name,
+            "{:<20} {:<40} {:<20} {}",
+            truncate_to(self.job_name.clone(), 18),
             self.job_id,
-            self.requesting_client,
+            truncate_to(self.requesting_client.clone(), 18),
             style.apply_to(self.job_status.clone())
         )
     }
@@ -41,7 +43,7 @@ impl JobsStatus {
     pub fn header(&self) -> String {
         let italic = Style::new().italic();
         format!(
-            "{:<15} {:<40} {:<20} {:<20}",
+            "{:<20} {:<40} {:<20} {:<20}",
             italic.apply_to("NAME"),
             italic.apply_to("ID"),
             italic.apply_to("REQUESTER"),
@@ -53,24 +55,9 @@ impl JobsStatus {
 impl Display for JobsStatus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let bold = Style::new().bold();
-        let queued = self
-            .queuedjobs
-            .iter()
-            .map(|job| job.to_string())
-            .collect::<Vec<String>>()
-            .join("\n");
-        let running = self
-            .runningjobs
-            .iter()
-            .map(|job| job.to_string())
-            .collect::<Vec<String>>()
-            .join("\n");
-        let completed = self
-            .completedjobs
-            .iter()
-            .map(|job| job.to_string())
-            .collect::<Vec<String>>()
-            .join("\n");
+        let queued = self.queuedjobs.iter().map(|job| job.to_string()).collect::<Vec<String>>().join("\n");
+        let running = self.runningjobs.iter().map(|job| job.to_string()).collect::<Vec<String>>().join("\n");
+        let completed = self.completedjobs.iter().map(|job| job.to_string()).collect::<Vec<String>>().join("\n");
         write!(
             f,
             "{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",

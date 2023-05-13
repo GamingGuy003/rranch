@@ -1,5 +1,5 @@
 pub enum Deps {
-    Deps,
+    Runtime,
     Build,
     Cross,
 }

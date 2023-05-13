@@ -98,7 +98,7 @@ fn main() -> std::io::Result<()> {
             "--dependers" => client.show_dependers(parsed.1.unwrap_or_default().as_str()),
             "--dependencies" => client.show_dependencies(parsed.1.unwrap_or_default().as_str()),
             "--rebuilddependers" => client.rebuild_dependers(parsed.1.unwrap_or_default().as_str()),
-            "--rebuild-dependencies" => client.rebuild_dependencies(parsed.1.unwrap_or_default().as_str(), structs::deps::Deps::Deps),
+            "--rebuild-dependencies" => client.rebuild_dependencies(parsed.1.unwrap_or_default().as_str(), structs::deps::Deps::Runtime),
             "--rebuild-build-dependencies" => client.rebuild_dependencies(parsed.1.unwrap_or_default().as_str(), structs::deps::Deps::Build),
             "--rebuild-cross-dependencies" => client.rebuild_dependencies(parsed.1.unwrap_or_default().as_str(), structs::deps::Deps::Cross),
             "--job-status" => client.show_jobs_status(false),

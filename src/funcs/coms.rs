@@ -360,7 +360,7 @@ impl Client {
 
     pub fn rebuild_dependencies(&mut self, pkgname: &str, deps: Deps) -> Result<(), std::io::Error> {
         let deps = match deps {
-            Deps::Deps => self.get_pkgb(pkgname)?.dependencies,
+            Deps::Runtime => self.get_pkgb(pkgname)?.dependencies,
             Deps::Build => self.get_pkgb(pkgname)?.build_dependencies,
             Deps::Cross => self.get_pkgb(pkgname)?.cross_dependencies,
         };

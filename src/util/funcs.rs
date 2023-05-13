@@ -89,3 +89,14 @@ pub fn configure(path: &str, editor: &str) -> Result<(), std::io::Error> {
     }
     Ok(())
 }
+
+pub fn truncate_to(input: String, max_chars: usize) -> String {
+    let mut s = input;
+    if s.len() > max_chars {
+        s.truncate(max_chars);
+        s.replace_range(max_chars - 3..=s.len() - 1, "...");
+        s.to_string()
+    } else {
+        s.to_string()
+    }
+}
