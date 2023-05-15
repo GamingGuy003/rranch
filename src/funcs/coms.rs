@@ -63,7 +63,7 @@ impl Client {
         });
 
         if warn {
-            if get_yn("Missing dependencies were found, do you want to submit anyways?", false)? {
+            if !get_yn("Missing dependencies were found, do you want to submit anyways?", false)? {
                 info!("Aborted due to user choice");
                 return Ok(());
             }
