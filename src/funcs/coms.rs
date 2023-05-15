@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use console::Style;
-use log::{debug, info};
+use log::{debug, info, warn};
 
 use crate::{
     json::{
@@ -15,7 +15,7 @@ use crate::{
         solution::Solution,
     },
     structs::{client::Client, deps::Deps, diff::Diff},
-    util::funcs::{get_input, print_cols},
+    util::funcs::{get_input, get_yn, print_cols},
 };
 
 impl Client {
@@ -36,10 +36,40 @@ impl Client {
     }
 
     pub fn submit(&mut self, path: &str) -> Result<(), std::io::Error> {
-        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&Request::new(
-            "SUBMIT",
-            Some(serde_json::to_value(PackageBuild::from_str(&std::fs::read_to_string(path)?)?)?),
-        ))?)?)?;
+        let pkgb = PackageBuild::from_str(&std::fs::read_to_string(path)?)?;
+        let combined = self.get_all()?;
+
+        let mut warn = false;
+
+        pkgb.dependencies.iter().for_each(|dep| {
+            if !combined.contains(dep) {
+                warn!("Runtime Dependency {dep} does not exist!");
+                warn = true;
+            }
+        });
+
+        pkgb.build_dependencies.iter().for_each(|dep| {
+            if !combined.contains(dep) {
+                warn!("Build Dependency {dep} does not exist!");
+                warn = true;
+            }
+        });
+
+        pkgb.cross_dependencies.iter().for_each(|dep| {
+            if !combined.contains(dep) {
+                warn!("Cross Dependency {dep} does not exist!");
+                warn = true;
+            }
+        });
+
+        if warn {
+            if get_yn("Missing dependencies were found, do you want to submit anyways?", false)? {
+                info!("Aborted due to user choice");
+                return Ok(());
+            }
+        }
+
+        let resp = serde_json::from_str::<Response>(&self.write_read(&serde_json::to_string(&Request::new("SUBMIT", Some(serde_json::to_value(pkgb)?)))?)?)?;
 
         match resp.statuscode {
             StatusCode::Ok => Ok(println!("{}", serde_json::to_string(&resp.payload)?)),

@@ -69,13 +69,8 @@ impl Client {
     pub fn get_diff(&mut self) -> Result<Vec<Diff>, std::io::Error> {
         let pkgbs = self.get_managed_pkgbs()?;
         let pkgs = self.get_managed_pkgs()?;
-        let mut combined = pkgbs.clone();
-        combined.sort();
-        pkgs.iter().for_each(|pkg| {
-            if !combined.contains(pkg) {
-                combined.push(pkg.clone())
-            }
-        });
+        let combined = self.get_all()?;
+
         Ok(combined
             .iter()
             .map(|name| {
@@ -290,15 +285,8 @@ impl Client {
     pub fn get_pkg_with_name(&mut self, pkgname: &str) -> Result<(), std::io::Error> {
         let bold = Style::new().bold();
         let style = Style::new().italic().bold().green();
-        let pkgbs = self.get_managed_pkgbs()?;
-        let pkgs = self.get_managed_pkgs()?;
-        let mut combined = pkgbs;
-        combined.sort();
-        pkgs.iter().for_each(|pkg| {
-            if !combined.contains(pkg) {
-                combined.push(pkg.clone())
-            }
-        });
+
+        let combined = self.get_all()?;
         let mut found = combined
             .iter()
             .filter(|elem| elem.to_lowercase().contains(&pkgname.to_lowercase()))
@@ -325,5 +313,18 @@ impl Client {
         println!("{:23} {}", italic.apply_to("CrossDeps:"), desc.cross_dependencies.join(", "));
 
         Ok(())
+    }
+
+    pub fn get_all(&mut self) -> Result<Vec<String>, std::io::Error> {
+        let pkgbs = self.get_managed_pkgbs()?;
+        let pkgs = self.get_managed_pkgs()?;
+        let mut combined = pkgbs;
+        combined.sort();
+        pkgs.iter().for_each(|pkg| {
+            if !combined.contains(pkg) {
+                combined.push(pkg.clone())
+            }
+        });
+        Ok(combined)
     }
 }
