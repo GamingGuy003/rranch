@@ -153,11 +153,11 @@ impl Client {
             info!("Aborted due to user choice");
             return Ok(());
         }
-
         let progress = ProgressBar::new(pkgbs.len() as u64);
         let term = Term::stdout();
         for pkgb in pkgbs {
             term.clear_screen()?;
+            println!("Downloading {pkgb}...");
             progress.inc(1);
             self.checkout(&pkgb)?;
         }
